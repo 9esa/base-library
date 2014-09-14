@@ -1,0 +1,58 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.2'
+    }
+}
+apply plugin: 'com.android.library'
+
+repositories {
+    jcenter()
+}
+
+android {
+    compileSdkVersion 'android-L'
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        applicationId "org.zuzuk"
+        minSdkVersion 7
+        targetSdkVersion 20
+        versionCode 1
+        versionName "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    /* Common */
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:20.0.0'
+
+    /* Image loading */
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+
+    /* Database working */
+    compile 'com.j256.ormlite:ormlite-android:4.48'
+
+    /* Network requests */
+    compile 'com.octo.android.robospice:robospice:1.4.13'
+    compile('com.google.http-client:google-http-client-android:1.17.0-rc') {
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
+    }
+    compile('com.google.http-client:google-http-client-jackson2:1.17.0-rc') {
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
+    }
+}
