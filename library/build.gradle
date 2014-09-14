@@ -13,7 +13,7 @@ repositories {
 }
 
 android {
-    compileSdkVersion 'android-L'
+    compileSdkVersion 20
     buildToolsVersion "20.0.0"
 
     defaultConfig {
@@ -48,7 +48,8 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-android:4.48'
 
     /* Network requests */
-    compile 'com.octo.android.robospice:robospice:1.4.13'
+    compile 'com.octo.android.robospice:robospice:1.4.14'
+
     compile('com.google.http-client:google-http-client-android:1.17.0-rc') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }

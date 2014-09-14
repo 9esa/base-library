@@ -15,28 +15,36 @@ public class Ln {
 
     /* Verbose level log */
     public static void v(String message) {
-        //TODO: disable logs
-        Log.v(getTag(), message);
+        if (Log.isLoggable("Ln", Log.VERBOSE)) {
+            Log.v(getTag(), message);
+        }
     }
 
     /* Debug level log */
     public static void d(String message) {
-        //TODO: disable logs
-        Log.d(getTag(), message);
+        if (Log.isLoggable("Ln", Log.DEBUG)) {
+            Log.d(getTag(), message);
+        }
     }
 
     /* Info level log */
     public static void i(String message) {
-        Log.i(getTag(), message);
+        if (Log.isLoggable("Ln", Log.INFO)) {
+            Log.i(getTag(), message);
+        }
     }
 
     /* Warning level log */
     public static void w(String message) {
-        Log.w(getTag(), message);
+        if (Log.isLoggable("Ln", Log.WARN)) {
+            Log.w(getTag(), message);
+        }
     }
 
     /* Error level log */
     public static void e(String message) {
-        Log.e(getTag(), message);
+        if (Log.isLoggable("Ln", Log.ERROR)) {
+            Log.e(getTag(), message);
+        }
     }
 }
