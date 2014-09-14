@@ -213,6 +213,12 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
         }
     }
 
+    /* Shows device keyboard */
+    public void showSoftInput(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);

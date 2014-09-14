@@ -196,6 +196,11 @@ public abstract class LoadingFragment extends BaseFragment
     public void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();
+
+        for (TaskResultController taskResultController : taskResultControllers) {
+            taskResultController.setOnCompletionListener(null);
+        }
+        taskResultControllers.clear();
     }
 
     @Override

@@ -40,6 +40,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     public void onResume() {
         localSpiceManager.start(context);
+        remoteSpiceManager.start(context);
     }
 
     @Override
@@ -70,6 +71,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     public void onPause() {
         localSpiceManager.shouldStop();
+        remoteSpiceManager.shouldStop();
     }
 
     public void onDestroy() {

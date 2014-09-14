@@ -2,6 +2,10 @@ package org.zuzuk.providers.base;
 
 import android.util.SparseArray;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -10,11 +14,11 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that supports paging-based loading
  */
-public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> {
+public abstract class PagingProvider<TItem extends Serializable> extends LoadingItemsProvider<TItem> {
     public static final int DEFAULT_ITEMS_ON_PAGE = 20;
 
     private Integer totalCount = null;
-    private final SparseArray<ArrayList<TItem>> pages = new SparseArray<>();
+    private SparseArray<ArrayList<TItem>> pages = new SparseArray<>();
     private final HashSet<Integer> requestingPages = new HashSet<>();
 
     /* Sets total count of items */
@@ -99,5 +103,23 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         if (totalCount == null && pageItems.size() < DEFAULT_ITEMS_ON_PAGE) {
             setTotalCount(pageIndex * DEFAULT_ITEMS_ON_PAGE + items.size());
         }
+    }
+
+    @Override
+    protected void writeObject(ObjectOutputStream out) throws IOException {
+        super.writeObject(out);
+        out.writeInt(totalCount != null ? totalCount : -1);
+        out.writeObject(pages);
+    }
+
+    @Override
+    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        super.readObject(in);
+        totalCount = in.readInt();
+        if (totalCount == -1) {
+            totalCount = null;
+        }
+
+        pages = (SparseArray<ArrayList<TItem>>) in.readObject();
     }
 }

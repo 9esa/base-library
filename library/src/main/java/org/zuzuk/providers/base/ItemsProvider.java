@@ -1,6 +1,7 @@
 package org.zuzuk.providers.base;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Base provider that stores some items data inside
  */
-public abstract class ItemsProvider<TItem> {
+public abstract class ItemsProvider<TItem extends Serializable> implements Serializable {
     private final List<DataSetChangedListener> dataSetChangedListeners = new ArrayList<>();
 
     /* Returns total count of items */

@@ -1,10 +1,15 @@
 package org.zuzuk.providers.base;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that needs initialization before it is available to provide items
  */
-public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> implements InitializationListener {
+public abstract class LoadingItemsProvider<TItem extends Serializable> extends ItemsProvider<TItem> implements InitializationListener {
     private InitializationListener initializationListener;
     private boolean isInitialized = false;
     private boolean isInitializing = false;
@@ -54,5 +59,13 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> i
     public void onInitializationFailed(Exception ex) {
         isInitializing = false;
         initializationListener.onInitializationFailed(ex);
+    }
+
+    protected void writeObject(ObjectOutputStream out) throws IOException {
+        out.writeBoolean(isInitialized);
+    }
+
+    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        isInitialized = in.readBoolean();
     }
 }

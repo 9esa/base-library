@@ -15,28 +15,25 @@ public class Typefaces {
     private final static HashMap<String, Typeface> typefaces = new HashMap<>();
 
     private static boolean isInitialized = false;
-    private static String defaultTypeface;
+    private static String defaultTypefaceName;
 
-    public static void initialize(Context context) {
+    public static void initialize(Context context, String defaultTypefaceName) {
         try {
             findFontsInAssetFolder("", context.getAssets());
             isInitialized = true;
+            Typefaces.defaultTypefaceName = defaultTypefaceName;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void setDefaultTypeface(String name) {
-        defaultTypeface = name;
-    }
-
     public static String getDefaultTypefaceName() {
-        return defaultTypeface;
+        return defaultTypefaceName;
     }
 
     public static Typeface getByName(String name) {
         if (!isInitialized)
-            throw new RuntimeException("You should initialize CustomTypeface class first");
+            throw new RuntimeException("You should initialize Typefaces class first");
 
         if (name.endsWith(".otf") || name.endsWith(".ttf")) {
             return typefaces.get(name.substring(0, name.length() - 4));

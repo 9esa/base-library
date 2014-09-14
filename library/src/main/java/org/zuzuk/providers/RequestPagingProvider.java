@@ -8,11 +8,16 @@ import org.zuzuk.providers.base.PagingTaskCreator;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on remote paging requests
  */
-public class RequestPagingProvider<TItem, TResponse> extends PagingProvider<TItem> {
+public class RequestPagingProvider<TItem extends Serializable, TResponse> extends PagingProvider<TItem> {
     private final RequestExecutor requestExecutor;
     private PagingTaskCreator<TItem, TResponse> requestCreator;
 
@@ -62,5 +67,17 @@ public class RequestPagingProvider<TItem, TResponse> extends PagingProvider<TIte
                     }
                 }
         );
+    }
+
+    @Override
+    protected void writeObject(ObjectOutputStream out) throws IOException {
+        super.writeObject(out);
+        out.writeObject(requestCreator);
+    }
+
+    @Override
+    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        super.readObject(in);
+        requestCreator = (PagingTaskCreator<TItem, TResponse>) in.readObject();
     }
 }

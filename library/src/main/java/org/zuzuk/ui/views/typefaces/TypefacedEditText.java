@@ -15,11 +15,13 @@ import org.zuzuk.R;
 public class TypefacedEditText extends EditText {
 
     public TypefacedEditText(Context context) {
-        this(context, null);
+        super(context);
+        initialize(context, null);
     }
 
     public TypefacedEditText(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        super(context, attrs);
+        initialize(context, attrs);
     }
 
     public TypefacedEditText(Context context, AttributeSet attrs, int defStyle) {
@@ -36,16 +38,18 @@ public class TypefacedEditText extends EditText {
     }
 
     private void initialize(Context context, AttributeSet attrs) {
-        String externalFont;
+        String customTypeface = null;
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedView);
-            externalFont = a.getString(R.styleable.TypefacedView_customTypeface);
+            customTypeface = a.getString(R.styleable.TypefacedView_customTypeface);
             a.recycle();
-        } else {
-            externalFont = Typefaces.getDefaultTypefaceName();
+        }
+
+        if (customTypeface == null) {
+            customTypeface = Typefaces.getDefaultTypefaceName();
         }
 
         Typeface typeface = getTypeface();
-        setTypeface(externalFont, typeface != null ? typeface.getStyle() : Typeface.NORMAL);
+        setTypeface(customTypeface, typeface != null ? typeface.getStyle() : Typeface.NORMAL);
     }
 }

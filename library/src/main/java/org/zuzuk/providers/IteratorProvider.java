@@ -14,6 +14,10 @@ import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.IteratorInitializationRequest;
 import org.zuzuk.tasks.local.IteratorRequest;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Stack;
 
@@ -21,7 +25,7 @@ import java.util.Stack;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on OrmLite (database) iterator
  */
-public class IteratorProvider<TItem> extends PagingProvider<TItem> implements PagingTaskCreator<TItem, List> {
+public class IteratorProvider<TItem extends Serializable> extends PagingProvider<TItem> implements PagingTaskCreator<TItem, List> {
     private final TaskExecutor taskExecutor;
     private final Stack<Integer> waitingForRequestPages = new Stack<>();
     private final RuntimeExceptionDao<TItem, ?> dao;
@@ -145,5 +149,15 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> implements Pa
         if (iterator != null) {
             iterator.closeQuietly();
         }
+    }
+
+    @Override
+    protected void writeObject(ObjectOutputStream out) throws IOException {
+        throw new RuntimeException("This object cannot be serialized");
+    }
+
+    @Override
+    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        throw new RuntimeException("This object cannot be dematerialized");
     }
 }
