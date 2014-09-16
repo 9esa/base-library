@@ -151,13 +151,11 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
         }
     }
 
-    @Override
-    protected void writeObject(ObjectOutputStream out) throws IOException {
+    private void writeObject(ObjectOutputStream out) throws IOException {
         throw new RuntimeException("This object cannot be serialized");
     }
 
-    @Override
-    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        throw new RuntimeException("This object cannot be dematerialized");
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        throw new RuntimeException("This object cannot be deserialized");
     }
 }

@@ -4,11 +4,14 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
+import android.graphics.Matrix;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.nostra13.universalimageloader.core.assist.ViewScaleType;
 import com.nostra13.universalimageloader.core.imageaware.ImageAware;
@@ -21,6 +24,23 @@ import java.lang.reflect.Field;
  */
 public abstract class LoadingDrawable extends Drawable implements ImageAware, ImageUrlParameters {
     private Drawable drawable;
+    private Matrix drawMatrix;
+    private ImageView.ScaleType imageScaleType = ImageView.ScaleType.CENTER_CROP;
+
+    /* Returns ImageView-like scale type */
+    public ImageView.ScaleType getImageScaleType() {
+        return imageScaleType;
+    }
+
+    /* Sets ImageView-like scale type */
+    public void setImageScaleType(ImageView.ScaleType scaleType) {
+        if (scaleType.equals(this.imageScaleType)) {
+            return;
+        }
+
+        this.imageScaleType = scaleType;
+        configureBounds();
+    }
 
     /* Indicates if image is possible to loading */
     protected boolean canLoad() {
@@ -35,18 +55,24 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         }
     }
 
+    @Override
+    protected void onBoundsChange(Rect bounds) {
+        super.onBoundsChange(bounds);
+        configureBounds();
+    }
+
     private Callback getInternalCallback() {
-        if (Build.VERSION.SDK_INT >= 11)
+        if (Build.VERSION.SDK_INT >= 11) {
             return getCallback();
-        else
+        } else {
             try {
                 Field f = Drawable.class.getDeclaredField("mCallback");
                 f.setAccessible(true);
                 return (Callback) f.get(this);
             } catch (Exception ex) {
-                ex.printStackTrace();
-                return null;
+                throw new RuntimeException(ex);
             }
+        }
     }
 
     @Override
@@ -61,7 +87,12 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
 
     @Override
     public ViewScaleType getScaleType() {
-        return ViewScaleType.FIT_INSIDE;
+        switch (imageScaleType) {
+            case CENTER_CROP:
+                return ViewScaleType.CROP;
+            default:
+                return ViewScaleType.FIT_INSIDE;
+        }
     }
 
     @Override
@@ -87,6 +118,8 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         if (this.drawable != null) {
             this.drawable.setCallback(getInternalCallback());
         }
+
+        configureBounds();
         invalidateSelf();
         return true;
     }
@@ -96,26 +129,101 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         return setImageDrawable(new BitmapDrawable(Resources.getSystem(), bitmap));
     }
 
+    private void configureBounds() {
+        if (drawable == null) {
+            drawMatrix = null;
+            return;
+        }
+
+        int drawableWidth = drawable.getIntrinsicWidth();
+        int drawableHeight = drawable.getIntrinsicHeight();
+
+        int width = getWidth();
+        int height = getHeight();
+
+        boolean fits = (drawableWidth < 0 || width == drawableWidth) &&
+                (drawableHeight < 0 || height == drawableHeight);
+
+        if (fits || drawableWidth <= 0 || drawableHeight <= 0) {
+            drawMatrix = null;
+            return;
+        }
+
+        switch (imageScaleType) {
+            case FIT_XY:
+                drawMatrix = null;
+                break;
+            case CENTER: {
+                drawMatrix = new Matrix();
+                drawMatrix.setTranslate((int) ((width - drawableWidth) * 0.5f + 0.5f),
+                        (int) ((height - drawableHeight) * 0.5f + 0.5f));
+                break;
+            }
+            case CENTER_CROP: {
+                drawMatrix = new Matrix();
+
+                float scale;
+                float dx = 0, dy = 0;
+
+                if (drawableWidth * height > width * drawableHeight) {
+                    scale = (float) height / (float) drawableHeight;
+                    dx = (width - drawableWidth * scale) * 0.5f;
+                } else {
+                    scale = (float) width / (float) drawableWidth;
+                    dy = (height - drawableHeight * scale) * 0.5f;
+                }
+
+                drawMatrix.setScale(scale, scale);
+                drawMatrix.postTranslate((int) (dx + 0.5f), (int) (dy + 0.5f));
+                break;
+            }
+            case CENTER_INSIDE: {
+                drawMatrix = new Matrix();
+                float scale;
+                float dx;
+                float dy;
+
+                scale = Math.min((float) width / (float) drawableWidth,
+                        (float) height / (float) drawableHeight);
+
+                dx = (int) ((width - drawableWidth * scale) * 0.5f + 0.5f);
+                dy = (int) ((height - drawableHeight * scale) * 0.5f + 0.5f);
+
+                drawMatrix.setScale(scale, scale);
+                drawMatrix.postTranslate(dx, dy);
+                break;
+            }
+            case MATRIX:
+            case FIT_CENTER:
+            case FIT_END:
+            case FIT_START:
+                throw new IllegalStateException("Scale type not supported: " + imageScaleType);
+        }
+    }
+
     @Override
     public void draw(Canvas canvas) {
         if (drawable != null) {
-            drawable.setBounds(getBounds());
-            drawable.draw(canvas);
+            if (drawMatrix == null) {
+                drawable.setBounds(getBounds());
+                drawable.draw(canvas);
+            } else {
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicWidth());
+                int saveCount = canvas.getSaveCount();
+                canvas.save();
+                canvas.concat(drawMatrix);
+                drawable.draw(canvas);
+                canvas.restoreToCount(saveCount);
+            }
         }
     }
 
     @Override
     public void setAlpha(int alpha) {
-        if (drawable != null) {
-            drawable.setAlpha(alpha);
-        }
     }
 
     @Override
     public void setColorFilter(ColorFilter cf) {
-        if (drawable != null) {
-            drawable.setColorFilter(cf);
-        }
     }
 
     @Override

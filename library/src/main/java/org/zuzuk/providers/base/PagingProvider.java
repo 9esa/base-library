@@ -19,7 +19,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
 
     private Integer totalCount = null;
     private SparseArray<ArrayList<TItem>> pages = new SparseArray<>();
-    private final HashSet<Integer> requestingPages = new HashSet<>();
+    private HashSet<Integer> requestingPages = new HashSet<>();
 
     /* Sets total count of items */
     protected void setTotalCount(Integer totalCount) {
@@ -105,21 +105,27 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         }
     }
 
-    @Override
-    protected void writeObject(ObjectOutputStream out) throws IOException {
-        super.writeObject(out);
+    private void writeObject(ObjectOutputStream out) throws IOException {
         out.writeInt(totalCount != null ? totalCount : -1);
-        out.writeObject(pages);
+        out.writeInt(pages.size());
+        for (int i = 0; i < pages.size(); i++) {
+            out.writeInt(pages.keyAt(i));
+            out.writeObject(pages.valueAt(i));
+        }
     }
 
-    @Override
-    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        super.readObject(in);
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         totalCount = in.readInt();
         if (totalCount == -1) {
             totalCount = null;
         }
 
-        pages = (SparseArray<ArrayList<TItem>>) in.readObject();
+        pages = new SparseArray<>();
+        int pagesSize = in.readInt();
+        for (int i = 0; i < pagesSize; i++) {
+            pages.put(in.readInt(), (ArrayList<TItem>) in.readObject());
+        }
+
+        requestingPages = new HashSet<>();
     }
 }

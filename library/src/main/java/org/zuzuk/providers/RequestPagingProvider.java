@@ -18,11 +18,11 @@ import java.io.Serializable;
  * Provider that based on remote paging requests
  */
 public class RequestPagingProvider<TItem extends Serializable, TResponse> extends PagingProvider<TItem> {
-    private final RequestExecutor requestExecutor;
+    private RequestExecutor requestExecutor;
     private PagingTaskCreator<TItem, TResponse> requestCreator;
 
     /* Returns object that executing paging requests */
-    protected RequestExecutor getRequestExecutor() {
+    public RequestExecutor getRequestExecutor() {
         return requestExecutor;
     }
 
@@ -33,8 +33,8 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
      * If you need totally async loading in background then you should create Service object for
      * that purposes and make bridge between Service and UI
      */
-    protected void setRequestCreator(PagingTaskCreator<TItem, TResponse> requestCreator) {
-        this.requestCreator = requestCreator;
+    public void setRequestExecutor(RequestExecutor requestExecutor) {
+        this.requestExecutor = requestExecutor;
     }
 
     public RequestPagingProvider(RequestExecutor requestExecutor, PagingTaskCreator<TItem, TResponse> requestCreator) {
@@ -69,15 +69,11 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
         );
     }
 
-    @Override
-    protected void writeObject(ObjectOutputStream out) throws IOException {
-        super.writeObject(out);
+    private void writeObject(ObjectOutputStream out) throws IOException {
         out.writeObject(requestCreator);
     }
 
-    @Override
-    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        super.readObject(in);
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         requestCreator = (PagingTaskCreator<TItem, TResponse>) in.readObject();
     }
 }

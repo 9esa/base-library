@@ -3,11 +3,15 @@ package org.zuzuk.ui.adapters;
 import org.zuzuk.providers.base.DataSetChangedListener;
 import org.zuzuk.providers.base.ItemsProvider;
 
+import java.io.Serializable;
+
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Adapter that based on provider so all logic should be implemented inside provider
  */
-public abstract class ProviderAdapter<TItem, TProvider extends ItemsProvider<TItem>> extends BaseAdapter<TItem> implements DataSetChangedListener {
+public abstract class ProviderAdapter<TItem extends Serializable, TProvider extends ItemsProvider<TItem>>
+        extends BaseAdapter<TItem>
+        implements DataSetChangedListener {
     private TProvider provider;
 
     /* Returns current data provider */

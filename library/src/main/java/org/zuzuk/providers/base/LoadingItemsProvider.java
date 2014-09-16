@@ -61,11 +61,11 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
         initializationListener.onInitializationFailed(ex);
     }
 
-    protected void writeObject(ObjectOutputStream out) throws IOException {
+    private void writeObject(ObjectOutputStream out) throws IOException {
         out.writeBoolean(isInitialized);
     }
 
-    protected void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         isInitialized = in.readBoolean();
     }
 }

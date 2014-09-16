@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ScrollView;
 
-import org.zuzuk.tasks.base.Task;
-
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Loading fragment that based on ScrollView so it have common restore logic
@@ -30,7 +28,7 @@ public abstract class ScrollViewFragment extends LoadingFragment {
     @Override
     protected void onLoadSuccess() {
         super.onLoadSuccess();
-        getPostHandler().postDelayed(updatePositionAction, 100);
+        getPostHandler().post(updatePositionAction);
     }
 
     @Override

@@ -1,6 +1,8 @@
 package org.zuzuk.providers.base;
 
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +12,7 @@ import java.util.List;
  * Base provider that stores some items data inside
  */
 public abstract class ItemsProvider<TItem extends Serializable> implements Serializable {
-    private final List<DataSetChangedListener> dataSetChangedListeners = new ArrayList<>();
+    private List<DataSetChangedListener> dataSetChangedListeners = new ArrayList<>();
 
     /* Returns total count of items */
     public abstract int getTotalCount();
@@ -44,5 +46,12 @@ public abstract class ItemsProvider<TItem extends Serializable> implements Seria
         for (DataSetChangedListener dataSetChangedListener : dataSetChangedListeners) {
             dataSetChangedListener.onDataSetChanged();
         }
+    }
+
+    private void writeObject(ObjectOutputStream out) {
+    }
+
+    private void readObject(ObjectInputStream in) {
+        dataSetChangedListeners = new ArrayList<>();
     }
 }
