@@ -114,6 +114,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         totalCount = in.readInt();
         if (totalCount == -1) {

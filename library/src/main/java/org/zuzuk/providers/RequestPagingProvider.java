@@ -1,5 +1,7 @@
 package org.zuzuk.providers;
 
+import android.annotation.SuppressLint;
+
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
@@ -73,6 +75,7 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
         out.writeObject(requestCreator);
     }
 
+    @SuppressWarnings("unchecked")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         requestCreator = (PagingTaskCreator<TItem, TResponse>) in.readObject();
     }

@@ -17,12 +17,16 @@ import java.util.HashMap;
  * Created by Gavriil Sitnikov on 07/14.
  * Helper class to simplify OrmLite integration into application
  */
+@SuppressWarnings("unchecked")
 public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     /* Returns full column name for specific database class */
     public static String getTableColumnName(Class tableClass, String columnName) {
-        DatabaseTable dbTable = (DatabaseTable) tableClass.getAnnotation(DatabaseTable.class);
-        return dbTable.tableName() + "." + columnName;
+        Object dbTableInfo = tableClass.getAnnotation(DatabaseTable.class);
+        if (dbTableInfo instanceof DatabaseTable) {
+            return ((DatabaseTable) dbTableInfo).tableName() + "." + columnName;
+        } else
+            throw new RuntimeException(tableClass.getName() + " isn't table class");
     }
 
     private final HashMap<Class, RuntimeExceptionDao> daoMap = new HashMap<>();

@@ -1,5 +1,7 @@
 package org.zuzuk.providers;
 
+import android.annotation.SuppressLint;
+
 import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
@@ -76,6 +78,7 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
             }
 
             @Override
+            @SuppressWarnings("unchecked")
             public void onRequestSuccess(IteratorInitializationRequest.Response response) {
                 setTotalCount(response.getCount());
                 iterator = response.getIterator();
@@ -138,6 +141,7 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<TItem> parseResponse(List items) {
         return (List<TItem>) items;
     }

@@ -1,6 +1,7 @@
 package org.zuzuk.ui.activities;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -227,7 +228,8 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    @SuppressWarnings("unchecked")
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         homeFragmentsTags = (HashMap<Class, String>) savedInstanceState.getSerializable(HOME_FRAGMENTS_EXTRA);
         bottomFragmentTag = savedInstanceState.getString(BOTTOM_FRAGMENT_EXTRA);

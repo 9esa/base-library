@@ -108,13 +108,13 @@ public abstract class LoadingFragment extends BaseFragment
      * Starts request over fragment with blocking UI interactions
      * till resultController calls fireOnFailure or fireOnSuccess.
      */
-    public void startScreenRequest(TaskResultController taskResultController,
-                                   Task task,
-                                   RequestListener requestListener) {
+    public <T> void startScreenRequest(TaskResultController taskResultController,
+                                   Task<T> task,
+                                   RequestListener<T> requestListener) {
         addResultController(taskResultController);
 
         if (task instanceof RemoteRequest) {
-            executeRequest((RemoteRequest) task, requestListener);
+            executeRequest((RemoteRequest<T>) task, requestListener);
         } else {
             executeTask(task, requestListener);
         }
@@ -124,14 +124,14 @@ public abstract class LoadingFragment extends BaseFragment
      * Continues started request over fragment with blocking UI interactions
      * till resultController calls fireOnFailure or fireOnSuccess.
      */
-    public void continueScreenRequest(TaskResultController taskResultController,
-                                      Task task,
-                                      RequestListener requestListener) {
+    public <T> void continueScreenRequest(TaskResultController taskResultController,
+                                      Task<T> task,
+                                      RequestListener<T> requestListener) {
         if (!taskResultControllers.contains(taskResultController))
             throw new IllegalStateException("Sent resultController has wrong id");
 
         if (task instanceof RemoteRequest) {
-            executeRequest((RemoteRequest) task, requestListener);
+            executeRequest((RemoteRequest<T>) task, requestListener);
         } else {
             executeTask(task, requestListener);
         }

@@ -16,7 +16,7 @@ import java.util.Queue;
  * Fragment that include base logic to hold views and navigation logic
  */
 public abstract class BaseFragment extends Fragment {
-    private final HashMap<View, HashMap<Integer, View>> viewsHolder = new HashMap<>();
+    private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
 
     /* Returns post handler to executes code on UI thread */
@@ -69,22 +69,18 @@ public abstract class BaseFragment extends Fragment {
     }
 
     /* Finds view by id and stores it in cache till view destroys */
+    @SuppressWarnings("unchecked")
     protected <TView extends View> TView findViewById(int viewId) {
-        View parent = getView();
-        HashMap<Integer, View> parentViews = viewsHolder.get(parent);
-        if (parentViews == null) {
-            parentViews = new HashMap<>();
-            viewsHolder.put(parent, parentViews);
-        }
-        View result = parentViews.get(viewId);
+        View result = viewsHolder.get(viewId);
         if (result == null) {
-            result = parent.findViewById(viewId);
-            parentViews.put(viewId, result);
+            result = getView().findViewById(viewId);
+            viewsHolder.put(viewId, result);
         }
         return (TView) result;
     }
 
     /* Finds view by type */
+    @SuppressWarnings("unchecked")
     protected <T> T findViewByType(Class<T> clazz, View parentView) {
         if (clazz.isInstance(parentView)) {
             return (T) parentView;

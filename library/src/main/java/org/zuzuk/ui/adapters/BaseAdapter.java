@@ -45,6 +45,7 @@ public abstract class BaseAdapter<TItem> extends android.widget.BaseAdapter {
     protected abstract void bindView(View view, TItem item, int position);
 
     /* Finds view by id in parent layout and caches it in viewsHolder */
+    @SuppressWarnings("unchecked")
     protected <TView extends View> TView findViewById(View parent, int viewId) {
         HashMap<Integer, View> parentViews = viewsHolder.get(parent);
         if (parentViews == null) {
