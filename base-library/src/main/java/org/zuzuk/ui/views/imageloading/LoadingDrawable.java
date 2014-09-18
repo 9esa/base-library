@@ -144,7 +144,8 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         boolean fits = (drawableWidth < 0 || width == drawableWidth) &&
                 (drawableHeight < 0 || height == drawableHeight);
 
-        if (fits || drawableWidth <= 0 || drawableHeight <= 0) {
+        if (fits || drawableWidth <= 0 || drawableHeight <= 0
+                || width == 0 || height == 0) {
             drawMatrix = null;
             return;
         }
@@ -167,27 +168,24 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
 
                 if (drawableWidth * height > width * drawableHeight) {
                     scale = (float) height / (float) drawableHeight;
-                    dx = (width - drawableWidth * scale) * 0.5f;
+                    dx = (width - drawableWidth * scale) * 0.5f + 0.5f;
                 } else {
                     scale = (float) width / (float) drawableWidth;
-                    dy = (height - drawableHeight * scale) * 0.5f;
+                    dy = (height - drawableHeight * scale) * 0.5f + 0.5f;
                 }
 
                 drawMatrix.setScale(scale, scale);
-                drawMatrix.postTranslate((int) (dx + 0.5f), (int) (dy + 0.5f));
+                drawMatrix.postTranslate((int) dx, (int) dy);
                 break;
             }
             case CENTER_INSIDE: {
                 drawMatrix = new Matrix();
-                float scale;
-                float dx;
-                float dy;
 
-                scale = Math.min((float) width / (float) drawableWidth,
+                float scale = Math.min((float) width / (float) drawableWidth,
                         (float) height / (float) drawableHeight);
 
-                dx = (int) ((width - drawableWidth * scale) * 0.5f + 0.5f);
-                dy = (int) ((height - drawableHeight * scale) * 0.5f + 0.5f);
+                float dx = (int) ((width - drawableWidth * scale) * 0.5f + 0.5f);
+                float dy = (int) ((height - drawableHeight * scale) * 0.5f + 0.5f);
 
                 drawMatrix.setScale(scale, scale);
                 drawMatrix.postTranslate(dx, dy);
@@ -208,7 +206,7 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
                 drawable.setBounds(getBounds());
                 drawable.draw(canvas);
             } else {
-                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicWidth());
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
                 int saveCount = canvas.getSaveCount();
                 canvas.save();
                 canvas.concat(drawMatrix);
