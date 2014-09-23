@@ -1,7 +1,5 @@
 package org.zuzuk.providers;
 
-import android.annotation.SuppressLint;
-
 import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.stmt.QueryBuilder;
@@ -68,59 +66,61 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
     }
 
     private void updateIterator(final Integer startPosition) {
-        taskExecutor.executeTask(queryBuilder != null
-                ? new IteratorInitializationRequest<>(queryBuilder, dao, isKnownCount)
-                : new IteratorInitializationRequest<>(where, dao, isKnownCount), new RequestListener<IteratorInitializationRequest.Response>() {
+        taskExecutor.executeTaskBackground(queryBuilder != null
+                        ? new IteratorInitializationRequest<>(queryBuilder, dao, isKnownCount)
+                        : new IteratorInitializationRequest<>(where, dao, isKnownCount),
+                new RequestListener<IteratorInitializationRequest.Response>() {
 
-            @Override
-            public void onRequestFailure(SpiceException spiceException) {
-                onInitializationFailed(spiceException);
-            }
+                    @Override
+                    public void onRequestFailure(SpiceException spiceException) {
+                        onInitializationFailed(spiceException);
+                    }
 
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onRequestSuccess(IteratorInitializationRequest.Response response) {
-                setTotalCount(response.getCount());
-                iterator = response.getIterator();
-                currentPosition = 0;
-                getRequestingPages().clear();
-                getPages().clear();
-                if (startPosition != null) {
-                    IteratorProvider.super.initialize(startPosition);
-                } else {
-                    onDataSetChanged();
-                }
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public void onRequestSuccess(IteratorInitializationRequest.Response response) {
+                        setTotalCount(response.getCount());
+                        iterator = response.getIterator();
+                        currentPosition = 0;
+                        getRequestingPages().clear();
+                        getPages().clear();
+                        if (startPosition != null) {
+                            IteratorProvider.super.initialize(startPosition);
+                        } else {
+                            onDataSetChanged();
+                        }
 
-            }
-        });
+                    }
+                });
     }
 
     @Override
     protected void requestPage(final int index) {
         if (getRequestingPages().isEmpty()) {
             getRequestingPages().add(index);
-            taskExecutor.executeTask(createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE), new RequestListener<List>() {
+            taskExecutor.executeTaskBackground(createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
+                    new RequestListener<List>() {
 
-                @Override
-                public void onRequestFailure(SpiceException spiceException) {
-                    getRequestingPages().remove(index);
-                    if (!isInitialized()) {
-                        onInitializationFailed(spiceException);
-                    }
+                        @Override
+                        public void onRequestFailure(SpiceException spiceException) {
+                            getRequestingPages().remove(index);
+                            if (!isInitialized()) {
+                                onInitializationFailed(spiceException);
+                            }
 
-                }
+                        }
 
-                @Override
-                public void onRequestSuccess(List list) {
-                    onPageLoaded(index, parseResponse(list));
-                    getRequestingPages().remove(index);
-                    onDataSetChanged();
-                    if (!isInitialized()) {
-                        onInitialized();
-                    }
+                        @Override
+                        public void onRequestSuccess(List list) {
+                            onPageLoaded(index, parseResponse(list));
+                            getRequestingPages().remove(index);
+                            onDataSetChanged();
+                            if (!isInitialized()) {
+                                onInitialized();
+                            }
 
-                }
-            });
+                        }
+                    });
         } else {
             waitingForRequestPages.push(index);
         }

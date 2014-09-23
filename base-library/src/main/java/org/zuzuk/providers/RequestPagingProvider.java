@@ -1,7 +1,5 @@
 package org.zuzuk.providers;
 
-import android.annotation.SuppressLint;
-
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
@@ -47,7 +45,7 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
     @Override
     protected void requestPage(final int index) {
         getRequestingPages().add(index);
-        requestExecutor.executeRequest((RemoteRequest<TResponse>) requestCreator.createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
+        requestExecutor.executeRequestBackground((RemoteRequest<TResponse>) requestCreator.createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
                 new RequestListener<TResponse>() {
 
                     @Override

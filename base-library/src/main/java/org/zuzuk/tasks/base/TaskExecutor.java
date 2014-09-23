@@ -10,9 +10,17 @@ import org.zuzuk.tasks.local.LocalTask;
  */
 public interface TaskExecutor {
 
-    /* Executes task */
-    public <T> void executeTask(Task<T> task, RequestListener<T> requestListener);
+    /* Executes task in foreground */
+    public <T> void executeTask(Task<T> task,
+                                RequestListener<T> requestListener);
 
-    /* Executes local task */
+    /* Executes local task in foreground */
     public void executeTask(LocalTask task);
+
+    /* Executes task in background */
+    public <T> void executeTaskBackground(Task<T> task,
+                                RequestListener<T> requestListener);
+
+    /* Executes local task in background */
+    public void executeTaskBackground(LocalTask task);
 }

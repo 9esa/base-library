@@ -14,8 +14,7 @@ import org.zuzuk.tasks.remote.base.RequestWrapper;
 public class RequestCacheWrapper<T> extends RequestWrapper<T> {
     private final CachedSpiceRequest<T> spiceRequest;
 
-    public RequestCacheWrapper(RemoteRequest<T> request, RequestListener<T> requestListener) {
-        super(requestListener);
+    public RequestCacheWrapper(RemoteRequest<T> request) {
         spiceRequest = prepareRequest(request);
     }
 

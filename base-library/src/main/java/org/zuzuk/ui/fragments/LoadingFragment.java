@@ -9,8 +9,8 @@ import android.view.ViewGroup;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.R;
+import org.zuzuk.tasks.AggregationTask;
 import org.zuzuk.tasks.TaskExecutorHelper;
-import org.zuzuk.tasks.TaskResultController;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
@@ -19,33 +19,29 @@ import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Fragment that include base logic of loading, remote requesting and refreshing data.
  * Also it is responsible to show current state of requesting (loading/need refresh/loaded)
  */
 public abstract class LoadingFragment extends BaseFragment
-        implements TaskExecutor, RequestExecutor {
-    private final List<TaskResultController> taskResultControllers = new ArrayList<>();
+        implements TaskExecutor, RequestExecutor, AggregationTask {
     private final TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
 
-    /**
-     * Returns is fragment needs something to load or not.
-     * If true then fragment will call loadFragment() method when fragment is resumed
-     */
-    protected boolean isLoadingNeeded() {
+    @Override
+    public boolean isLoadingNeeded() {
         return false;
     }
 
-    /**
-     * Returns is fragment have something to show.
-     * If true then fragment will show view returned by createContentView() method
-     */
-    protected boolean isContentLoaded() {
+    @Override
+    public boolean isLoaded() {
         return true;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        taskExecutorHelper.addLoadingTask(this);
     }
 
     /* Returns content view. It will blocks on loading and screen requests */
@@ -68,139 +64,55 @@ public abstract class LoadingFragment extends BaseFragment
 
         findViewById(R.id.refreshBtn).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                refresh();
+                taskExecutorHelper.reload(false);
             }
         });
 
-        findViewById(R.id.progressBar).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // need to block content view from user touches
-            }
-        });
+        taskExecutorHelper.onCreate(view.getContext());
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        taskExecutorHelper.onCreate(getActivity());
+    public void load(boolean isInBackground) {
+        loadFragment();
     }
 
-    private void addResultController(final TaskResultController taskResultController) {
-        taskResultControllers.add(taskResultController);
-
-        if (taskResultControllers.size() == 1) {
-            updateProgressViewState();
-        }
-
-        taskResultController.setOnCompletionListener(new TaskResultController.OnCompletionListener() {
-            @Override
-            public void onCompleted() {
-                taskResultControllers.remove(taskResultController);
-
-                if (taskResultControllers.isEmpty()) {
-                    updateProgressViewState();
-                }
-            }
-        });
-    }
-
-    /**
-     * Starts request over fragment with blocking UI interactions
-     * till resultController calls fireOnFailure or fireOnSuccess.
-     */
-    public <T> void startScreenRequest(TaskResultController taskResultController,
-                                   Task<T> task,
-                                   RequestListener<T> requestListener) {
-        addResultController(taskResultController);
-
-        if (task instanceof RemoteRequest) {
-            executeRequest((RemoteRequest<T>) task, requestListener);
-        } else {
-            executeTask(task, requestListener);
+    @Override
+    public void onLoadingStarted(boolean isInBackground) {
+        if (!isInBackground) {
+            findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         }
     }
 
-    /**
-     * Continues started request over fragment with blocking UI interactions
-     * till resultController calls fireOnFailure or fireOnSuccess.
-     */
-    public <T> void continueScreenRequest(TaskResultController taskResultController,
-                                      Task<T> task,
-                                      RequestListener<T> requestListener) {
-        if (!taskResultControllers.contains(taskResultController))
-            throw new IllegalStateException("Sent resultController has wrong id");
+    @Override
+    public void onLoaded() {
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        findViewById(R.id.contentContainer).setVisibility(View.VISIBLE);
+        findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+    }
 
-        if (task instanceof RemoteRequest) {
-            executeRequest((RemoteRequest<T>) task, requestListener);
-        } else {
-            executeTask(task, requestListener);
+    @Override
+    public void onFailed(Exception ex) {
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        if (!isLoaded()) {
+            findViewById(R.id.contentContainer).setVisibility(View.INVISIBLE);
+            findViewById(R.id.refreshBtn).setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
         taskExecutorHelper.onResume();
-
-        updateProgressViewState();
-        hideRefreshView();
-        if (!isContentLoaded() || isLoadingNeeded()) {
-            refresh();
-        } else {
-            onLoadSuccess();
-            updateContentViewState();
-        }
     }
 
     /* Logic of loading fragment's content */
-    protected void loadFragment(TaskResultController taskResultController) {
-        hideRefreshView();
-        updateContentViewState();
-    }
-
-    /* Refreshing fragment's content by calling loadFragment() */
-    protected void refresh() {
-        TaskResultController taskResultController = new TaskResultController() {
-            @Override
-            public void fireOnSuccess() {
-                super.fireOnSuccess();
-                onLoadSuccess();
-                updateContentViewState();
-            }
-
-            @Override
-            public void fireOnFailure(Exception ex) {
-                super.fireOnFailure(ex);
-                onLoadFailure(ex);
-                updateContentViewState();
-                if (!isContentLoaded()) {
-                    showRefreshView();
-                }
-            }
-        };
-        addResultController(taskResultController);
-
-        loadFragment(taskResultController);
-    }
-
-    /* Raises after success loading of fragment */
-    protected void onLoadSuccess() {
-    }
-
-    /* Raises after failed loading of fragment */
-    protected void onLoadFailure(Exception ex) {
-    }
+    protected abstract void loadFragment();
 
     @Override
     public void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();
-
-        for (TaskResultController taskResultController : taskResultControllers) {
-            taskResultController.setOnCompletionListener(null);
-        }
-        taskResultControllers.clear();
     }
 
     @Override
@@ -210,8 +122,23 @@ public abstract class LoadingFragment extends BaseFragment
     }
 
     @Override
-    public void executeTask(LocalTask task) {
-        taskExecutorHelper.executeTask(task);
+    public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequest(new RequestCacheWrapper<>(request), requestListener);
+    }
+
+    @Override
+    public <T> void executeRequest(RequestWrapper<T> requestWrapper, RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequest(requestWrapper, requestListener);
+    }
+
+    @Override
+    public <T> void executeRequestBackground(RemoteRequest<T> request, RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequestBackground(new RequestCacheWrapper<>(request), requestListener);
+    }
+
+    @Override
+    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper, RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequestBackground(requestWrapper, requestListener);
     }
 
     @Override
@@ -220,37 +147,17 @@ public abstract class LoadingFragment extends BaseFragment
     }
 
     @Override
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        taskExecutorHelper.executeRequest(requestWrapper);
+    public void executeTask(LocalTask task) {
+        taskExecutorHelper.executeTask(task);
     }
 
-    /* Executing request via RoboSpice SpiceManager with cache provided by RequestCacheWrapper */
     @Override
-    public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener) {
-        executeRequest(new RequestCacheWrapper<>(request, requestListener));
+    public <T> void executeTaskBackground(Task<T> task, RequestListener<T> requestListener) {
+        taskExecutorHelper.executeTaskBackground(task, requestListener);
     }
 
-    private void updateContentViewState() {
-        if (isContentLoaded()) {
-            findViewById(R.id.contentContainer).setVisibility(View.VISIBLE);
-        } else {
-            findViewById(R.id.contentContainer).setVisibility(View.INVISIBLE);
-        }
-    }
-
-    private void updateProgressViewState() {
-        if (taskResultControllers.isEmpty()) {
-            findViewById(R.id.progressBar).setVisibility(View.GONE);
-        } else {
-            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void showRefreshView() {
-        findViewById(R.id.refreshBtn).setVisibility(View.VISIBLE);
-    }
-
-    private void hideRefreshView() {
-        findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+    @Override
+    public void executeTaskBackground(LocalTask task) {
+        taskExecutorHelper.executeTaskBackground(task);
     }
 }

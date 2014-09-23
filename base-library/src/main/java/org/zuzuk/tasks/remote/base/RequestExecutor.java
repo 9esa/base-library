@@ -8,9 +8,18 @@ import com.octo.android.robospice.request.listener.RequestListener;
  */
 public interface RequestExecutor {
 
-    /* Executes request */
+    /* Executes request in foreground */
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener);
 
-    /* Executes wrapped request */
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper);
+    /* Executes wrapped request in foreground */
+    public <T> void executeRequest(RequestWrapper<T> requestWrapper,
+                                   RequestListener<T> requestListener);
+
+    /* Executes request in background */
+    public <T> void executeRequestBackground(RemoteRequest<T> request,
+                                   RequestListener<T> requestListener);
+
+    /* Executes wrapped request in background */
+    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper,
+                                   RequestListener<T> requestListener);
 }

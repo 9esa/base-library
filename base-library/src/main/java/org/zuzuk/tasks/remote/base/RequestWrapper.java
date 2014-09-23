@@ -9,9 +9,9 @@ import com.octo.android.robospice.request.listener.RequestListener;
  * Wrapper around request
  */
 public abstract class RequestWrapper<T> {
-    private final RequestListener<T> requestListener;
+    private RequestListener<T> requestListener;
 
-    public RequestWrapper(RequestListener<T> requestListener) {
+    public void setRequestListener(RequestListener<T> requestListener) {
         this.requestListener = requestListener;
     }
 

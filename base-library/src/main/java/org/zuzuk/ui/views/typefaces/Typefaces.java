@@ -17,14 +17,15 @@ public class Typefaces {
     private static boolean isInitialized = false;
     private static String defaultTypefaceName;
 
-    public static void initialize(Context context, String defaultTypefaceName) {
-        try {
-            findFontsInAssetFolder("", context.getAssets());
-            isInitialized = true;
-            Typefaces.defaultTypefaceName = defaultTypefaceName;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    /* Initialize typefaces directly by their asset paths */
+    public static void initialize(Context context, String defaultTypefaceName, String[] paths) {
+        AssetManager assetManager = context.getAssets();
+        for (String path : paths) {
+            String name = path.substring(path.lastIndexOf('/') + 1, path.length() - 4);
+            typefaces.put(name, Typeface.createFromAsset(assetManager, path));
         }
+        isInitialized = true;
+        Typefaces.defaultTypefaceName = defaultTypefaceName;
     }
 
     public static String getDefaultTypefaceName() {
@@ -39,19 +40,5 @@ public class Typefaces {
             return typefaces.get(name.substring(0, name.length() - 4));
         }
         return typefaces.get(name);
-    }
-
-    private static void findFontsInAssetFolder(String path, AssetManager assetManager) throws IOException {
-        String[] list = assetManager.list(path);
-        if (list.length > 0) {
-            for (String file : list) {
-                findFontsInAssetFolder(path + "/" + file, assetManager);
-            }
-        } else {
-            if (path.endsWith(".otf") || path.endsWith(".ttf")) {
-                String name = path.substring(path.lastIndexOf('/') + 1, path.length() - 4);
-                typefaces.put(name, Typeface.createFromAsset(assetManager, path.substring(1)));
-            }
-        }
     }
 }

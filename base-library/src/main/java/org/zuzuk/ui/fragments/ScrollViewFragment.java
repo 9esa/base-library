@@ -26,8 +26,8 @@ public abstract class ScrollViewFragment extends LoadingFragment {
     }
 
     @Override
-    protected void onLoadSuccess() {
-        super.onLoadSuccess();
+    public void onLoaded() {
+        super.onLoaded();
         getPostHandler().post(updatePositionAction);
     }
 

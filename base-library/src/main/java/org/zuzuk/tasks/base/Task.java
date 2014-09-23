@@ -10,17 +10,6 @@ import com.octo.android.robospice.request.listener.RequestListener;
  */
 public abstract class Task<T> extends SpiceRequest<T> {
 
-    /* Listener that's doing nothing on task result */
-    public static <T> RequestListener<T> createMockListener() {
-        return new RequestListener<T>() {
-            public void onRequestFailure(SpiceException spiceException) {
-            }
-
-            public void onRequestSuccess(T response) {
-            }
-        };
-    }
-
     public Task(Class<T> clazz) {
         super(clazz);
     }

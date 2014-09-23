@@ -133,8 +133,8 @@ public abstract class AbsListViewFragment extends LoadingFragment {
     }
 
     @Override
-    protected void onLoadSuccess() {
-        super.onLoadSuccess();
+    public void onLoaded() {
+        super.onLoaded();
         if (!isListViewStateValid) {
             getPostHandler().post(updatePositionAction);
         }
