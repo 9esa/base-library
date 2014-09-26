@@ -37,6 +37,18 @@ public abstract class BaseFragment extends Fragment {
         return false;
     }
 
+    /* Returns title of fragment. Class name by default */
+    public CharSequence getTitle() {
+        return ((Object) this).getClass().getSimpleName();
+    }
+
+    /* Configuring action bar. using title by default */
+    public void configureActionBar() {
+        getBaseActivity().getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getBaseActivity().getSupportActionBar().setDisplayShowCustomEnabled(false);
+        getBaseActivity().getSupportActionBar().setTitle(getTitle());
+    }
+
     @Override
     public void onStart() {
         super.onStart();

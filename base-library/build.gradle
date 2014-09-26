@@ -14,16 +14,20 @@ repositories {
     jcenter()
 }
 
+ext.libArtifactId = 'base-library'
+ext.libPackageName = 'org.zuzuk'
+ext.libVersion = '1.0.6'
+
 android {
     compileSdkVersion 20
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "org.zuzuk"
+        applicationId libPackageName
         minSdkVersion 7
         targetSdkVersion 20
         versionCode 2
-        versionName "1.0.1"
+        versionName libVersion
     }
 
     compileOptions {
@@ -43,6 +47,19 @@ android {
             options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         }
     }
+}
+
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from 'src'
+}
+
+configurations{
+    sourceArchives
+}
+
+artifacts{
+    sourceArchives sourceJar
 }
 
 dependencies {
@@ -70,15 +87,18 @@ dependencies {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library"){
+
+            configuration = configurations.sourceArchives
+
+            repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library") {
                 authentication(
                         userName: bintrayUserName,
                         password: bintrayApiKey
                 )
             }
-            pom.groupId = 'org.zuzuk'
-            pom.artifactId = 'base-library'
-            pom.version = '1.0'
+            pom.groupId = libPackageName
+            pom.artifactId = libArtifactId
+            pom.version = libVersion
         }
     }
 }
