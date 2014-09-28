@@ -1,6 +1,7 @@
 package org.zuzuk.tasks.remote.base;
 
 import com.octo.android.robospice.SpiceManager;
+import com.octo.android.robospice.request.CachedSpiceRequest;
 import com.octo.android.robospice.request.SpiceRequest;
 import com.octo.android.robospice.request.listener.RequestListener;
 
@@ -16,7 +17,7 @@ public abstract class RequestWrapper<T> {
     }
 
     /* Get prepared request before executing */
-    protected abstract SpiceRequest<T> getPreparedRequest();
+    protected abstract CachedSpiceRequest<T> getPreparedRequest();
 
     /* Executes cached request */
     public void execute(SpiceManager spiceManager) {

@@ -2,6 +2,7 @@ package org.zuzuk.ui.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,9 +50,15 @@ public abstract class LoadingFragment extends BaseFragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_request, container, false);
+        int loadingFragmentLayoutId = R.layout.fragment_loading;
+        TypedValue a = new TypedValue();
+        if (inflater.getContext().getTheme().resolveAttribute(R.attr.loadingFragmentLayout, a, true)) {
+            loadingFragmentLayoutId = a.resourceId;
+        }
 
-        ViewGroup contentContainerView = (ViewGroup) view.findViewById(R.id.contentContainer);
+        View view = inflater.inflate(loadingFragmentLayoutId, container, false);
+
+        ViewGroup contentContainerView = (ViewGroup) view.findViewById(R.id.loadingContentContainer);
         View contentView = createContentView(inflater, contentContainerView, savedInstanceState);
         contentContainerView.addView(contentView);
 
@@ -62,7 +69,7 @@ public abstract class LoadingFragment extends BaseFragment
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        findViewById(R.id.refreshBtn).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.loadingRefreshButton).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 taskExecutorHelper.reload(false);
             }
@@ -79,30 +86,30 @@ public abstract class LoadingFragment extends BaseFragment
     @Override
     public void onLoadingStarted(boolean isInBackground) {
         if (!isInBackground) {
-            findViewById(R.id.refreshBtn).setVisibility(View.GONE);
-            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-            findViewById(R.id.contentContainer).setVisibility(isLoaded() ? View.VISIBLE : View.INVISIBLE);
+            findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
+            findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingContentContainer).setVisibility(isLoaded() ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
     @Override
     public void onLoaded() {
-        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
         if (isLoaded()) {
-            findViewById(R.id.contentContainer).setVisibility(View.VISIBLE);
-            findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+            findViewById(R.id.loadingContentContainer).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
         } else {
-            findViewById(R.id.contentContainer).setVisibility(View.INVISIBLE);
-            findViewById(R.id.refreshBtn).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
+            findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void onFailed(Exception ex) {
-        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
         if (!isLoaded()) {
-            findViewById(R.id.contentContainer).setVisibility(View.INVISIBLE);
-            findViewById(R.id.refreshBtn).setVisibility(View.VISIBLE);
+            findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
+            findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
         }
     }
 

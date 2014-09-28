@@ -19,7 +19,7 @@ public class RequestCacheWrapper<T> extends RequestWrapper<T> {
     }
 
     @Override
-    protected SpiceRequest<T> getPreparedRequest() {
+    protected CachedSpiceRequest<T> getPreparedRequest() {
         return spiceRequest;
     }
 
