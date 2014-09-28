@@ -6,6 +6,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ObjectParser;
+import com.octo.android.robospice.persistence.DurationInMillis;
 
 import org.zuzuk.utils.Ln;
 import org.zuzuk.utils.Utils;

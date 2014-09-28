@@ -81,14 +81,20 @@ public abstract class LoadingFragment extends BaseFragment
         if (!isInBackground) {
             findViewById(R.id.refreshBtn).setVisibility(View.GONE);
             findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+            findViewById(R.id.contentContainer).setVisibility(isLoaded() ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
     @Override
     public void onLoaded() {
         findViewById(R.id.progressBar).setVisibility(View.GONE);
-        findViewById(R.id.contentContainer).setVisibility(View.VISIBLE);
-        findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+        if (isLoaded()) {
+            findViewById(R.id.contentContainer).setVisibility(View.VISIBLE);
+            findViewById(R.id.refreshBtn).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.contentContainer).setVisibility(View.INVISIBLE);
+            findViewById(R.id.refreshBtn).setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

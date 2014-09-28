@@ -27,6 +27,7 @@ public class RequestCacheWrapper<T> extends RequestWrapper<T> {
         CachedSpiceRequest<T> cachedSpiceRequest = new CachedSpiceRequest<>(request, request.getCacheKey(), request.getCacheExpiryDuration());
         cachedSpiceRequest.setOffline(request.isOffline());
         cachedSpiceRequest.setAggregatable(true);
+        cachedSpiceRequest.setAcceptingDirtyCache(request.isAcceptDirtyCache());
         return cachedSpiceRequest;
     }
 }
