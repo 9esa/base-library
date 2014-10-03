@@ -134,6 +134,11 @@ public abstract class LoadingFragment extends BaseFragment
         taskExecutorHelper.onDestroy();
     }
 
+    /* Reloads fragment */
+    public void reload(boolean isInBackground){
+        taskExecutorHelper.reload(isInBackground);
+    }
+
     @Override
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener) {
         taskExecutorHelper.executeRequest(new RequestCacheWrapper<>(request), requestListener);

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="TypefacedView">
-        <attr name="customTypeface" format="string" />
-    </declare-styleable>
 
     <declare-styleable name="BaseLibraryAttributes">
         <attr name="loadingFragmentLayout" format="reference"/>
     </declare-styleable>
+
+    <declare-styleable name="TypefacedView">
+        <attr name="customTypeface" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="AspectRatioFrameLayout">
+        <attr name="aspectRatio" format="float" />
+        <attr name="wrapToContent" format="boolean" />
+    </declare-styleable>
+
 </resources>
