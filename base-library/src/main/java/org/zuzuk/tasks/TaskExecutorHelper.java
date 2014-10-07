@@ -27,16 +27,16 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
     private Context context;
-    private final HashMap<AggregationTask, List<RequestListener>> aggregationTasks = new HashMap<>();
-    private final HashSet<AggregationTask> temporaryAggregationTasks = new HashSet<>();
-    private AggregationTask currentAggregationTask;
+    private final HashMap<AggregationTaskController, List<RequestListener>> tasksControllers = new HashMap<>();
+    private final HashSet<AggregationTaskController> temporaryTasksControllers = new HashSet<>();
+    private AggregationTaskController currentTaskController;
     private boolean isCurrentTaskTemporary;
 
-    private void setCurrentAggregationTask(AggregationTask currentAggregationTask) {
-        if (this.currentAggregationTask != null)
+    private void setCurrentTaskController(AggregationTaskController currentTaskController) {
+        if (this.currentTaskController != null)
             throw new RuntimeException("Current aggregation task have set already");
 
-        this.currentAggregationTask = currentAggregationTask;
+        this.currentTaskController = currentTaskController;
     }
 
     /* Creates task for someone who using helper not only as loader but as task executor */
@@ -60,7 +60,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
      * if loading is not needed. Add all tasks in onCreate
      */
     public void addLoadingTask(AggregationTask loadingTask) {
-        aggregationTasks.put(loadingTask, new ArrayList<RequestListener>());
+        tasksControllers.put(new AggregationTaskController(loadingTask), new ArrayList<RequestListener>());
     }
 
     /* Associated lifecycle method */
@@ -73,17 +73,17 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     /* Executes all tasks that needed to be reloaded */
     public void reload(boolean isInBackground) {
-        for (AggregationTask aggregationTask : aggregationTasks.keySet()) {
-            if (!aggregationTask.isLoaded() || aggregationTask.isLoadingNeeded()) {
-                setCurrentAggregationTask(aggregationTask);
-                aggregationTask.load(false);
-                aggregationTask.onLoadingStarted(isInBackground);
+        for (AggregationTaskController taskController : tasksControllers.keySet()) {
+            if (!taskController.task.isLoaded() || taskController.task.isLoadingNeeded()) {
+                setCurrentTaskController(taskController);
+                taskController.task.load(false);
+                taskController.task.onLoadingStarted(isInBackground);
             } else {
-                aggregationTask.onLoaded();
+                taskController.task.onLoaded();
             }
         }
 
-        currentAggregationTask = null;
+        currentTaskController = null;
     }
 
     @Override
@@ -98,7 +98,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public <T> void executeRequestBackground(RemoteRequest<T> request,
                                              RequestListener<T> requestListener) {
         checkManagersState(request);
-        if(currentAggregationTask != null) {
+        if (currentTaskController != null) {
             remoteSpiceManager.execute(request, wrapToAggregationTask(requestListener));
         } else {
             remoteSpiceManager.execute(request, requestListener);
@@ -117,7 +117,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper,
                                              RequestListener<T> requestListener) {
         checkManagersState(requestWrapper);
-        if(currentAggregationTask != null) {
+        if (currentTaskController != null) {
             requestWrapper.setRequestListener(wrapToAggregationTask(requestListener));
         } else {
             requestWrapper.setRequestListener(requestListener);
@@ -147,7 +147,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public <T> void executeTaskBackground(Task<T> task,
                                           RequestListener<T> requestListener) {
         checkManagersState(task);
-        if(currentAggregationTask != null) {
+        if (currentTaskController != null) {
             localSpiceManager.execute(task, wrapToAggregationTask(requestListener));
         } else {
             localSpiceManager.execute(task, requestListener);
@@ -173,77 +173,103 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     }
 
     private void beforeExecution() {
-        isCurrentTaskTemporary = currentAggregationTask == null;
+        isCurrentTaskTemporary = currentTaskController == null;
         if (isCurrentTaskTemporary) {
-            currentAggregationTask = createTemporaryTask();
-            aggregationTasks.put(currentAggregationTask, new ArrayList<RequestListener>());
-            temporaryAggregationTasks.add(currentAggregationTask);
-            currentAggregationTask.onLoadingStarted(false);
+            currentTaskController = new AggregationTaskController(createTemporaryTask());
+            tasksControllers.put(currentTaskController, new ArrayList<RequestListener>());
+            temporaryTasksControllers.add(currentTaskController);
+            currentTaskController.task.onLoadingStarted(false);
         }
     }
 
     private void afterExecution() {
         if (isCurrentTaskTemporary) {
-            currentAggregationTask = null;
+            currentTaskController = null;
         }
     }
 
     private <T> AggregationTaskRequestListener<T> wrapToAggregationTask(RequestListener<T> requestListener) {
         AggregationTaskRequestListener<T> result = new AggregationTaskRequestListener<>(requestListener);
-        aggregationTasks.get(currentAggregationTask).add(result);
+        tasksControllers.get(currentTaskController).add(result);
         return result;
     }
 
+    private class AggregationTaskController {
+        private final AggregationTask task;
+        private final List<Exception> fails = new ArrayList<>();
+
+        private void addFail(Exception ex) {
+            fails.add(ex);
+        }
+
+        private void finishTask() {
+            if (task.isLoaded()) {
+                task.onLoaded();
+            } else {
+                task.onFailed(fails.isEmpty() ? null : fails.get(fails.size() - 1));
+            }
+        }
+
+        private AggregationTaskController(AggregationTask task) {
+            this.task = task;
+        }
+    }
+
     private class AggregationTaskRequestListener<T> implements RequestListener<T> {
-        private final AggregationTask parentTask;
         private final RequestListener<T> requestListener;
+        private final AggregationTaskController parentTaskController;
 
         private AggregationTaskRequestListener(RequestListener<T> requestListener) {
-            this.parentTask = currentAggregationTask;
+            this.parentTaskController = currentTaskController;
             this.requestListener = requestListener;
         }
 
         @Override
         public void onRequestSuccess(T response) {
-            setCurrentAggregationTask(parentTask);
-            isCurrentTaskTemporary = temporaryAggregationTasks.contains(parentTask);
+            setCurrentTaskController(parentTaskController);
+            isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
 
             if (requestListener != null) {
                 requestListener.onRequestSuccess(response);
             }
 
-            List<RequestListener> listeners = aggregationTasks.get(parentTask);
+            List<RequestListener> listeners = tasksControllers.get(parentTaskController);
             listeners.remove(this);
+
             if (listeners.isEmpty()) {
-                parentTask.onLoaded();
+                parentTaskController.finishTask();
                 if (isCurrentTaskTemporary) {
-                    temporaryAggregationTasks.remove(parentTask);
-                    aggregationTasks.remove(parentTask);
+                    temporaryTasksControllers.remove(parentTaskController);
+                    tasksControllers.remove(parentTaskController);
                 }
             }
-            currentAggregationTask = null;
+
+            currentTaskController = null;
             isCurrentTaskTemporary = false;
         }
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
-            setCurrentAggregationTask(parentTask);
-            isCurrentTaskTemporary = temporaryAggregationTasks.contains(parentTask);
+            setCurrentTaskController(parentTaskController);
+            isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
 
             if (requestListener != null) {
                 requestListener.onRequestFailure(spiceException);
             }
 
-            List<RequestListener> listeners = aggregationTasks.get(parentTask);
+            List<RequestListener> listeners = tasksControllers.get(parentTaskController);
             listeners.remove(this);
+            parentTaskController.addFail(spiceException);
+
             if (listeners.isEmpty()) {
-                parentTask.onFailed(spiceException);
+                parentTaskController.finishTask();
                 if (isCurrentTaskTemporary) {
-                    temporaryAggregationTasks.remove(parentTask);
-                    aggregationTasks.remove(parentTask);
+                    temporaryTasksControllers.remove(parentTaskController);
+                    tasksControllers.remove(parentTaskController);
                 }
             }
-            currentAggregationTask = null;
+
+            currentTaskController = null;
             isCurrentTaskTemporary = false;
         }
     }
