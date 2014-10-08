@@ -19,6 +19,11 @@ public abstract class ScrollViewFragment extends LoadingFragment {
         }
     };
 
+    /* Clears cached position of ScrollView */
+    protected void clearPosition() {
+        scrollY = 0;
+    }
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
