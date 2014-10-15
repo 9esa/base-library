@@ -11,6 +11,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import org.zuzuk.ui.fragments.BaseFragment;
+import org.zuzuk.ui.fragments.OnFragmentChangedListener;
+import org.zuzuk.ui.fragments.StaticFragment;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -19,11 +21,12 @@ import java.util.UUID;
  * Created by Gavriil Sitnikov on 07/14.
  * Activity that include basic fragment navigation logic
  */
-public abstract class BaseActivity extends ActionBarActivity implements FragmentManager.OnBackStackChangedListener {
-    private final static String HOME_FRAGMENTS_EXTRA = "HOME_FRAGMENTS_EXTRA";
+public abstract class BaseActivity extends ActionBarActivity
+        implements FragmentManager.OnBackStackChangedListener, OnFragmentChangedListener {
+    private final static String STATIC_FRAGMENTS_EXTRA = "STATIC_FRAGMENTS_EXTRA";
     private final static String BOTTOM_FRAGMENT_EXTRA = "BOTTOM_FRAGMENT_EXTRA";
 
-    private HashMap<Class, String> homeFragmentsTags = new HashMap<>();
+    private HashMap<Class, String> staticFragmentsTags = new HashMap<>();
     private String bottomFragmentTag;
     private BaseFragment currentFragment;
 
@@ -43,7 +46,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
         getSupportFragmentManager().addOnBackStackChangedListener(this);
     }
 
-    /* Raises when current navigation-node fragment changes */
+    @Override
     public void onFragmentChanged(BaseFragment fragment) {
         currentFragment = fragment;
     }
@@ -53,20 +56,22 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
     public void onBackStackChanged() {
     }
 
+    public void setStaticFragment(Class fragmentClass) {
+        setStaticFragment(fragmentClass, null);
+    }
+
     /**
-     * Setting fragment of special class as single on top and one of home fragments.
-     * Home fragments are fragments that is stored in background after loading so they can
+     * Setting fragment of special class as single on top and one of static fragments.
+     * Static fragments are fragments that is stored in background after loading so they can
      * restores faster with last state.
-     * There couldn't be any args because this fragment couldn't replaces by any other fragment
-     * of same class
      */
-    public void setHomeFragment(Class fragmentClass) {
+    public void setStaticFragment(Class fragmentClass, Bundle args) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        String fragmentTag = homeFragmentsTags.get(fragmentClass);
+        String fragmentTag = staticFragmentsTags.get(fragmentClass);
         if (fragmentTag == null) {
             fragmentTag = UUID.randomUUID().toString();
-            homeFragmentsTags.put(fragmentClass, fragmentTag);
+            staticFragmentsTags.put(fragmentClass, fragmentTag);
         }
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
@@ -89,6 +94,13 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
             transaction.attach(fragment);
         }
 
+        if (!(fragment instanceof StaticFragment))
+            throw new IllegalStateException(fragmentClass.getName() + " should implement StaticFragment interface");
+
+        if (args != null) {
+            ((StaticFragment) fragment).applyArguments(args);
+        }
+
         transaction.commit();
 
         bottomFragmentTag = fragmentTag;
@@ -101,7 +113,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
 
     /* Setting fragment of special class as single on top with args */
     public void setFragment(Class fragmentClass, Bundle args) {
-        if (homeFragmentsTags.containsKey(fragmentClass))
+        if (staticFragmentsTags.containsKey(fragmentClass))
             throw new IllegalStateException("Fragment " + fragmentClass + " should be set as home fragment as it already is");
 
         String fragmentTag = UUID.randomUUID().toString();
@@ -124,7 +136,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
     private void removeBottomFragment(FragmentTransaction transaction) {
         if (bottomFragmentTag != null) {
             Fragment bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
-            for (String tag : homeFragmentsTags.values()) {
+            for (String tag : staticFragmentsTags.values()) {
                 if (tag.equals(bottomFragmentTag)) {
                     transaction.detach(bottomFragment);
                     return;
@@ -141,7 +153,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
 
     /* Pushing fragment of special class with args on top of fragments stack */
     public void pushFragment(Class fragmentClass, Bundle args) {
-        if (homeFragmentsTags.containsKey(fragmentClass))
+        if (staticFragmentsTags.containsKey(fragmentClass))
             throw new IllegalStateException("Fragment " + fragmentClass + " shouldn't be push as it is home fragment");
 
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -223,7 +235,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable(HOME_FRAGMENTS_EXTRA, homeFragmentsTags);
+        outState.putSerializable(STATIC_FRAGMENTS_EXTRA, staticFragmentsTags);
         outState.putString(BOTTOM_FRAGMENT_EXTRA, bottomFragmentTag);
     }
 
@@ -231,7 +243,7 @@ public abstract class BaseActivity extends ActionBarActivity implements Fragment
     @SuppressWarnings("unchecked")
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        homeFragmentsTags = (HashMap<Class, String>) savedInstanceState.getSerializable(HOME_FRAGMENTS_EXTRA);
+        staticFragmentsTags = (HashMap<Class, String>) savedInstanceState.getSerializable(STATIC_FRAGMENTS_EXTRA);
         bottomFragmentTag = savedInstanceState.getString(BOTTOM_FRAGMENT_EXTRA);
     }
 }

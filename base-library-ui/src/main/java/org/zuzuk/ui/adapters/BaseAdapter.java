@@ -38,7 +38,10 @@ public abstract class BaseAdapter<TItem> extends android.widget.BaseAdapter {
         return view;
     }
 
-    /* Creates view for item */
+    /**
+     * Create view for item here. If view is using in several adapters then create special
+     * class that extends view
+     */
     protected abstract View newView(int position, LayoutInflater inflater, ViewGroup parent);
 
     /* Fills view with item data */

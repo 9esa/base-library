@@ -4,12 +4,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 
-import org.apache.commons.io.IOUtils;
-import org.zuzuk.utils.Ln;
-
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.

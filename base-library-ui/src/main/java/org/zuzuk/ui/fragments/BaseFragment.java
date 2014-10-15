@@ -34,7 +34,7 @@ public abstract class BaseFragment extends Fragment {
      * If fragment is nested then it won't be as current fragment in BaseActivity
      */
     protected boolean isNestedFragment() {
-        return false;
+        return getParentFragment() != null;
     }
 
     /* Returns title of fragment. Class name by default */
@@ -55,6 +55,11 @@ public abstract class BaseFragment extends Fragment {
 
         if (!isNestedFragment()) {
             getBaseActivity().onFragmentChanged(this);
+        } else {
+            Fragment parentFragment = getParentFragment();
+            if (parentFragment != null && parentFragment instanceof OnFragmentChangedListener) {
+                ((OnFragmentChangedListener) parentFragment).onFragmentChanged(this);
+            }
         }
     }
 

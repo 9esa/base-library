@@ -2,54 +2,103 @@ package org.zuzuk.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
 
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-
-import org.zuzuk.utils.Ln;
+import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Class that represents object setting
  */
-public class ObjectSetting<T> extends Setting<T> {
-    private final static JsonFactory DefaultJsonFactory = new JacksonFactory();
-
+public class ObjectSetting<T extends Serializable> extends Setting<T> {
     private final Class<T> clazz;
-    private final ValueChecker<T> valueChecker;
+    private final T defaultValue;
+    private final ValueValidator<T> valueValidator;
 
     public ObjectSetting(Class<T> clazz, String name) {
-        this(clazz, name, null);
-    }
-
-    public ObjectSetting(Class<T> clazz, String name, ValueChecker<T> valueChecker) {
         super(name);
         this.clazz = clazz;
-        this.valueChecker = valueChecker;
+        this.defaultValue = null;
+        this.valueValidator = null;
     }
 
-    private String getJsonString(Context context) {
+    public ObjectSetting(Class<T> clazz, String name, T defaultValue) {
+        super(name);
+        this.clazz = clazz;
+        this.defaultValue = defaultValue;
+        this.valueValidator = null;
+    }
+
+    public ObjectSetting(Class<T> clazz, String name, ValueValidator<T> valueValidator) {
+        super(name);
+        this.clazz = clazz;
+        this.defaultValue = null;
+        this.valueValidator = valueValidator;
+    }
+
+    public ObjectSetting(Class<T> clazz, String name, T defaultValue, ValueValidator<T> valueValidator) {
+        super(name);
+        this.clazz = clazz;
+        this.defaultValue = defaultValue;
+        this.valueValidator = valueValidator;
+    }
+
+    private String getDataString(Context context) {
         SharedPreferences preferences = getPreferences(context);
         return preferences.contains(getName())
                 ? preferences.getString(getName(), "")
                 : null;
     }
 
+    @SuppressWarnings("unchecked")
+    private T deserializeObject(String dataString) {
+        ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
+        try {
+            ObjectInputStream is = new ObjectInputStream(in);
+            return (T) is.readObject();
+        } catch (Exception e) {
+            Lc.e("Setting " + getName() + " have invalid data: " + dataString + '\n' + e.getMessage());
+            return null;
+        }
+    }
+
+    private String serializeObject(T value) throws IOException {
+        if (value != null) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream os = new ObjectOutputStream(out);
+            os.writeObject(value);
+            return new String(Base64.encode(out.toByteArray(), Base64.DEFAULT));
+        } else {
+            return null;
+        }
+    }
+
     /* Returns value of setting */
     public T get(Context context) {
         CachedValue cachedValue = getCachedValue();
         if (cachedValue == null) {
-            String jsonString = getJsonString(context);
+            String dataString = getDataString(context);
             T value;
             try {
-                value = jsonString != null
-                        ? DefaultJsonFactory.createJsonParser(jsonString).parseAndClose(clazz)
-                        : null;
-            } catch (IOException e) {
-                Ln.e("Setting " + getName() + " have invalid JSON: " + jsonString);
+                if (dataString != null) {
+                    value = deserializeObject(dataString);
+                } else {
+                    value = null;
+                }
+
+                if (value == null && defaultValue != null) {
+                    value = defaultValue;
+                }
+            } catch (Exception e) {
+                Lc.e("Setting " + getName() + " have invalid data: " + dataString + '\n' + e.getMessage());
                 value = null;
             }
             cachedValue = new CachedValue(value);
@@ -60,31 +109,37 @@ public class ObjectSetting<T> extends Setting<T> {
 
     /* Sets value of setting */
     public boolean set(Context context, T value) {
-        String currentJsonString = getJsonString(context);
-        String valueJsonString;
+        String currentDataString = getDataString(context);
+        String valueDataString;
         try {
-            valueJsonString = value != null
-                    ? DefaultJsonFactory.toPrettyString(value)
-                    : null;
+            valueDataString = serializeObject(value);
         } catch (IOException e) {
-            Ln.e("Setting " + getName() + " can't parse to JSON: " + value.toString());
+            Lc.e("Setting " + getName() + " can't parse to String: " + value.toString() + '\n' + e.getMessage());
             return false;
         }
 
-        if (Utils.objectsEquals(currentJsonString, valueJsonString)) {
+        if (Utils.objectsEquals(currentDataString, valueDataString)) {
             return true;
         }
 
-        if (!valueChecker.isValid(value)) {
-            Ln.e("Setting " + getName() + " tried to set with invalid value: "
-                    + (valueJsonString != null ? valueJsonString : "null"));
+        if (valueValidator != null && !valueValidator.isValid(value)) {
+            Lc.e("Setting " + getName() + " tried to set with invalid value: "
+                    + (valueDataString != null ? valueDataString : "null"));
             return false;
         }
 
         if (value == null) {
-            getPreferences(context).edit().remove(getName()).commit();
+            if (defaultValue != null) {
+                try {
+                    getPreferences(context).edit().putString(getName(), serializeObject(defaultValue)).commit();
+                } catch (Exception e) {
+                    Lc.e("Setting " + getName() + " can't parse to String: " + defaultValue.toString() + '\n' + e.getMessage());
+                }
+            } else {
+                getPreferences(context).edit().remove(getName()).commit();
+            }
         } else {
-            getPreferences(context).edit().putString(getName(), valueJsonString).apply();
+            getPreferences(context).edit().putString(getName(), valueDataString).commit();
         }
         setCachedValue(new CachedValue(value));
         raiseOnSettingChanged(context);

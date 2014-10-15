@@ -15,6 +15,7 @@ public abstract class Setting<T> {
     private final String name;
     private SharedPreferences preferences;
     private CachedValue cachedValue;
+    protected final Object valueLocker = new Object();
 
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context){

@@ -21,7 +21,6 @@ public class LocalSpiceService extends SpiceService {
         return new CacheManager() {
             @Override
             public <T> T saveDataToCacheAndReturnData(T data, Object cacheKey) throws CacheSavingException, CacheCreationException {
-
                 return data;
             }
         };

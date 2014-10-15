@@ -1,14 +1,18 @@
 package org.zuzuk.utils;
 
+import android.support.annotation.NonNull;
+
 import com.google.api.client.util.Value;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Some common utils
  */
+@SuppressWarnings("unchecked")
 public class Utils {
 
     /* Returns url parameter from Value attribute of Enum. Used for requesting */
@@ -41,5 +45,22 @@ public class Utils {
     /* Null-safe equivalent of a.equals(b) */
     public static boolean objectsEquals(Object a, Object b) {
         return (a == null) ? (b == null) : a.equals(b);
+    }
+
+    /**
+     * Equals thisObject to thatObject by IEqualsTypedChecker if thisObject is not null.
+     * Use it inside equals(Object obj) method
+     */
+    public static <T extends EqualsTypedChecker> boolean objectEqualTo(@NonNull T thisObject, Object thatObject) {
+        return thatObject == thisObject
+                ||
+                thatObject != null
+                        && thatObject.getClass().equals(thisObject.getClass())
+                        && thisObject.areEqual(thisObject, thatObject);
+    }
+
+    /* Returns hash code from multiple objects */
+    public static int hashCode(Object... values) {
+        return Arrays.hashCode(values);
     }
 }

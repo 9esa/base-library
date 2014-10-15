@@ -4,33 +4,33 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
-import android.widget.TextView;
+import android.widget.EditText;
 
-import org.zuzuk.R;
+import org.zuzuk.ui.R;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
- * TextView that supports fonts from Typefaces class
+ * EditText that supports fonts from Typefaces class
  */
-public class TypefacedTextView extends TextView {
+public class TypefacedEditText extends EditText {
 
-    public TypefacedTextView(Context context) {
+    public TypefacedEditText(Context context) {
         super(context);
         initialize(context, null);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs) {
+    public TypefacedEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         initialize(context, attrs);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs, int defStyle) {
+    public TypefacedEditText(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         initialize(context, attrs);
     }
 
     public void setTypeface(String name, int style) {
-        setTypeface(Typefaces.getByName(name), style);
+        setTypeface(Typefaces.getByName(getContext(), name), style);
     }
 
     public void setTypeface(String name) {
@@ -45,11 +45,9 @@ public class TypefacedTextView extends TextView {
             a.recycle();
         }
 
-        if (customTypeface == null) {
-            customTypeface = Typefaces.getDefaultTypefaceName();
+        if (customTypeface != null && !isInEditMode()) {
+            Typeface typeface = getTypeface();
+            setTypeface(customTypeface, typeface != null ? typeface.getStyle() : Typeface.NORMAL);
         }
-
-        Typeface typeface = getTypeface();
-        setTypeface(customTypeface, typeface != null ? typeface.getStyle() : Typeface.NORMAL);
     }
 }

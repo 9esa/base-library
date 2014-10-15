@@ -56,6 +56,7 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
             for (Class table : getTables()) {
                 TableUtils.createTableIfNotExists(connectionSource, table);
             }
+            afterTablesCreation();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -74,10 +75,16 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
     }
 
     /* Initializes helper */
-    public void initialize() {
-        for (Class table : getTables()) {
-            daoMap.put(table, getRuntimeExceptionDao(table));
+    private void checkDaoMap() {
+        if (daoMap.isEmpty() && getTables().length > 0) {
+            for (Class table : getTables()) {
+                daoMap.put(table, getRuntimeExceptionDao(table));
+            }
         }
+    }
+
+    /* Method that calls right after all tables created */
+    protected void afterTablesCreation() {
     }
 
     @Override
@@ -88,11 +95,13 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     /* Returns data access object for special table */
     public <TDbTable, TId> RuntimeExceptionDao<TDbTable, TId> getDbTable(Class<TDbTable> clazz) {
+        checkDaoMap();
         return daoMap.get(clazz);
     }
 
     /* Returns default access object */
     public RuntimeExceptionDao getDao() {
+        checkDaoMap();
         return daoMap.get(getTables()[0]);
     }
 }

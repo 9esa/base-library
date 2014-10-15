@@ -6,9 +6,8 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ObjectParser;
-import com.octo.android.robospice.persistence.DurationInMillis;
 
-import org.zuzuk.utils.Ln;
+import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
 import java.net.URLEncoder;
@@ -55,7 +54,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         com.google.api.client.http.HttpRequest request = builtRequest != null ? builtRequest : buildRequest();
         builtRequest = null;
 
-        Ln.v("REQUESTED: " + request.getUrl().toString());
+        Lc.d("REQUESTED: " + request.getUrl().toString());
 
         T response = request.execute().parseAs(responseResultType);
         handleResponse(response);

@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 
 import com.octo.android.robospice.request.listener.RequestListener;
 
-import org.zuzuk.R;
 import org.zuzuk.tasks.AggregationTask;
 import org.zuzuk.tasks.TaskExecutorHelper;
 import org.zuzuk.tasks.base.Task;
@@ -19,6 +18,7 @@ import org.zuzuk.tasks.remote.RequestCacheWrapper;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
+import org.zuzuk.ui.R;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
@@ -27,7 +27,41 @@ import org.zuzuk.tasks.remote.base.RequestWrapper;
  */
 public abstract class LoadingFragment extends BaseFragment
         implements TaskExecutor, RequestExecutor, AggregationTask {
-    private final TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
+    private final TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper() {
+        @Override
+        public AggregationTask createTemporaryTask() {
+            return new AggregationTask() {
+                @Override
+                public boolean isLoadingNeeded() {
+                    return false;
+                }
+
+                @Override
+                public boolean isLoaded() {
+                    return true;
+                }
+
+                @Override
+                public void load(boolean b) {
+                }
+
+                @Override
+                public void onLoadingStarted(boolean b) {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onLoaded() {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onFailed(Exception e) {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+                }
+            };
+        }
+    };
 
     @Override
     public boolean isLoadingNeeded() {
@@ -117,6 +151,7 @@ public abstract class LoadingFragment extends BaseFragment
     public void onResume() {
         super.onResume();
         taskExecutorHelper.onResume();
+        taskExecutorHelper.reload(false);
     }
 
     /* Logic of loading fragment's content */
@@ -135,7 +170,7 @@ public abstract class LoadingFragment extends BaseFragment
     }
 
     /* Reloads fragment */
-    public void reload(boolean isInBackground){
+    public void reload(boolean isInBackground) {
         taskExecutorHelper.reload(isInBackground);
     }
 

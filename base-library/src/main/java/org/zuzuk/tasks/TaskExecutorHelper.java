@@ -67,19 +67,18 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public void onResume() {
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
-
-        reload(false);
     }
 
     /* Executes all tasks that needed to be reloaded */
     public void reload(boolean isInBackground) {
         for (AggregationTaskController taskController : tasksControllers.keySet()) {
-            if (!taskController.task.isLoaded() || taskController.task.isLoadingNeeded()) {
+            if (taskController.task.isLoaded()) {
+                taskController.task.onLoaded();
+            }
+            if (taskController.task.isLoadingNeeded()) {
                 setCurrentTaskController(taskController);
                 taskController.task.load(false);
                 taskController.task.onLoadingStarted(isInBackground);
-            } else {
-                taskController.task.onLoaded();
             }
         }
 

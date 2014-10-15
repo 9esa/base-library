@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import org.zuzuk.R;
+import org.zuzuk.ui.R;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.

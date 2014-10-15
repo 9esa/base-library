@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
  * Created by Gavriil Sitnikov on 07/09/2014.
  * Base drawable to use for loading images
  */
-public abstract class LoadingDrawable extends Drawable implements ImageAware, ImageUrlParameters {
+public abstract class LoadingDrawable extends Drawable implements ImageAware, ImageLoadingObject {
     private Drawable drawable;
     private Matrix drawMatrix;
     private ImageView.ScaleType imageScaleType = ImageView.ScaleType.CENTER_CROP;

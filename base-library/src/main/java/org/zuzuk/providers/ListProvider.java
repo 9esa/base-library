@@ -10,11 +10,16 @@ import java.util.List;
  * Provider that based on simple list
  */
 public class ListProvider<TItem extends Serializable> extends ItemsProvider<TItem> {
-    private final List<TItem> items;
+    private List<TItem> items;
 
     @Override
     public int getTotalCount() {
-        return items.size();
+        return isInitialized() ? items.size() : 0;
+    }
+
+    /* Returns if provider is initialized */
+    public boolean isInitialized() {
+        return items != null;
     }
 
     @Override
@@ -22,7 +27,14 @@ public class ListProvider<TItem extends Serializable> extends ItemsProvider<TIte
         return items.get(position);
     }
 
-    public ListProvider(List<TItem> items) {
+    /* Sets items as source and initializes provider if it wasn't */
+    public void setItems(List<TItem> items) {
         this.items = items;
+        onDataSetChanged();
+    }
+
+    /* Resets provider and made it not initialized */
+    public void reset(){
+        items = null;
     }
 }
