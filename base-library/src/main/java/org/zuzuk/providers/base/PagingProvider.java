@@ -94,14 +94,14 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {
-        if (items.size() > DEFAULT_ITEMS_ON_PAGE) {
-            throw new RuntimeException("Wrong result items count: " + items.size());
-        }
+        int itemsSize = items != null ? items.size() : 0;
+        if (itemsSize > DEFAULT_ITEMS_ON_PAGE)
+            throw new RuntimeException("Wrong result items count: " + itemsSize);
 
-        ArrayList<TItem> pageItems = new ArrayList<>(items);
+        ArrayList<TItem> pageItems = items != null ? new ArrayList<>(items) : new ArrayList<TItem>(0);
         pages.put(pageIndex, pageItems);
         if (totalCount == null && pageItems.size() < DEFAULT_ITEMS_ON_PAGE) {
-            setTotalCount(pageIndex * DEFAULT_ITEMS_ON_PAGE + items.size());
+            setTotalCount(pageIndex * DEFAULT_ITEMS_ON_PAGE + itemsSize));
         }
     }
 

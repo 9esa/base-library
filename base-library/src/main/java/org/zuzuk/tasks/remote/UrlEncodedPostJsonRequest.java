@@ -25,12 +25,6 @@ public abstract class UrlEncodedPostJsonRequest<T> extends PostJsonRequest<T> {
         super(responseResultType);
     }
 
-    @Override
-    protected void setupHeaders(HttpHeaders headers) {
-        super.setupHeaders(headers);
-        headers.setContentType(UrlEncodedParser.CONTENT_TYPE);
-    }
-
     /* Setup url encoded parameters */
     protected abstract void setupUrlEncodedParameters(Map<String, Object> urlEncodedParameters);
 }
