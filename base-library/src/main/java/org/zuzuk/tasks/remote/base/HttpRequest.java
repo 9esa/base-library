@@ -12,6 +12,7 @@ import org.zuzuk.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URLEncoder;
 
 /**
@@ -66,13 +67,13 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         T response = null;
         if (doLogResponse()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(request.execute().getContent()));
-            StringBuilder logString = new StringBuilder();
+            StringBuilder responseString = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
-                logString.append(line);
+                responseString.append(line);
             }
-            Lc.d("Response for: " + request.getUrl().toString() + '\n' + logString);
-            response = getParser().parseAndClose(reader, responseResultType);
+            Lc.d("Response for: " + request.getUrl().toString() + '\n' + responseString);
+            response = getParser().parseAndClose(new StringReader(responseString.toString()), responseResultType);
         } else {
             response = request.execute().parseAs(responseResultType);
         }
