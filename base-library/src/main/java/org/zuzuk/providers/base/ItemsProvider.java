@@ -33,7 +33,7 @@ public abstract class ItemsProvider<TItem extends Serializable> implements Seria
 
     /* Removes data set changing listener */
     public void removeOnDataSetChangedListener(DataSetChangedListener dataSetChangedListener) {
-        for (int i = dataSetChangedListenersReferences.size(); i >= 0; i--) {
+        for (int i = dataSetChangedListenersReferences.size() - 1; i >= 0; i--) {
             DataSetChangedListener listener = dataSetChangedListenersReferences.get(i).get();
             if (listener != null && listener == dataSetChangedListener) {
                 dataSetChangedListenersReferences.remove(i);
@@ -46,7 +46,7 @@ public abstract class ItemsProvider<TItem extends Serializable> implements Seria
 
     /* Fires data set changing events in all listeners */
     public void onDataSetChanged() {
-        for (int i = dataSetChangedListenersReferences.size(); i >= 0; i--) {
+        for (int i = dataSetChangedListenersReferences.size() - 1; i >= 0; i--) {
             DataSetChangedListener listener = dataSetChangedListenersReferences.get(i).get();
             if (listener != null) {
                 listener.onDataSetChanged();
