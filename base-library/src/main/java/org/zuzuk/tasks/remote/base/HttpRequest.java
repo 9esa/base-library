@@ -10,6 +10,8 @@ import com.google.api.client.util.ObjectParser;
 import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URLEncoder;
 
 /**
@@ -25,6 +27,11 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
     /* Returns base url without parameters */
     protected abstract String getUrl();
+
+    /* Return if response should be logged */
+    protected boolean doLogResponse() {
+        return false;
+    }
 
     /* Returns data parser */
     protected abstract ObjectParser getParser();
@@ -54,9 +61,22 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         com.google.api.client.http.HttpRequest request = builtRequest != null ? builtRequest : buildRequest();
         builtRequest = null;
 
-        Lc.d("REQUESTED: " + request.getUrl().toString());
+        Lc.d("Url requested: " + request.getUrl().toString());
 
-        T response = request.execute().parseAs(responseResultType);
+        T response = null;
+        if (doLogResponse()) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(request.execute().getContent()));
+            StringBuilder logString = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                logString.append(line);
+            }
+            Lc.d("Response for: " + request.getUrl().toString() + '\n' + logString);
+            response = getParser().parseAndClose(reader, responseResultType);
+        } else {
+            response = request.execute().parseAs(responseResultType);
+        }
+
         handleResponse(response);
         return response;
     }

@@ -8,7 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library-ui'
 ext.libPackageName = 'org.zuzuk.ui'
-ext.libVersion = '1.0.6'
+ext.libVersion = '1.0.7'
 
 android {
     compileSdkVersion 20
@@ -18,7 +18,7 @@ android {
         applicationId libPackageName
         minSdkVersion 7
         targetSdkVersion 20
-        versionCode 2
+        versionCode 7
         versionName libVersion
     }
 
@@ -59,8 +59,8 @@ afterEvaluate { project ->
 
                 repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library-ui") {
                     authentication(
-                            userName: bintrayUserName,
-                            password: bintrayApiKey
+                            userName: 'zuzuk',
+                            password: 'f1c404aabba3c0a182c9857eb5c08921e0ccc212'
                     )
                 }
                 pom.groupId = libPackageName

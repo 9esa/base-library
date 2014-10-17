@@ -147,8 +147,10 @@ public abstract class AbsListViewFragment extends LoadingFragment {
         absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 int headersCount = absListView instanceof ListView ? ((ListView) absListView).getHeaderViewsCount() : 0;
+                int footersCount = absListView instanceof ListView ? ((ListView) absListView).getFooterViewsCount() : 0;
+                int itemsCount = getAdapter().getCount() - footersCount - headersCount;
                 int listItemPosition = position - headersCount;
-                if (listItemPosition < 0) {
+                if (listItemPosition < 0 || listItemPosition >= itemsCount) {
                     return;
                 }
 

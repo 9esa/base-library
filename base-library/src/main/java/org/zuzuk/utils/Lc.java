@@ -14,7 +14,7 @@ public class Lc {
     private static int LogLevel;
     private static LogProcessor LogProcessor;
 
-    private static final ThreadLocal<SimpleDateFormat> dateTimeFormatter =
+    private static final ThreadLocal<SimpleDateFormat> DateTimeFormatter =
             new ThreadLocal<SimpleDateFormat>() {
                 @Override
                 protected SimpleDateFormat initialValue() {
@@ -24,14 +24,19 @@ public class Lc {
 
     /* Logging initialization */
     public static void initialize(int logLevel) {
-        initialize(logLevel, InitializationHelper.createDefaultLogProcessor());
+        initialize(logLevel, logLevel, InitializationHelper.createDefaultLogProcessor());
     }
 
-    /* Logging initialization */
-    public static void initialize(int logLevel, LogProcessor logProcessor) {
+    /* Logging initialization with different log level for Robospice*/
+    public static void initialize(int logLevel, int robospiceLogLevel) {
+        initialize(logLevel, robospiceLogLevel, InitializationHelper.createDefaultLogProcessor());
+    }
+
+    /* Logging initialization with different log level for Robospice and custom log processor */
+    public static void initialize(int logLevel, int robospiceLogLevel, LogProcessor logProcessor) {
         LogLevel = logLevel;
         LogProcessor = logProcessor;
-        Ln.getConfig().setLoggingLevel(logLevel);
+        Ln.getConfig().setLoggingLevel(robospiceLogLevel);
         Ln.setPrint(new Ln.Print() {
             @Override
             public int println(int priority, String msg) {
@@ -67,7 +72,7 @@ public class Lc {
             StackTraceElement trace = Thread.currentThread().getStackTrace()[5 + stackTraceAdditionalDepth];
             String tag = trace.getFileName() + ":" + trace.getLineNumber();
             String messageExtended = String.format("%s %s %s",
-                    dateTimeFormatter.get().format(System.currentTimeMillis()),
+                    DateTimeFormatter.get().format(System.currentTimeMillis()),
                     Thread.currentThread().getName(), message);
 
             LogProcessor.processLogMessage(priority, tag, messageExtended);
