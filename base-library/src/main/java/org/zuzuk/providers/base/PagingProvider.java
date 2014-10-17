@@ -101,7 +101,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         ArrayList<TItem> pageItems = items != null ? new ArrayList<>(items) : new ArrayList<TItem>(0);
         pages.put(pageIndex, pageItems);
         if (totalCount == null && pageItems.size() < DEFAULT_ITEMS_ON_PAGE) {
-            setTotalCount(pageIndex * DEFAULT_ITEMS_ON_PAGE + itemsSize));
+            setTotalCount(pageIndex * DEFAULT_ITEMS_ON_PAGE + itemsSize);
         }
     }
 
