@@ -2,8 +2,8 @@ package org.zuzuk.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Base64;
 
+import org.zuzuk.utils.Base64;
 import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
@@ -65,7 +65,7 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
             ObjectInputStream is = new ObjectInputStream(in);
             return (T) is.readObject();
         } catch (Exception e) {
-            Lc.e("Setting " + getName() + " have invalid data: " + dataString + '\n' + e.getMessage());
+            Lc.e("Setting " + getName() + " cannot be deserialized from: " + dataString + '\n' + e.getMessage());
             return null;
         }
     }
@@ -86,20 +86,10 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
         CachedValue cachedValue = getCachedValue();
         if (cachedValue == null) {
             String dataString = getDataString(context);
-            T value;
-            try {
-                if (dataString != null) {
-                    value = deserializeObject(dataString);
-                } else {
-                    value = null;
-                }
+            T value = dataString != null ? deserializeObject(dataString) : null;
 
-                if (value == null && defaultValue != null) {
-                    value = defaultValue;
-                }
-            } catch (Exception e) {
-                Lc.e("Setting " + getName() + " have invalid data: " + dataString + '\n' + e.getMessage());
-                value = null;
+            if (value == null && defaultValue != null) {
+                value = defaultValue;
             }
             cachedValue = new CachedValue(value);
             setCachedValue(cachedValue);
@@ -114,7 +104,7 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
         try {
             valueDataString = serializeObject(value);
         } catch (IOException e) {
-            Lc.e("Setting " + getName() + " can't parse to String: " + value.toString() + '\n' + e.getMessage());
+            Lc.e("Setting " + getName() + " cannot be serialized: " + value.toString() + '\n' + e.getMessage());
             return false;
         }
 
@@ -133,7 +123,7 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
                 try {
                     getPreferences(context).edit().putString(getName(), serializeObject(defaultValue)).commit();
                 } catch (Exception e) {
-                    Lc.e("Setting " + getName() + " can't parse to String: " + defaultValue.toString() + '\n' + e.getMessage());
+                    Lc.e("Setting " + getName() + " cannot be serialized: " + defaultValue.toString() + '\n' + e.getMessage());
                 }
             } else {
                 getPreferences(context).edit().remove(getName()).commit();
