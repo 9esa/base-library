@@ -6,6 +6,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ObjectParser;
+import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
@@ -59,6 +60,15 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
     @Override
     public T execute() throws Exception {
+        CachedSpiceRequest<T> cachedSpiceRequest = new CachedSpiceRequest<>(this, getCacheKey(), getCacheExpiryDuration());
+        cachedSpiceRequest.setOffline(isOffline());
+        cachedSpiceRequest.setAggregatable(true);
+        cachedSpiceRequest.setAcceptingDirtyCache(isAcceptDirtyCache());
+        return cachedSpiceRequest.loadDataFromNetwork();
+    }
+
+    @Override
+    public T loadDataFromNetwork() throws Exception {
         com.google.api.client.http.HttpRequest request = builtRequest != null ? builtRequest : buildRequest();
         builtRequest = null;
 

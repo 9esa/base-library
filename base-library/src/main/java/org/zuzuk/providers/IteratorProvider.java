@@ -56,7 +56,7 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
     }
 
     @Override
-    protected void initialize(final int startPosition) {
+    protected void initializeInternal(final int startPosition) {
         updateIterator(startPosition);
     }
 
@@ -85,7 +85,7 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
                         getRequestingPages().clear();
                         getPages().clear();
                         if (startPosition != null) {
-                            IteratorProvider.super.initialize(startPosition);
+                            IteratorProvider.super.initializeInternal(startPosition);
                         } else {
                             onDataSetChanged();
                         }

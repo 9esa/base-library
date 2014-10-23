@@ -14,7 +14,6 @@ import org.zuzuk.tasks.TaskExecutorHelper;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
-import org.zuzuk.tasks.remote.RequestCacheWrapper;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
@@ -176,22 +175,22 @@ public abstract class LoadingFragment extends BaseFragment
 
     @Override
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequest(new RequestCacheWrapper<>(request), requestListener);
+        taskExecutorHelper.executeRequest(request, requestListener);
     }
 
     @Override
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper, RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequest(requestWrapper, requestListener);
+    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
+        taskExecutorHelper.executeRequest(requestWrapper);
     }
 
     @Override
     public <T> void executeRequestBackground(RemoteRequest<T> request, RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequestBackground(new RequestCacheWrapper<>(request), requestListener);
+        taskExecutorHelper.executeRequestBackground(request, requestListener);
     }
 
     @Override
-    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper, RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequestBackground(requestWrapper, requestListener);
+    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper) {
+        taskExecutorHelper.executeRequestBackground(requestWrapper);
     }
 
     @Override

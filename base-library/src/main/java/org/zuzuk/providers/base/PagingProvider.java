@@ -65,6 +65,11 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         if (totalCount != null) {
             return totalCount;
         }
+
+        if (!isInitialized()) {
+            return 0;
+        }
+
         int maxPageIndex = -1;
         for (int i = 0; i < pages.size(); i++) {
             maxPageIndex = Math.max(maxPageIndex, pages.keyAt(i));
@@ -85,7 +90,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
     }
 
     @Override
-    protected void initialize(int startPosition) {
+    protected void initializeInternal(int startPosition) {
         requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE);
     }
 

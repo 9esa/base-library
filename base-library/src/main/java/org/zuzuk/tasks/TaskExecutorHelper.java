@@ -105,23 +105,20 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     }
 
     @Override
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper,
-                                   RequestListener<T> requestListener) {
+    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
         beforeExecution();
-        executeRequestBackground(requestWrapper, requestListener);
+        executeRequestBackground(requestWrapper);
         afterExecution();
     }
 
     @Override
-    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper,
-                                             RequestListener<T> requestListener) {
+    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper) {
         checkManagersState(requestWrapper);
         if (currentTaskController != null) {
-            requestWrapper.setRequestListener(wrapToAggregationTask(requestListener));
+            remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), wrapToAggregationTask(requestWrapper));
         } else {
-            requestWrapper.setRequestListener(requestListener);
+            remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), requestWrapper);
         }
-        requestWrapper.execute(remoteSpiceManager);
     }
 
     @Override

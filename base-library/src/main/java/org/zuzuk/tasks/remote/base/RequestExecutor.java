@@ -12,14 +12,12 @@ public interface RequestExecutor {
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener);
 
     /* Executes wrapped request in foreground */
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper,
-                                   RequestListener<T> requestListener);
+    public <T> void executeRequest(RequestWrapper<T> requestWrapper);
 
     /* Executes request in background */
     public <T> void executeRequestBackground(RemoteRequest<T> request,
                                    RequestListener<T> requestListener);
 
     /* Executes wrapped request in background */
-    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper,
-                                   RequestListener<T> requestListener);
+    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper);
 }

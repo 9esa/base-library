@@ -10,7 +10,7 @@ import org.zuzuk.tasks.base.Task;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
- * Request that initialize OrmLite iterator (it is usually long because of count() method)
+ * Request that initializeInternal OrmLite iterator (it is usually long because of count() method)
  */
 public class IteratorInitializationRequest<TItem> extends Task<IteratorInitializationRequest.Response> {
 
