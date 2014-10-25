@@ -134,16 +134,22 @@ public abstract class BaseActivity extends ActionBarActivity
     }
 
     private void removeBottomFragment(FragmentTransaction transaction) {
-        if (bottomFragmentTag != null) {
-            Fragment bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
-            for (String tag : staticFragmentsTags.values()) {
-                if (tag.equals(bottomFragmentTag)) {
-                    transaction.detach(bottomFragment);
-                    return;
-                }
-            }
-            transaction.remove(bottomFragment);
+        if (bottomFragmentTag == null) {
+            return;
         }
+
+        Fragment bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
+        if (bottomFragment == null) {
+            return;
+        }
+
+        for (String tag : staticFragmentsTags.values()) {
+            if (tag.equals(bottomFragmentTag)) {
+                transaction.detach(bottomFragment);
+                return;
+            }
+        }
+        transaction.remove(bottomFragment);
     }
 
     /* Pushing fragment of special class on top of fragments stack */

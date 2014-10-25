@@ -48,7 +48,7 @@ public abstract class BaseRequestExecutorService extends Service {
 
     /* Executes wrapped request in background */
     public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        requestWrapper.execute(remoteSpiceManager);
+        remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), requestWrapper);
     }
 
     /* Executes local task in background */

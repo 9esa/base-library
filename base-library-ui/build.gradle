@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    compile 'org.zuzuk:base-library:1.0.31'
+    compile 'org.zuzuk:base-library:1.0.32'
 
     /* Common */
     compile fileTree(dir: 'libs', include: ['*.jar'])

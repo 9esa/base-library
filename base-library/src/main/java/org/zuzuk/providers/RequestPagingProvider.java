@@ -5,6 +5,7 @@ import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.providers.base.PagingProvider;
 import org.zuzuk.providers.base.PagingTaskCreator;
+import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 
@@ -18,11 +19,11 @@ import java.io.Serializable;
  * Provider that based on remote paging requests
  */
 public class RequestPagingProvider<TItem extends Serializable, TResponse> extends PagingProvider<TItem> {
-    private RequestExecutor requestExecutor;
+    private TaskExecutor requestExecutor;
     private PagingTaskCreator<TItem, TResponse> requestCreator;
 
     /* Returns object that executing paging requests */
-    public RequestExecutor getRequestExecutor() {
+    public TaskExecutor getRequestExecutor() {
         return requestExecutor;
     }
 
@@ -33,11 +34,11 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
      * If you need totally async loading in background then you should create Service object for
      * that purposes and make bridge between Service and UI
      */
-    public void setRequestExecutor(RequestExecutor requestExecutor) {
+    public void setRequestExecutor(TaskExecutor requestExecutor) {
         this.requestExecutor = requestExecutor;
     }
 
-    public RequestPagingProvider(RequestExecutor requestExecutor, PagingTaskCreator<TItem, TResponse> requestCreator) {
+    public RequestPagingProvider(TaskExecutor requestExecutor, PagingTaskCreator<TItem, TResponse> requestCreator) {
         this.requestExecutor = requestExecutor;
         this.requestCreator = requestCreator;
     }
@@ -45,7 +46,7 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
     @Override
     protected void requestPage(final int index) {
         getRequestingPages().add(index);
-        requestExecutor.executeRequestBackground((RemoteRequest<TResponse>) requestCreator.createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
+        requestExecutor.executeTaskBackground(requestCreator.createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
                 new RequestListener<TResponse>() {
 
                     @Override
