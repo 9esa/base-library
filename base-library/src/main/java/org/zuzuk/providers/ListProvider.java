@@ -36,5 +36,6 @@ public class ListProvider<TItem extends Serializable> extends ItemsProvider<TIte
     /* Resets provider and made it not initialized */
     public void reset(){
         items = null;
+        onDataSetChanged();
     }
 }
