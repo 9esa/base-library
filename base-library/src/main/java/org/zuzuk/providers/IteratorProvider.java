@@ -102,23 +102,22 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
                     new RequestListener<List>() {
 
                         @Override
+                        public void onRequestSuccess(List list) {
+                            onPageLoaded(index, parseResponse(list));
+                            getRequestingPages().remove(index);
+                            if (!isInitialized()) {
+                                onInitialized();
+                            } else {
+                                onDataSetChanged();
+                            }
+                        }
+
+                        @Override
                         public void onRequestFailure(SpiceException spiceException) {
                             getRequestingPages().remove(index);
                             if (!isInitialized()) {
                                 onInitializationFailed(spiceException);
                             }
-
-                        }
-
-                        @Override
-                        public void onRequestSuccess(List list) {
-                            onPageLoaded(index, parseResponse(list));
-                            getRequestingPages().remove(index);
-                            onDataSetChanged();
-                            if (!isInitialized()) {
-                                onInitialized();
-                            }
-
                         }
                     });
         } else {

@@ -60,6 +60,7 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
             initializationListener.onInitialized();
             initializationListener = null;
         }
+        onDataSetChanged();
     }
 
     /* Raises when provider initialization failed. Use it in child classes */

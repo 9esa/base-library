@@ -53,9 +53,10 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
                     public void onRequestSuccess(TResponse response) {
                         onPageLoaded(index, requestCreator.parseResponse(response));
                         getRequestingPages().remove(index);
-                        onDataSetChanged();
                         if (!isInitialized()) {
                             onInitialized();
+                        } else {
+                            onDataSetChanged();
                         }
                     }
 
