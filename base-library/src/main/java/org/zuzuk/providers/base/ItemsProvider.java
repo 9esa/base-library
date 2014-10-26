@@ -15,6 +15,9 @@ import java.util.List;
 public abstract class ItemsProvider<TItem extends Serializable> implements Serializable {
     private List<WeakReference<DataSetChangedListener>> dataSetChangedListenersReferences = new ArrayList<>();
 
+    /* Returns if provider is initialized */
+    public abstract boolean isInitialized();
+
     /* Returns total count of items */
     public abstract int getTotalCount();
 

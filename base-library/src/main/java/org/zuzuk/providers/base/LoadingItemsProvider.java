@@ -10,6 +10,7 @@ import java.io.Serializable;
  * Provider that needs initialization before it is available to provide items
  */
 public abstract class LoadingItemsProvider<TItem extends Serializable> extends ItemsProvider<TItem> implements InitializationListener {
+
     private InitializationListener initializationListener;
     private boolean isInitialized = false;
     private boolean isInitializing = false;
@@ -25,6 +26,11 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
         return isInitialized;
     }
 
+    /* Starts provider initialization at specific position without listener */
+    public void initialize(int initializationPosition) {
+        initialize(null, 0);
+    }
+
     /* Starts provider initialization */
     public void initialize(InitializationListener initializationListener) {
         initialize(initializationListener, 0);
@@ -35,23 +41,25 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
         this.initializationListener = initializationListener;
 
         if (isInitialized) {
-            initializationListener.onInitialized();
+            onInitialized();
         } else if (!isInitializing) {
             isInitializing = true;
-            initialize(initializationPosition);
+            initializeInternal(initializationPosition);
         }
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initialize(int initializationPosition);
+    protected abstract void initializeInternal(int initializationPosition);
 
     /* Raises when provider initialized. Use it in child classes */
     @Override
     public void onInitialized() {
         isInitialized = true;
         isInitializing = false;
-        initializationListener.onInitialized();
-        initializationListener = null;
+        if (initializationListener != null) {
+            initializationListener.onInitialized();
+            initializationListener = null;
+        }
     }
 
     /* Raises when provider initialization failed. Use it in child classes */

@@ -8,7 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library-ui'
 ext.libPackageName = 'org.zuzuk.ui'
-ext.libVersion = '1.0.7'
+ext.libVersion = '1.0.8'
 
 android {
     compileSdkVersion 20
@@ -18,7 +18,7 @@ android {
         applicationId libPackageName
         minSdkVersion 7
         targetSdkVersion 20
-        versionCode 7
+        versionCode 8
         versionName libVersion
     }
 
@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    compile 'org.zuzuk:base-library:+'
+    compile 'org.zuzuk:base-library:1.0.32'
 
     /* Common */
     compile fileTree(dir: 'libs', include: ['*.jar'])
