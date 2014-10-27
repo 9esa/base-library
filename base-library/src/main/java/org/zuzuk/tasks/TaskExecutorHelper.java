@@ -34,7 +34,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     private void setCurrentTaskController(AggregationTaskController currentTaskController) {
         if (this.currentTaskController != null)
-            throw new RuntimeException("Current aggregation task have set already");
+            throw new RuntimeException("You cannot start another task while current task is already set. Let current task end before start new task. Use post() method as simpliest solution");
 
         this.currentTaskController = currentTaskController;
     }
