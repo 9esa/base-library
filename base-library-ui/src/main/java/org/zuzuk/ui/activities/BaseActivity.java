@@ -28,6 +28,7 @@ public abstract class BaseActivity extends ActionBarActivity
 
     private HashMap<Class, String> staticFragmentsTags = new HashMap<>();
     private String bottomFragmentTag;
+    private Fragment bottomFragment;
     private BaseFragment currentFragment;
 
     /* Returns id of main fragments container where navigation-node fragments should be */
@@ -104,6 +105,7 @@ public abstract class BaseActivity extends ActionBarActivity
         transaction.commit();
 
         bottomFragmentTag = fragmentTag;
+        bottomFragment = fragment;
     }
 
     /* Setting fragment of special class as single on top */
@@ -131,6 +133,7 @@ public abstract class BaseActivity extends ActionBarActivity
         transaction.add(getFragmentContainerId(), fragment, fragmentTag).commit();
 
         bottomFragmentTag = fragmentTag;
+        bottomFragment = fragment;
     }
 
     private void removeBottomFragment(FragmentTransaction transaction) {
@@ -138,9 +141,11 @@ public abstract class BaseActivity extends ActionBarActivity
             return;
         }
 
-        Fragment bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
         if (bottomFragment == null) {
-            return;
+            bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
+            if (bottomFragment == null) {
+                return;
+            }
         }
 
         for (String tag : staticFragmentsTags.values()) {
