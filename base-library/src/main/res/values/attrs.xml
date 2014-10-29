@@ -5,7 +5,11 @@
         <attr name="loadingFragmentLayout" format="reference"/>
     </declare-styleable>
 
-    <declare-styleable name="TypefacedView">
+    <declare-styleable name="TypefacedTextView">
+        <attr name="customTypeface" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="TypefacedEditText">
         <attr name="customTypeface" format="string" />
     </declare-styleable>
 

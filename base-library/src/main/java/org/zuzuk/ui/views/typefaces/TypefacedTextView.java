@@ -40,8 +40,8 @@ public class TypefacedTextView extends TextView {
     private void initialize(Context context, AttributeSet attrs) {
         String customTypeface = null;
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedView);
-            customTypeface = a.getString(R.styleable.TypefacedView_customTypeface);
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedTextView);
+            customTypeface = a.getString(R.styleable.TypefacedTextView_customTypeface);
             a.recycle();
         }
 

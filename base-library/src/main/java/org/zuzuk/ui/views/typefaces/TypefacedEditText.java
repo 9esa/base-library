@@ -40,8 +40,8 @@ public class TypefacedEditText extends EditText {
     private void initialize(Context context, AttributeSet attrs) {
         String customTypeface = null;
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedView);
-            customTypeface = a.getString(R.styleable.TypefacedView_customTypeface);
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedEditText);
+            customTypeface = a.getString(R.styleable.TypefacedEditText_customTypeface);
             a.recycle();
         }
 
