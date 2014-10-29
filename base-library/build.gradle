@@ -68,8 +68,8 @@ afterEvaluate { project ->
         repositories {
             mavenDeployer {
 
-                if (project.hasProperty("bintrayApiKey")) {
-                    repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library") {
+                repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library") {
+                    if (project.hasProperty("bintrayApiKey")) {
                         authentication(
                                 userName: bintrayUserName,
                                 password: bintrayApiKey
