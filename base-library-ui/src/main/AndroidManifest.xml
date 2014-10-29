@@ -1,1 +1,5 @@
-<manifest package="org.zuzuk.ui" />
+<manifest package="org.zuzuk.ui">
+
+    <application />
+
+</manifest>

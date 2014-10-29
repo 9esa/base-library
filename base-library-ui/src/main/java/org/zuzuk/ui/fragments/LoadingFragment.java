@@ -64,7 +64,7 @@ public abstract class LoadingFragment extends BaseFragment
 
     @Override
     public boolean isLoadingNeeded() {
-        return false;
+        return !isLoaded();
     }
 
     @Override
