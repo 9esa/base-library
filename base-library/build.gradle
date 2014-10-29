@@ -11,13 +11,13 @@ ext.libPackageName = 'org.zuzuk'
 ext.libVersion = '1.0.36'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.0.2"
+    compileSdkVersion 20
+    buildToolsVersion "20.0.0"
 
     defaultConfig {
         applicationId libPackageName
         minSdkVersion 7
-        targetSdkVersion 21
+        targetSdkVersion 20
     }
 
     compileOptions {
@@ -69,7 +69,7 @@ afterEvaluate { project ->
             mavenDeployer {
 
                 repository(url: "https://api.bintray.com/maven/zuzuk/maven/base-library") {
-                    if (project.hasProperty("bintrayApiKey")) {
+                    if (hasProperty("bintrayApiKey")) {
                         authentication(
                                 userName: bintrayUserName,
                                 password: bintrayApiKey
