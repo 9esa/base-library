@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.R;
 import org.zuzuk.tasks.AggregationTask;
 import org.zuzuk.tasks.TaskExecutorHelper;
 import org.zuzuk.tasks.base.Task;
@@ -17,7 +18,6 @@ import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
-import org.zuzuk.ui.R;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.

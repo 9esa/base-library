@@ -6,7 +6,7 @@ import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-import org.zuzuk.ui.R;
+import org.zuzuk.R;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
