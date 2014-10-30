@@ -29,10 +29,12 @@ import java.util.Queue;
 public abstract class BaseFragment extends Fragment {
     private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
+
     private final List<String> globalEvents = new ArrayList<>();
     private final List<String> localEvents = new ArrayList<>();
     private final List<String> globalOnResumeEvents = new ArrayList<>();
     private final List<String> localOnResumeEvents = new ArrayList<>();
+    private boolean isOnCreateReceiversRegistered = false;
     private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             onEvent(context, intent);
@@ -95,6 +97,7 @@ public abstract class BaseFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(localEventReceiver, UIUtils.createIntentFilter(localEvents));
         getActivity().registerReceiver(globalEventReceiver, UIUtils.createIntentFilter(globalEvents));
+        isOnCreateReceiversRegistered = true;
     }
 
     @Override
@@ -154,8 +157,11 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localEventReceiver);
-        getActivity().unregisterReceiver(globalEventReceiver);
+        if (isOnCreateReceiversRegistered) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localEventReceiver);
+            getActivity().unregisterReceiver(globalEventReceiver);
+            isOnCreateReceiversRegistered = false;
+        }
     }
 
     private void fillListeningBroadcastEvents() {
