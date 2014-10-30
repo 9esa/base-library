@@ -1,17 +1,19 @@
 package org.zuzuk.tasks.remote.base;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ObjectParser;
-import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URLEncoder;
@@ -22,6 +24,8 @@ import java.net.URLEncoder;
  */
 public abstract class HttpRequest<T> extends RemoteRequest<T> {
     private final static String CACHE_PARAMETER_SEPARATOR = "#";
+    private final static int CACHE_MAX_KEY_SIZE = 128;
+    private final static int CACHE_MAX_CONTENT_SIZE = 256 * 1024;
     protected final static HttpTransport DefaultHttpTransport = new NetHttpTransport();
 
     private final Class<T> responseResultType;
@@ -100,20 +104,29 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
     protected void handleResponse(T response) throws Exception {
     }
 
+    /* Returns content as string */
+    protected String httpContentToString(HttpContent httpContent) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        httpContent.writeTo(outputStream);
+        return outputStream.toString("UTF-8");
+    }
+
     @Override
     public String getCacheKey() {
-        String fileNameSafeCacheKey;
+        StringBuilder fileNameSafeCacheKey = new StringBuilder();
         try {
             com.google.api.client.http.HttpRequest request = buildRequest();
             builtRequest = request;
-            fileNameSafeCacheKey = URLEncoder.encode(request.getUrl().build(), "UTF-8").replace("%", CACHE_PARAMETER_SEPARATOR);
-            fileNameSafeCacheKey += request.getHeaders().toString();
-            // TODO: getContent?
+            fileNameSafeCacheKey.append(URLEncoder.encode(request.getUrl().build(), "UTF-8").replace("%", CACHE_PARAMETER_SEPARATOR));
+            fileNameSafeCacheKey.append(CACHE_PARAMETER_SEPARATOR).append(request.getHeaders().toString());
+            if (request.getContent() != null) {
+                fileNameSafeCacheKey.append(CACHE_PARAMETER_SEPARATOR).append(httpContentToString(request.getContent()));
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        String cacheKeyMd5 = Utils.md5(fileNameSafeCacheKey);
+        String cacheKeyMd5 = Utils.md5(fileNameSafeCacheKey.toString());
         int length = fileNameSafeCacheKey.length();
-        return fileNameSafeCacheKey.substring(Math.max(0, length - 120), length) + CACHE_PARAMETER_SEPARATOR + cacheKeyMd5;
+        return fileNameSafeCacheKey.substring(Math.max(0, length - CACHE_MAX_KEY_SIZE), length) + CACHE_PARAMETER_SEPARATOR + cacheKeyMd5;
     }
 }
