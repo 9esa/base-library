@@ -10,7 +10,6 @@ import java.io.Serializable;
  * Provider that needs initialization before it is available to provide items
  */
 public abstract class LoadingItemsProvider<TItem extends Serializable> extends ItemsProvider<TItem> implements InitializationListener {
-
     private InitializationListener initializationListener;
     private boolean isInitialized = false;
     private boolean isInitializing = false;
