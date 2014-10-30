@@ -9,10 +9,6 @@
         <attr name="customTypeface" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="TypefacedEditText">
-        <attr name="customTypeface" format="string" />
-    </declare-styleable>
-
     <declare-styleable name="AspectRatioFrameLayout">
         <attr name="aspectRatio" format="float" />
         <attr name="wrapToContent" format="boolean" />

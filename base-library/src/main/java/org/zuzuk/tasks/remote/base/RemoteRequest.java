@@ -1,6 +1,7 @@
 package org.zuzuk.tasks.remote.base;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
+import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.tasks.base.Task;
 
@@ -9,6 +10,15 @@ import org.zuzuk.tasks.base.Task;
  * Base remote request that supports caching if possible
  */
 public abstract class RemoteRequest<T> extends Task<T> {
+
+    /* Returns associated cache request */
+    public CachedSpiceRequest<T> wrapAsCacheRequest() {
+        CachedSpiceRequest<T> cachedSpiceRequest = new CachedSpiceRequest<>(this, getCacheKey(), getCacheExpiryDuration());
+        cachedSpiceRequest.setOffline(isOffline());
+        cachedSpiceRequest.setAggregatable(true);
+        cachedSpiceRequest.setAcceptingDirtyCache(isAcceptDirtyCache());
+        return cachedSpiceRequest;
+    }
 
     /* Returns if request could use expired cache data */
     public boolean isAcceptDirtyCache() {

@@ -98,9 +98,9 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
                                              RequestListener<T> requestListener) {
         checkManagersState(request);
         if (currentTaskController != null) {
-            remoteSpiceManager.execute(request, wrapToAggregationTask(requestListener));
+            remoteSpiceManager.execute(request.wrapAsCacheRequest(), wrapToAggregationTask(requestListener));
         } else {
-            remoteSpiceManager.execute(request, requestListener);
+            remoteSpiceManager.execute(request.wrapAsCacheRequest(), requestListener);
         }
     }
 
@@ -115,9 +115,9 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper) {
         checkManagersState(requestWrapper);
         if (currentTaskController != null) {
-            remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), wrapToAggregationTask(requestWrapper));
+            remoteSpiceManager.execute(requestWrapper.getPreparedRequest().wrapAsCacheRequest(), wrapToAggregationTask(requestWrapper));
         } else {
-            remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), requestWrapper);
+            remoteSpiceManager.execute(requestWrapper.getPreparedRequest().wrapAsCacheRequest(), requestWrapper);
         }
     }
 

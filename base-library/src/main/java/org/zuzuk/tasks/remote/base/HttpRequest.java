@@ -60,15 +60,6 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
     @Override
     public T execute() throws Exception {
-        CachedSpiceRequest<T> cachedSpiceRequest = new CachedSpiceRequest<>(this, getCacheKey(), getCacheExpiryDuration());
-        cachedSpiceRequest.setOffline(isOffline());
-        cachedSpiceRequest.setAggregatable(true);
-        cachedSpiceRequest.setAcceptingDirtyCache(isAcceptDirtyCache());
-        return cachedSpiceRequest.loadDataFromNetwork();
-    }
-
-    @Override
-    public T loadDataFromNetwork() throws Exception {
         com.google.api.client.http.HttpRequest request = builtRequest != null ? builtRequest : buildRequest();
         builtRequest = null;
 
@@ -90,6 +81,11 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
         handleResponse(response);
         return response;
+    }
+
+    @Override
+    public T loadDataFromNetwork() throws Exception {
+        return execute();
     }
 
     /* Setups headers of HttpRequest */
