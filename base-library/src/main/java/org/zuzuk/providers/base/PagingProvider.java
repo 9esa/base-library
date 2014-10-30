@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.List;
 public abstract class PagingProvider<TItem extends Serializable> extends LoadingItemsProvider<TItem> {
     public static final int DEFAULT_ITEMS_ON_PAGE = 20;
 
-    private WeakReference<OnPageLoadedListener<TItem>> onPageLoadedListener;
+    private OnPageLoadedListener<TItem> onPageLoadedListener;
     private Integer totalCount = null;
     private SparseArray<ArrayList<TItem>> pages = new SparseArray<>();
     private HashSet<Integer> requestingPages = new HashSet<>();
@@ -40,7 +39,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
 
     /* Sets page loading listener */
     public void setOnPageLoadedListener(OnPageLoadedListener<TItem> onPageLoadedListener) {
-        this.onPageLoadedListener = new WeakReference<>(onPageLoadedListener);
+        this.onPageLoadedListener = onPageLoadedListener;
     }
 
     @Override
@@ -117,11 +116,7 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         }
 
         if (onPageLoadedListener != null) {
-            if (onPageLoadedListener.get() != null) {
-                onPageLoadedListener.get().onPageLoaded(pageIndex, items);
-            } else {
-                onPageLoadedListener = null;
-            }
+            onPageLoadedListener.onPageLoaded(pageIndex, items);
         }
     }
 
