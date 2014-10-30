@@ -1,11 +1,14 @@
 package org.zuzuk.ui;
 
 import android.content.Context;
+import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableString;
 
 import org.zuzuk.ui.views.TypefaceSpan;
+
+import java.util.List;
 
 /**
  * Created by Gavriil Sitnikov on 15/10/2014.
@@ -18,5 +21,14 @@ public class UIUtils {
         SpannableString spanTitle = new SpannableString(text);
         spanTitle.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return spanTitle;
+    }
+
+    /* Creates intent filter based on list of actions */
+    public static IntentFilter createIntentFilter(List<String> strings) {
+        IntentFilter result = new IntentFilter();
+        for (String eventName : strings) {
+            result.addAction(eventName);
+        }
+        return result;
     }
 }

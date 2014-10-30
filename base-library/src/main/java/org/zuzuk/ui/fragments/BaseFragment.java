@@ -1,14 +1,25 @@
 package org.zuzuk.ui.fragments;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.zuzuk.events.BroadcastEvents;
+import org.zuzuk.events.EventAnnotation;
+import org.zuzuk.ui.UIUtils;
 import org.zuzuk.ui.activities.BaseActivity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 /**
@@ -18,6 +29,30 @@ import java.util.Queue;
 public abstract class BaseFragment extends Fragment {
     private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
+    private final List<String> globalEvents = new ArrayList<>();
+    private final List<String> localEvents = new ArrayList<>();
+    private final List<String> globalOnResumeEvents = new ArrayList<>();
+    private final List<String> localOnResumeEvents = new ArrayList<>();
+    private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
+    private final BroadcastReceiver localEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
+    private final BroadcastReceiver globalOnResumeEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
+    private final BroadcastReceiver localOnResumeEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
 
     /* Returns post handler to executes code on UI thread */
     public Handler getPostHandler() {
@@ -50,6 +85,19 @@ public abstract class BaseFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        fillListeningBroadcastEvents();
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(localEventReceiver, UIUtils.createIntentFilter(localEvents));
+        getActivity().registerReceiver(globalEventReceiver, UIUtils.createIntentFilter(globalEvents));
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -63,6 +111,17 @@ public abstract class BaseFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(localOnResumeEventReceiver, UIUtils.createIntentFilter(localOnResumeEvents));
+        getActivity().registerReceiver(globalOnResumeEventReceiver, UIUtils.createIntentFilter(globalOnResumeEvents));
+    }
+
+    /* Raises when even received */
+    protected void onEvent(Context context, Intent intent) {
+    }
+
     /* Raises when device back button pressed */
     public boolean onBackPressed() {
         return false;
@@ -71,6 +130,13 @@ public abstract class BaseFragment extends Fragment {
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed() {
         return false;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localOnResumeEventReceiver);
+        getActivity().unregisterReceiver(globalOnResumeEventReceiver);
     }
 
     @Override
@@ -83,6 +149,34 @@ public abstract class BaseFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         viewsHolder.clear();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localEventReceiver);
+        getActivity().unregisterReceiver(globalEventReceiver);
+    }
+
+    private void fillListeningBroadcastEvents() {
+        BroadcastEvents events = ((Object) this).getClass().getAnnotation(BroadcastEvents.class);
+        if (events != null) {
+            for (EventAnnotation eventAnnotation : events.value()) {
+                if (eventAnnotation.isLocal()) {
+                    if (eventAnnotation.isOnlyWhileResumed()) {
+                        localOnResumeEvents.add(eventAnnotation.value());
+                    } else {
+                        localEvents.add(eventAnnotation.value());
+                    }
+                } else {
+                    if (eventAnnotation.isOnlyWhileResumed()) {
+                        globalOnResumeEvents.add(eventAnnotation.value());
+                    } else {
+                        globalEvents.add(eventAnnotation.value());
+                    }
+                }
+            }
+        }
     }
 
     /* Finds view by id and stores it in cache till view destroys */

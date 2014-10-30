@@ -1,20 +1,29 @@
 package org.zuzuk.ui.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import org.zuzuk.events.BroadcastEvents;
+import org.zuzuk.events.EventAnnotation;
+import org.zuzuk.ui.UIUtils;
 import org.zuzuk.ui.fragments.BaseFragment;
 import org.zuzuk.ui.fragments.OnFragmentChangedListener;
 import org.zuzuk.ui.fragments.StaticFragment;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,6 +39,18 @@ public abstract class BaseActivity extends ActionBarActivity
     private String bottomFragmentTag;
     private Fragment bottomFragment;
     private BaseFragment currentFragment;
+    private final List<String> globalEvents = new ArrayList<>();
+    private final List<String> localEvents = new ArrayList<>();
+    private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
+    private final BroadcastReceiver localEventReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            onEvent(context, intent);
+        }
+    };
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -45,6 +66,19 @@ public abstract class BaseActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+        LocalBroadcastManager.getInstance(this).registerReceiver(localEventReceiver, UIUtils.createIntentFilter(localEvents));
+        registerReceiver(globalEventReceiver, UIUtils.createIntentFilter(globalEvents));
+    }
+
+    /* Raises when even received */
+    protected void onEvent(Context context, Intent intent) {
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(localEventReceiver);
+        unregisterReceiver(globalEventReceiver);
     }
 
     @Override
@@ -241,6 +275,19 @@ public abstract class BaseActivity extends ActionBarActivity
     public void showSoftInput(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    private void fillListeningBroadcastEvents() {
+        BroadcastEvents events = ((Object) this).getClass().getAnnotation(BroadcastEvents.class);
+        if (events != null) {
+            for (EventAnnotation eventAnnotation : events.value()) {
+                if (eventAnnotation.isLocal()) {
+                    localEvents.add(eventAnnotation.value());
+                } else {
+                    globalEvents.add(eventAnnotation.value());
+                }
+            }
+        }
     }
 
     @Override
