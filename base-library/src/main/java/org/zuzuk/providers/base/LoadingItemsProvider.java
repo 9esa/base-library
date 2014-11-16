@@ -40,8 +40,10 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
         this.initializationListener = initializationListener;
 
         if (isInitialized) {
-            onInitialized();
-        } else if (!isInitializing) {
+            reset();
+        }
+
+        if (!isInitializing) {
             isInitializing = true;
             initializeInternal(initializationPosition);
         }

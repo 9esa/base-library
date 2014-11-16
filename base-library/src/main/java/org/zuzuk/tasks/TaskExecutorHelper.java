@@ -31,6 +31,12 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private final HashSet<AggregationTaskController> temporaryTasksControllers = new HashSet<>();
     private AggregationTaskController currentTaskController;
     private boolean isCurrentTaskTemporary;
+    private boolean isPaused = true;
+
+    @Override
+    public SpiceManager getSpiceManager() {
+        return remoteSpiceManager;
+    }
 
     private void setCurrentTaskController(AggregationTaskController currentTaskController) {
         if (this.currentTaskController != null)
@@ -67,22 +73,50 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public void onResume() {
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
+        isPaused = false;
     }
 
     /* Executes all tasks that needed to be reloaded */
-    public void reload(boolean isInBackground) {
-        for (AggregationTaskController taskController : tasksControllers.keySet()) {
-            if (taskController.task.isLoaded()) {
-                taskController.task.onLoaded();
-            }
-            if (taskController.task.isLoadingNeeded()) {
-                setCurrentTaskController(taskController);
-                taskController.task.load(false);
-                taskController.task.onLoadingStarted(isInBackground);
-            }
+    public void reload(final boolean isInBackground) {
+        for (final AggregationTaskController taskController : tasksControllers.keySet()) {
+            executeAggregationTask(taskController, isInBackground);
+        }
+    }
+
+    public void executeAggregationTask(AggregationTask aggregationTask, boolean isInBackground) {
+        AggregationTaskController controller = new AggregationTaskController(aggregationTask);
+        temporaryTasksControllers.add(controller);
+        executeAggregationTask(controller, isInBackground);
+    }
+
+    private void executeAggregationTask(final AggregationTaskController taskController, final boolean isInBackground) {
+        final boolean isLoaded = taskController.task.isLoaded();
+        if (isLoaded) {
+            taskController.task.onLoaded();
         }
 
-        currentTaskController = null;
+        executeTaskBackground(new Task<Boolean>(Boolean.class) {
+            @Override
+            public Boolean execute() throws Exception {
+                return taskController.task.isLoadingNeeded();
+            }
+        }, new RequestListener<Boolean>() {
+
+            @Override
+            public void onRequestSuccess(Boolean isLoadingNeeded) {
+                if (isLoadingNeeded) {
+                    setCurrentTaskController(taskController);
+                    taskController.task.load(isInBackground || isLoaded);
+                    taskController.task.onLoadingStarted(isInBackground);
+                    currentTaskController = null;
+                }
+            }
+
+            @Override
+            public void onRequestFailure(SpiceException spiceException) {
+                throw new RuntimeException(spiceException);
+            }
+        });
     }
 
     @Override
@@ -152,6 +186,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     /* Associated lifecycle method */
     public void onPause() {
+        isPaused = true;
         localSpiceManager.shouldStop();
         remoteSpiceManager.shouldStop();
     }
@@ -202,7 +237,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
             if (task.isLoaded()) {
                 task.onLoaded();
             } else {
-                task.onFailed(fails.isEmpty() ? null : fails.get(fails.size() - 1));
+                task.onFailed(fails.size() > 0 ? fails.get(fails.size() - 1) : null);
             }
         }
 
@@ -222,6 +257,10 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
         @Override
         public void onRequestSuccess(T response) {
+            if (isPaused) {
+                return;
+            }
+
             setCurrentTaskController(parentTaskController);
             isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
 
@@ -246,6 +285,10 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
+            if (isPaused) {
+                return;
+            }
+
             setCurrentTaskController(parentTaskController);
             isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
 
@@ -267,6 +310,35 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
             currentTaskController = null;
             isCurrentTaskTemporary = false;
+        }
+    }
+
+    public static class DefaultTemporaryTask implements AggregationTask {
+
+        @Override
+        public boolean isLoadingNeeded() {
+            return false;
+        }
+
+        @Override
+        public boolean isLoaded() {
+            return true;
+        }
+
+        @Override
+        public void load(boolean b) {
+        }
+
+        @Override
+        public void onLoadingStarted(boolean b) {
+        }
+
+        @Override
+        public void onLoaded() {
+        }
+
+        @Override
+        public void onFailed(Exception e) {
         }
     }
 }

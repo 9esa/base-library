@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.R;
@@ -29,20 +30,7 @@ public abstract class LoadingFragment extends BaseFragment
     private final TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper() {
         @Override
         public AggregationTask createTemporaryTask() {
-            return new AggregationTask() {
-                @Override
-                public boolean isLoadingNeeded() {
-                    return false;
-                }
-
-                @Override
-                public boolean isLoaded() {
-                    return true;
-                }
-
-                @Override
-                public void load(boolean b) {
-                }
+            return new DefaultTemporaryTask() {
 
                 @Override
                 public void onLoadingStarted(boolean b) {
@@ -64,12 +52,17 @@ public abstract class LoadingFragment extends BaseFragment
 
     @Override
     public boolean isLoadingNeeded() {
-        return !isLoaded();
+        return true;
     }
 
     @Override
     public boolean isLoaded() {
         return true;
+    }
+
+    @Override
+    public SpiceManager getSpiceManager() {
+        return taskExecutorHelper.getSpiceManager();
     }
 
     @Override
@@ -95,6 +88,7 @@ public abstract class LoadingFragment extends BaseFragment
         View contentView = createContentView(inflater, contentContainerView, savedInstanceState);
         contentContainerView.addView(contentView);
 
+
         return view;
     }
 
@@ -107,6 +101,10 @@ public abstract class LoadingFragment extends BaseFragment
                 taskExecutorHelper.reload(false);
             }
         });
+
+        findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
+        findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+        findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
 
         taskExecutorHelper.onCreate(view.getContext());
     }
@@ -128,22 +126,15 @@ public abstract class LoadingFragment extends BaseFragment
     @Override
     public void onLoaded() {
         findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
-        if (isLoaded()) {
-            findViewById(R.id.loadingContentContainer).setVisibility(View.VISIBLE);
-            findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
-        } else {
-            findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
-            findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
-        }
+        findViewById(R.id.loadingContentContainer).setVisibility(View.VISIBLE);
+        findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
     }
 
     @Override
     public void onFailed(Exception ex) {
         findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
-        if (!isLoaded()) {
-            findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
-            findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
-        }
+        findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
+        findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
     }
 
     @Override

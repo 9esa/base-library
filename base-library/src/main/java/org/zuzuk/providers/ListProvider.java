@@ -2,6 +2,9 @@ package org.zuzuk.providers;
 
 import org.zuzuk.providers.base.ItemsProvider;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 
@@ -33,9 +36,22 @@ public class ListProvider<TItem extends Serializable> extends ItemsProvider<TIte
         onDataSetChanged();
     }
 
-    /* Resets provider and made it not initialized */
-    public void reset(){
+    @Override
+    protected void resetInternal() {
         items = null;
-        onDataSetChanged();
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.writeBoolean(isInitialized());
+        if (isInitialized()) {
+            out.writeObject(items);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        if (in.readBoolean()) {
+            items = (List<TItem>) in.readObject();
+        }
     }
 }

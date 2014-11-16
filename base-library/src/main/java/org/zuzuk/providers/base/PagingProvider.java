@@ -105,6 +105,10 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {
+        if (!getRequestingPages().contains(pageIndex)) {
+            return;
+        }
+
         int itemsSize = items != null ? items.size() : 0;
         if (itemsSize > DEFAULT_ITEMS_ON_PAGE)
             throw new RuntimeException("Wrong result items count: " + itemsSize);
@@ -118,6 +122,24 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         if (onPageLoadedListener != null) {
             onPageLoadedListener.onPageLoaded(pageIndex, items);
         }
+
+        getRequestingPages().remove(pageIndex);
+        if (!isInitialized()) {
+            onInitialized();
+        } else {
+            onDataSetChanged();
+        }
+    }
+
+    protected void onPageLoadingFailed(int pageIndex, Exception exception) {
+        if (!getRequestingPages().contains(pageIndex)) {
+            return;
+        }
+
+        getRequestingPages().remove(pageIndex);
+        if (!isInitialized()) {
+            onInitializationFailed(exception);
+        }
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -127,6 +149,13 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
             out.writeInt(pages.keyAt(i));
             out.writeObject(pages.valueAt(i));
         }
+    }
+
+    @Override
+    protected void resetInternal() {
+        getRequestingPages().clear();
+        getPages().clear();
+        totalCount = null;
     }
 
     @SuppressWarnings("unchecked")

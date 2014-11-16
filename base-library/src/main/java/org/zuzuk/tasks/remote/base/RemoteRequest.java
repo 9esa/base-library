@@ -5,6 +5,8 @@ import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.tasks.base.Task;
 
+import java.io.Serializable;
+
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Base remote request that supports caching if possible

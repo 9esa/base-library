@@ -1,5 +1,6 @@
 package org.zuzuk.tasks.remote.base;
 
+import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 /**
@@ -7,6 +8,9 @@ import com.octo.android.robospice.request.listener.RequestListener;
  * Interface that supply async remote request executing
  */
 public interface RequestExecutor {
+
+    /* Returns spice manager that executes requests */
+    public SpiceManager getSpiceManager();
 
     /* Executes request in foreground */
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener);

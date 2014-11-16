@@ -104,20 +104,11 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
                         @Override
                         public void onRequestSuccess(List list) {
                             onPageLoaded(index, parseResponse(list));
-                            getRequestingPages().remove(index);
-                            if (!isInitialized()) {
-                                onInitialized();
-                            } else {
-                                onDataSetChanged();
-                            }
                         }
 
                         @Override
                         public void onRequestFailure(SpiceException spiceException) {
-                            getRequestingPages().remove(index);
-                            if (!isInitialized()) {
-                                onInitializationFailed(spiceException);
-                            }
+                            onPageLoadingFailed(index, spiceException);
                         }
                     });
         } else {
@@ -145,10 +136,15 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
         return (List<TItem>) items;
     }
 
+    @Override
+    protected void resetInternal() {
+        super.resetInternal();
+        waitingForRequestPages.clear();
+    }
+
     /* Disposes iterator to avoid memory leaks and open cursors */
     public void dispose() {
-        getRequestingPages().clear();
-        getPages().clear();
+        resetInternal();
         if (iterator != null) {
             iterator.closeQuietly();
         }

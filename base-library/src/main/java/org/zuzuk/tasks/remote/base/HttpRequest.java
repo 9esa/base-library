@@ -25,11 +25,7 @@ import java.net.URLEncoder;
 public abstract class HttpRequest<T> extends RemoteRequest<T> {
     private final static String CACHE_PARAMETER_SEPARATOR = "#";
     private final static int CACHE_MAX_KEY_SIZE = 128;
-    private final static int CACHE_MAX_CONTENT_SIZE = 256 * 1024;
     protected final static HttpTransport DefaultHttpTransport = new NetHttpTransport();
-
-    private final Class<T> responseResultType;
-    private com.google.api.client.http.HttpRequest builtRequest;
 
     /* Returns base url without parameters */
     protected abstract String getUrl();
@@ -44,7 +40,6 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
     protected HttpRequest(Class<T> responseResultType) {
         super(responseResultType);
-        this.responseResultType = responseResultType;
     }
 
     /* Builds HttpRequest */
@@ -64,8 +59,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
     @Override
     public T execute() throws Exception {
-        com.google.api.client.http.HttpRequest request = builtRequest != null ? builtRequest : buildRequest();
-        builtRequest = null;
+        com.google.api.client.http.HttpRequest request = buildRequest();
 
         Lc.d("Url requested: " + request.getUrl().toString());
 
@@ -78,9 +72,9 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
                 responseString.append(line);
             }
             Lc.d("Response for: " + request.getUrl().toString() + '\n' + responseString);
-            response = getParser().parseAndClose(new StringReader(responseString.toString()), responseResultType);
+            response = getParser().parseAndClose(new StringReader(responseString.toString()), getResultType());
         } else {
-            response = request.execute().parseAs(responseResultType);
+            response = request.execute().parseAs(getResultType());
         }
 
         handleResponse(response);
@@ -116,7 +110,6 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         StringBuilder fileNameSafeCacheKey = new StringBuilder();
         try {
             com.google.api.client.http.HttpRequest request = buildRequest();
-            builtRequest = request;
             fileNameSafeCacheKey.append(URLEncoder.encode(request.getUrl().build(), "UTF-8").replace("%", CACHE_PARAMETER_SEPARATOR));
             fileNameSafeCacheKey.append(CACHE_PARAMETER_SEPARATOR).append(request.getHeaders().toString());
             if (request.getContent() != null) {
