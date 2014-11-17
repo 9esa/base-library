@@ -83,8 +83,10 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         }
     }
 
+    /* Executes aggregation task */
     public void executeAggregationTask(AggregationTask aggregationTask, boolean isInBackground) {
         AggregationTaskController controller = new AggregationTaskController(aggregationTask);
+        tasksControllers.put(controller, new ArrayList<RequestListener>());
         temporaryTasksControllers.add(controller);
         executeAggregationTask(controller, isInBackground);
     }
@@ -107,7 +109,11 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
                 if (isLoadingNeeded) {
                     setCurrentTaskController(taskController);
                     taskController.task.load(isInBackground || isLoaded);
-                    taskController.task.onLoadingStarted(isInBackground);
+                    if (!tasksControllers.get(taskController).isEmpty()) {
+                        taskController.task.onLoadingStarted(isInBackground);
+                    } else {
+                        finishTask(taskController);
+                    }
                     currentTaskController = null;
                 }
             }
@@ -225,20 +231,25 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         return result;
     }
 
+    private void finishTask(AggregationTaskController controller) {
+        if (controller.task.isLoaded()) {
+            controller.task.onLoaded();
+        } else {
+            controller.task.onFailed(controller.fails.size() > 0 ? controller.fails.get(controller.fails.size() - 1) : null);
+        }
+
+        if (isCurrentTaskTemporary) {
+            temporaryTasksControllers.remove(controller);
+            tasksControllers.remove(controller);
+        }
+    }
+
     private class AggregationTaskController {
         private final AggregationTask task;
         private final List<Exception> fails = new ArrayList<>();
 
         private void addFail(Exception ex) {
             fails.add(ex);
-        }
-
-        private void finishTask() {
-            if (task.isLoaded()) {
-                task.onLoaded();
-            } else {
-                task.onFailed(fails.size() > 0 ? fails.get(fails.size() - 1) : null);
-            }
         }
 
         private AggregationTaskController(AggregationTask task) {
@@ -272,11 +283,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
             listeners.remove(this);
 
             if (listeners.isEmpty()) {
-                parentTaskController.finishTask();
-                if (isCurrentTaskTemporary) {
-                    temporaryTasksControllers.remove(parentTaskController);
-                    tasksControllers.remove(parentTaskController);
-                }
+                finishTask(parentTaskController);
             }
 
             currentTaskController = null;
@@ -301,11 +308,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
             parentTaskController.addFail(spiceException);
 
             if (listeners.isEmpty()) {
-                parentTaskController.finishTask();
-                if (isCurrentTaskTemporary) {
-                    temporaryTasksControllers.remove(parentTaskController);
-                    tasksControllers.remove(parentTaskController);
-                }
+                finishTask(parentTaskController);
             }
 
             currentTaskController = null;

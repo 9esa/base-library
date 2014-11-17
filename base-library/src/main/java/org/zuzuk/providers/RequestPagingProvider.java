@@ -24,7 +24,7 @@ import java.util.HashMap;
 public class RequestPagingProvider<TItem extends Serializable, TResponse> extends PagingProvider<TItem> {
     private RequestExecutor requestExecutor;
     private PagingTaskCreator<TItem, TResponse> requestCreator;
-    private HashMap<Integer, CacheEntry> cacheInfo;
+    private HashMap<Integer, CacheEntry> cacheInfo = new HashMap<>();
     private Long initializationTime;
 
     /* Returns object that executing paging requests */
@@ -85,7 +85,7 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
     @Override
     protected void resetInternal() {
         super.resetInternal();
-        cacheInfo = new HashMap<>();
+        cacheInfo.clear();
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -103,6 +103,8 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
         if (in.readBoolean()) {
             cacheInfo = (HashMap<Integer, CacheEntry>) in.readObject();
             initializationTime = in.readLong();
+        } else {
+            cacheInfo = new HashMap<>();
         }
     }
 }

@@ -142,6 +142,13 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         }
     }
 
+    @Override
+    protected void resetInternal() {
+        getRequestingPages().clear();
+        getPages().clear();
+        totalCount = null;
+    }
+
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.writeInt(totalCount != null ? totalCount : -1);
         out.writeInt(pages.size());
@@ -149,13 +156,6 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
             out.writeInt(pages.keyAt(i));
             out.writeObject(pages.valueAt(i));
         }
-    }
-
-    @Override
-    protected void resetInternal() {
-        getRequestingPages().clear();
-        getPages().clear();
-        totalCount = null;
     }
 
     @SuppressWarnings("unchecked")
