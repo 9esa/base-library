@@ -3,7 +3,6 @@ package org.zuzuk.settings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * Created by Gavriil Sitnikov on 09/2014.
@@ -18,8 +17,8 @@ public abstract class Setting<T> {
     protected final Object valueLocker = new Object();
 
     /* Raises when value changes */
-    public void raiseOnSettingChanged(Context context){
-        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(getName()));
+    public void raiseOnSettingChanged(Context context) {
+        context.sendBroadcast(new Intent(getName()));
     }
 
     /* Returns name of setting */

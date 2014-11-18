@@ -27,28 +27,7 @@ import org.zuzuk.tasks.remote.base.RequestWrapper;
  */
 public abstract class LoadingFragment extends BaseFragment
         implements TaskExecutor, RequestExecutor, AggregationTask {
-    private final TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper() {
-        @Override
-        public AggregationTask createTemporaryTask() {
-            return new DefaultTemporaryTask() {
-
-                @Override
-                public void onLoadingStarted(boolean b) {
-                    findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onLoaded() {
-                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
-                }
-
-                @Override
-                public void onFailed(Exception e) {
-                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
-                }
-            };
-        }
-    };
+    private final TaskExecutorHelper taskExecutorHelper = createTaskExecutorHelper();
 
     @Override
     public boolean isLoadingNeeded() {
@@ -202,5 +181,33 @@ public abstract class LoadingFragment extends BaseFragment
     @Override
     public void executeTaskBackground(LocalTask task) {
         taskExecutorHelper.executeTaskBackground(task);
+    }
+
+    /* Creates new task executor helper. Should override if some logic inside helper must be changed */
+    protected LoadingFragmentExecutorHelper createTaskExecutorHelper() {
+        return new LoadingFragmentExecutorHelper();
+    }
+
+    protected class LoadingFragmentExecutorHelper extends TaskExecutorHelper {
+        @Override
+        public AggregationTask createTemporaryTask() {
+            return new DefaultTemporaryTask() {
+
+                @Override
+                public void onLoadingStarted(boolean b) {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onLoaded() {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onFailed(Exception e) {
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+                }
+            };
+        }
     }
 }

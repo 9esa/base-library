@@ -1,10 +1,14 @@
 package org.zuzuk.ui.services;
 
 import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
 
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.events.EventListener;
+import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
@@ -15,7 +19,8 @@ import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
  * Created by Gavriil Sitnikov on 03/10/2014.
  * Base service that can execute requests
  */
-public abstract class BaseRequestExecutorService extends Service {
+public abstract class BaseRequestExecutorService extends Service implements EventListener {
+    private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
     private SpiceManager remoteSpiceManager;
     private SpiceManager localSpiceManager;
 
@@ -31,6 +36,13 @@ public abstract class BaseRequestExecutorService extends Service {
 
         remoteSpiceManager.start(this);
         localSpiceManager.start(this);
+
+        eventListenerHelper.onCreate(this);
+        eventListenerHelper.onResume();
+    }
+
+    @Override
+    public void onEvent(Context context, String eventName, Intent intent) {
     }
 
     @Override
@@ -38,6 +50,9 @@ public abstract class BaseRequestExecutorService extends Service {
         remoteSpiceManager.shouldStop();
         localSpiceManager.shouldStop();
         super.onDestroy();
+
+        eventListenerHelper.onPause();
+        eventListenerHelper.onDestroy();
     }
 
     /* Executes request in background */

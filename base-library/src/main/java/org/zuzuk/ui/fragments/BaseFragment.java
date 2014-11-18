@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 
 import org.zuzuk.events.BroadcastEvents;
 import org.zuzuk.events.EventAnnotation;
+import org.zuzuk.events.EventListener;
+import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.ui.UIUtils;
 import org.zuzuk.ui.activities.BaseActivity;
 
@@ -26,35 +28,10 @@ import java.util.Queue;
  * Created by Gavriil Sitnikov on 07/14.
  * Fragment that include base logic to hold views and navigation logic
  */
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseFragment extends Fragment implements EventListener {
     private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
-
-    private final List<String> globalEvents = new ArrayList<>();
-    private final List<String> localEvents = new ArrayList<>();
-    private final List<String> globalOnResumeEvents = new ArrayList<>();
-    private final List<String> localOnResumeEvents = new ArrayList<>();
-    private boolean isOnCreateReceiversRegistered = false;
-    private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            onEvent(context, intent);
-        }
-    };
-    private final BroadcastReceiver localEventReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            onEvent(context, intent);
-        }
-    };
-    private final BroadcastReceiver globalOnResumeEventReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            onEvent(context, intent);
-        }
-    };
-    private final BroadcastReceiver localOnResumeEventReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            onEvent(context, intent);
-        }
-    };
+    private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
 
     /* Returns post handler to executes code on UI thread */
     public Handler getPostHandler() {
@@ -87,17 +64,9 @@ public abstract class BaseFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        fillListeningBroadcastEvents();
-    }
-
-    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(localEventReceiver, UIUtils.createIntentFilter(localEvents));
-        getActivity().registerReceiver(globalEventReceiver, UIUtils.createIntentFilter(globalEvents));
-        isOnCreateReceiversRegistered = true;
+        eventListenerHelper.onCreate(getActivity());
     }
 
     @Override
@@ -117,12 +86,7 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(localOnResumeEventReceiver, UIUtils.createIntentFilter(localOnResumeEvents));
-        getActivity().registerReceiver(globalOnResumeEventReceiver, UIUtils.createIntentFilter(globalOnResumeEvents));
-    }
-
-    /* Raises when even received */
-    protected void onEvent(Context context, Intent intent) {
+        eventListenerHelper.onResume();
     }
 
     /* Raises when device back button pressed */
@@ -136,10 +100,13 @@ public abstract class BaseFragment extends Fragment {
     }
 
     @Override
+    public void onEvent(Context context, String eventName, Intent intent) {
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localOnResumeEventReceiver);
-        getActivity().unregisterReceiver(globalOnResumeEventReceiver);
+        eventListenerHelper.onPause();
     }
 
     @Override
@@ -157,32 +124,7 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (isOnCreateReceiversRegistered) {
-            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(localEventReceiver);
-            getActivity().unregisterReceiver(globalEventReceiver);
-            isOnCreateReceiversRegistered = false;
-        }
-    }
-
-    private void fillListeningBroadcastEvents() {
-        BroadcastEvents events = ((Object) this).getClass().getAnnotation(BroadcastEvents.class);
-        if (events != null) {
-            for (EventAnnotation eventAnnotation : events.value()) {
-                if (eventAnnotation.isLocal()) {
-                    if (eventAnnotation.isOnlyWhileResumed()) {
-                        localOnResumeEvents.add(eventAnnotation.value());
-                    } else {
-                        localEvents.add(eventAnnotation.value());
-                    }
-                } else {
-                    if (eventAnnotation.isOnlyWhileResumed()) {
-                        globalOnResumeEvents.add(eventAnnotation.value());
-                    } else {
-                        globalEvents.add(eventAnnotation.value());
-                    }
-                }
-            }
-        }
+        eventListenerHelper.onDestroy();
     }
 
     /* Finds view by id and stores it in cache till view destroys */

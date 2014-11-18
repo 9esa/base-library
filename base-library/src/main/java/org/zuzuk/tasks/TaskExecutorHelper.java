@@ -1,11 +1,14 @@
 package org.zuzuk.tasks;
 
 import android.content.Context;
+import android.content.Intent;
 
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.events.EventListener;
+import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
@@ -23,10 +26,11 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
+public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventListener {
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
     private Context context;
+    private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
     private final HashMap<AggregationTaskController, List<RequestListener>> tasksControllers = new HashMap<>();
     private final HashSet<AggregationTaskController> temporaryTasksControllers = new HashSet<>();
     private AggregationTaskController currentTaskController;
@@ -59,6 +63,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
             remoteSpiceManager = ((SpiceManagerProvider) applicationContext).createRemoteSpiceManager();
         } else
             throw new RuntimeException("To use TaskExecutorHelper your Application class should implement SpiceManagerProvider");
+
+        eventListenerHelper.onCreate(context);
     }
 
     /**
@@ -74,6 +80,11 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
         isPaused = false;
+        eventListenerHelper.onResume();
+    }
+
+    @Override
+    public void onEvent(Context context, String eventName, Intent intent) {
     }
 
     /* Executes all tasks that needed to be reloaded */
@@ -195,6 +206,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         isPaused = true;
         localSpiceManager.shouldStop();
         remoteSpiceManager.shouldStop();
+        eventListenerHelper.onPause();
     }
 
     /* Associated lifecycle method */
@@ -202,6 +214,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         context = null;
         localSpiceManager = null;
         remoteSpiceManager = null;
+        eventListenerHelper.onDestroy();
     }
 
     private void checkManagersState(Object request) {
