@@ -121,7 +121,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
                     setCurrentTaskController(taskController);
                     taskController.task.load(isInBackground || isLoaded);
                     if (!tasksControllers.get(taskController).isEmpty()) {
-                        taskController.task.onLoadingStarted(isInBackground);
+                        taskController.task.onLoadingStarted(isInBackground || isLoaded);
                     } else {
                         finishTask(taskController);
                     }
