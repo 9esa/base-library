@@ -75,6 +75,7 @@ public class LongSetting extends Setting<Long> {
             if (value == null) {
                 if (defaultValue != null) {
                     getPreferences(context).edit().putLong(getName(), defaultValue).commit();
+                    value = defaultValue;
                 } else {
                     getPreferences(context).edit().remove(getName()).commit();
                 }

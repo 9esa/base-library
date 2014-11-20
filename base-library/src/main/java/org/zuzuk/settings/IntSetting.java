@@ -75,6 +75,7 @@ public class IntSetting extends Setting<Integer> {
             if (value == null) {
                 if (defaultValue != null) {
                     getPreferences(context).edit().putInt(getName(), defaultValue).commit();
+                    value = defaultValue;
                 } else {
                     getPreferences(context).edit().remove(getName()).commit();
                 }

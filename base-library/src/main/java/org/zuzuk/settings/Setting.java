@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
+import org.zuzuk.utils.Lc;
+
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Base class that represents setting
@@ -19,6 +21,7 @@ public abstract class Setting<T> {
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context) {
         context.sendBroadcast(new Intent(getName()));
+        Lc.d("Setting " + name + " changed to " + valueToString(getCachedValue().get()));
     }
 
     /* Returns name of setting */
@@ -45,6 +48,10 @@ public abstract class Setting<T> {
 
     protected Setting(String name) {
         this.name = name;
+    }
+
+    private String valueToString(T value){
+        return value != null ? value.toString() : "null";
     }
 
     /* helper class to store cached value */

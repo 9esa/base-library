@@ -75,6 +75,7 @@ public class FloatSetting extends Setting<Float> {
             if (value == null) {
                 if (defaultValue != null) {
                     getPreferences(context).edit().putFloat(getName(), defaultValue).commit();
+                    value = defaultValue;
                 } else {
                     getPreferences(context).edit().remove(getName()).commit();
                 }
