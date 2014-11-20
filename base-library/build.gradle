@@ -8,7 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library'
 ext.libPackageName = 'org.zuzuk'
-ext.libVersion = '1.0.54'
+ext.libVersion = '1.0.56'
 
 android {
     compileSdkVersion 20
@@ -34,25 +34,24 @@ android {
 
 dependencies {
     /* Common */
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:20.0.0'
+    provided 'com.android.support:appcompat-v7:20.0.0'
 
     /* Image loading */
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+    provided 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 
     /* Database working */
-    compile 'com.j256.ormlite:ormlite-android:4.48'
+    provided 'com.j256.ormlite:ormlite-android:4.48'
 
     /* Network requests */
-    compile 'com.octo.android.robospice:robospice:1.4.14'
+    provided 'com.octo.android.robospice:robospice:1.4.14'
 
-    compile('com.google.http-client:google-http-client-android:1.19.0') {
+    provided('com.google.http-client:google-http-client-android:1.19.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
-    compile('com.google.http-client:google-http-client-jackson2:1.19.0') {
+    provided('com.google.http-client:google-http-client-jackson2:1.19.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
-    compile('com.octo.android.robospice:robospice-google-http-client:1.4.8') {
+    provided('com.octo.android.robospice:robospice-google-http-client:1.4.8') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
 }

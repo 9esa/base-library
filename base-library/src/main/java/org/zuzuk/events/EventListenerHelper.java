@@ -66,12 +66,12 @@ public class EventListenerHelper {
     }
 
     public void onDestroy() {
-        context = null;
         if (isOnCreateReceiversRegistered) {
             LocalBroadcastManager.getInstance(context).unregisterReceiver(localEventReceiver);
             context.unregisterReceiver(globalEventReceiver);
             isOnCreateReceiversRegistered = false;
         }
+        context = null;
     }
 
 
