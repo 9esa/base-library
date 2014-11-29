@@ -75,6 +75,7 @@ public class BooleanSetting extends Setting<Boolean> {
             if (value == null) {
                 if (defaultValue != null) {
                     getPreferences(context).edit().putBoolean(getName(), defaultValue).commit();
+                    value = defaultValue;
                 } else {
                     getPreferences(context).edit().remove(getName()).commit();
                 }

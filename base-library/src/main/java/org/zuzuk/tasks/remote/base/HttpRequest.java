@@ -77,7 +77,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
             response = request.execute().parseAs(getResultType());
         }
 
-        handleResponse(response);
+        response = handleResponse(response);
         return response;
     }
 
@@ -95,7 +95,8 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
     }
 
     /* Handle response. Use it to do something after request successfully executes */
-    protected void handleResponse(T response) throws Exception {
+    protected T handleResponse(T response) throws Exception {
+        return response;
     }
 
     /* Returns content as string */

@@ -122,6 +122,7 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
             if (defaultValue != null) {
                 try {
                     getPreferences(context).edit().putString(getName(), serializeObject(defaultValue)).commit();
+                    value = defaultValue;
                 } catch (Exception e) {
                     Lc.e("Setting " + getName() + " cannot be serialized: " + defaultValue.toString() + '\n' + e.getMessage());
                 }

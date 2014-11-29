@@ -75,6 +75,7 @@ public class StringSetting extends Setting<String> {
             if (value == null) {
                 if (defaultValue != null) {
                     getPreferences(context).edit().putString(getName(), defaultValue).commit();
+                    value = defaultValue;
                 } else {
                     getPreferences(context).edit().remove(getName()).commit();
                 }
