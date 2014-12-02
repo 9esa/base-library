@@ -1,90 +1,38 @@
 package org.zuzuk.settings;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import org.zuzuk.utils.Lc;
-import org.zuzuk.utils.Utils;
+import java.nio.ByteBuffer;
 
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Class that represents long setting
  */
 public class LongSetting extends Setting<Long> {
-    private final Long defaultValue;
-    private final ValueValidator<Long> valueValidator;
 
     public LongSetting(String name) {
         super(name);
-        this.defaultValue = null;
-        this.valueValidator = null;
     }
 
-    public LongSetting(String name, long defaultValue) {
-        super(name);
-        this.defaultValue = defaultValue;
-        this.valueValidator = null;
+    public LongSetting(String name, Long defaultValue) {
+        super(name, defaultValue);
     }
 
     public LongSetting(String name, ValueValidator<Long> valueValidator) {
-        super(name);
-        this.defaultValue = null;
-        this.valueValidator = valueValidator;
+        super(name, valueValidator);
     }
 
-    public LongSetting(String name, long defaultValue, ValueValidator<Long> valueValidator) {
-        super(name);
-        this.defaultValue = defaultValue;
-        this.valueValidator = valueValidator;
+    public LongSetting(String name, Long defaultValue, ValueValidator<Long> valueValidator) {
+        super(name, defaultValue, valueValidator);
     }
 
-    /* Returns boolean value of setting */
-    public Long get(Context context) {
-        synchronized (valueLocker) {
-            CachedValue cachedValue = getCachedValue();
-            if (cachedValue == null) {
-                SharedPreferences preferences = getPreferences(context);
-                Long value = preferences.contains(getName())
-                        ? preferences.getLong(getName(), 0)
-                        : null;
-
-                if (value == null && defaultValue != null) {
-                    value = defaultValue;
-                }
-
-                cachedValue = new CachedValue(value);
-                setCachedValue(cachedValue);
-            }
-            return cachedValue.get();
-        }
+    @Override
+    protected Long fromBytes(byte[] data) {
+        return data != null ? ByteBuffer.wrap(data).getLong() : null;
     }
 
-    /* Sets boolean value of setting */
-    public boolean set(Context context, Long value) {
-        synchronized (valueLocker) {
-            if (Utils.objectsEquals(value, get(context))) {
-                return true;
-            }
-
-            if (valueValidator != null && !valueValidator.isValid(value)) {
-                Lc.e("Setting " + getName() + " tried to set with invalid value: "
-                        + (value != null ? value : "null"));
-                return false;
-            }
-
-            if (value == null) {
-                if (defaultValue != null) {
-                    getPreferences(context).edit().putLong(getName(), defaultValue).commit();
-                    value = defaultValue;
-                } else {
-                    getPreferences(context).edit().remove(getName()).commit();
-                }
-            } else {
-                getPreferences(context).edit().putLong(getName(), value).commit();
-            }
-            setCachedValue(new CachedValue(value));
-            raiseOnSettingChanged(context);
-            return true;
-        }
+    @Override
+    protected byte[] toBytes(Long value) {
+        return value != null
+                ? ByteBuffer.allocate(Long.SIZE / 8).putLong(value).array()
+                : null;
     }
 }
