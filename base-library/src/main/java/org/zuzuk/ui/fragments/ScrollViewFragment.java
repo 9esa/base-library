@@ -19,8 +19,8 @@ public abstract class ScrollViewFragment extends LoadingFragment {
         }
     };
 
-    /* Clears cached position of ScrollView */
-    protected void clearPosition() {
+    /* Resets fragment current state. (e.s. clears cached position of ScrollView) */
+    protected void resetFragmentState() {
         scrollY = 0;
     }
 

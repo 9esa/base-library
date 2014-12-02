@@ -50,6 +50,9 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
 
     @SuppressWarnings("unchecked")
     private T deserializeObject(byte[] data) {
+        if (data == null) {
+            return null;
+        }
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         try {
             ObjectInputStream is = new ObjectInputStream(in);

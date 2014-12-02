@@ -72,10 +72,11 @@ public abstract class AbsListViewFragment extends LoadingFragment {
         return listPosition;
     }
 
-    /* Clears cached list position of ListView */
-    protected void clearListPosition() {
+    /* Resets fragment current state. (e.g. clears cached list position of ListView) */
+    protected void resetFragmentState() {
         listPosition = 0;
         listTopMargin = 0;
+        checkedItems = null;
     }
 
     /* Returns selection type of ListView */
