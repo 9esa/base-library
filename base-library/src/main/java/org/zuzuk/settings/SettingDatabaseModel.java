@@ -1,5 +1,6 @@
 package org.zuzuk.settings;
 
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -11,7 +12,7 @@ import com.j256.ormlite.table.DatabaseTable;
 class SettingDatabaseModel {
     @DatabaseField(id = true, canBeNull = false)
     private String name;
-    @DatabaseField
+    @DatabaseField(dataType = DataType.BYTE_ARRAY)
     private byte[] data;
 
     /* Returns name of setting */
