@@ -15,30 +15,20 @@ import java.io.File;
  */
 public abstract class Setting<T> {
     private final String name;
-    private final T defaultValue;
+    private final byte[] defaultValueBytes;
     private final ValueValidator<T> valueValidator;
-    private CachedValue cachedValue;
+    private byte[] cachedValueBytes;
     protected final Object valueLocker = new Object();
 
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context) {
         context.sendBroadcast(new Intent(getName()));
-        Lc.d("Setting " + name + " changed to " + valueToString(getCachedValue().get()));
+        Lc.d("Setting " + name + " changed to " + valueToString(get(context)));
     }
 
     /* Returns name of setting */
     public String getName() {
         return name;
-    }
-
-    /* Returns cached value of setting */
-    private CachedValue getCachedValue() {
-        return cachedValue;
-    }
-
-    /* Sets string value of setting */
-    protected void setCachedValue(CachedValue cachedValue) {
-        this.cachedValue = cachedValue;
     }
 
     /* Returns value bytes of setting */
@@ -51,19 +41,13 @@ public abstract class Setting<T> {
     /* Returns value of setting */
     public T get(Context context) {
         synchronized (valueLocker) {
-            CachedValue cachedValue = getCachedValue();
-            if (cachedValue == null) {
-                byte[] valueBytes = getValueBytes(context);
-                T value = valueBytes != null ? fromBytes(valueBytes) : null;
-
-                if (value == null && defaultValue != null) {
-                    value = defaultValue;
-                }
-
-                cachedValue = new CachedValue(value);
-                setCachedValue(cachedValue);
+            if (cachedValueBytes == null) {
+                byte[] bytes = getValueBytes(context);
+                cachedValueBytes = bytes != null ? bytes : new byte[0];
             }
-            return cachedValue.get();
+            return cachedValueBytes.length > 0
+                    ? fromBytes(cachedValueBytes)
+                    : (defaultValueBytes != null ? fromBytes(defaultValueBytes) : null);
         }
     }
 
@@ -82,18 +66,11 @@ public abstract class Setting<T> {
 
             SettingsDatabaseHelper database = SettingsDatabaseHelper.getInstance(context);
             if (value == null) {
-                if (defaultValue != null) {
-                    SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(defaultValue));
-                    database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
-                    value = defaultValue;
-                } else {
-                    database.getDbTable(SettingDatabaseModel.class).deleteById(name);
-                }
+                database.getDbTable(SettingDatabaseModel.class).deleteById(name);
             } else {
                 SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(value));
                 database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
             }
-            setCachedValue(new CachedValue(value));
             raiseOnSettingChanged(context);
             return true;
         }
@@ -101,25 +78,25 @@ public abstract class Setting<T> {
 
     public Setting(String name) {
         this.name = name;
-        this.defaultValue = null;
+        this.defaultValueBytes = null;
         this.valueValidator = null;
     }
 
     public Setting(String name, T defaultValue) {
         this.name = name;
-        this.defaultValue = defaultValue;
+        this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
         this.valueValidator = null;
     }
 
     public Setting(String name, ValueValidator<T> valueValidator) {
         this.name = name;
-        this.defaultValue = null;
+        this.defaultValueBytes = null;
         this.valueValidator = valueValidator;
     }
 
     public Setting(String name, T defaultValue, ValueValidator<T> valueValidator) {
         this.name = name;
-        this.defaultValue = defaultValue;
+        this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
         this.valueValidator = valueValidator;
     }
 
@@ -130,19 +107,6 @@ public abstract class Setting<T> {
     protected abstract T fromBytes(byte[] data);
 
     protected abstract byte[] toBytes(T value);
-
-    /* helper class to store cached value */
-    protected class CachedValue {
-        private final T cachedValue;
-
-        public T get() {
-            return cachedValue;
-        }
-
-        public CachedValue(T cachedValue) {
-            this.cachedValue = cachedValue;
-        }
-    }
 
     private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         private final static String SETTINGS_DATABASE_NAME = "inner_settings";
