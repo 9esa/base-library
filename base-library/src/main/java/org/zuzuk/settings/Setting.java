@@ -7,6 +7,8 @@ import org.zuzuk.database.BaseOrmLiteHelper;
 import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.Utils;
 
+import java.io.File;
+
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Base class that represents setting. Settings are storing into database
@@ -82,14 +84,14 @@ public abstract class Setting<T> {
             if (value == null) {
                 if (defaultValue != null) {
                     SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(defaultValue));
-                    database.getDbTable(SettingDatabaseModel.class).update(settingsModel);
+                    database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
                     value = defaultValue;
                 } else {
                     database.getDbTable(SettingDatabaseModel.class).deleteById(name);
                 }
             } else {
-                SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(defaultValue));
-                database.getDbTable(SettingDatabaseModel.class).update(settingsModel);
+                SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(value));
+                database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
             }
             setCachedValue(new CachedValue(value));
             raiseOnSettingChanged(context);
@@ -143,7 +145,7 @@ public abstract class Setting<T> {
     }
 
     private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
-        private final static String SETTINGS_DATABASE_NAME = "INNER_SETTINGS";
+        private final static String SETTINGS_DATABASE_NAME = "inner_settings";
         private final static int SETTINGS_VERSION = 1;
 
         private static SettingsDatabaseHelper instance;
@@ -156,7 +158,7 @@ public abstract class Setting<T> {
         }
 
         public SettingsDatabaseHelper(Context context) {
-            super(context, SETTINGS_DATABASE_NAME, null, SETTINGS_VERSION);
+            super(context, context.getFilesDir() + File.separator + SETTINGS_DATABASE_NAME, null, SETTINGS_VERSION);
         }
 
         @Override
