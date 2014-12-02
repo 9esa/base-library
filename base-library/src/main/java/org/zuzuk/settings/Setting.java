@@ -5,15 +5,17 @@ import android.content.Intent;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
 import org.zuzuk.utils.Lc;
-import org.zuzuk.utils.Utils;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Base class that represents setting. Settings are storing into database
  */
 public abstract class Setting<T> {
+    private final static byte[] EMPTY_VALUE = new byte[0];
+
     private final String name;
     private final byte[] defaultValueBytes;
     private final ValueValidator<T> valueValidator;
@@ -31,31 +33,50 @@ public abstract class Setting<T> {
         return name;
     }
 
-    /* Returns value bytes of setting */
-    protected byte[] getValueBytes(Context context) {
+    private void updateCacheValueBytes(Context context) {
         SettingsDatabaseHelper database = SettingsDatabaseHelper.getInstance(context);
         SettingDatabaseModel settingModel = database.getDbTable(SettingDatabaseModel.class).queryForId(name);
-        return settingModel != null ? settingModel.getData() : null;
+        cachedValueBytes = settingModel != null
+                ? settingModel.getData()
+                : (defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE);
+    }
+
+    /* Returns value bytes of setting */
+    protected byte[] getValueBytes(Context context) {
+        if (cachedValueBytes == null) {
+            updateCacheValueBytes(context);
+        }
+        return cachedValueBytes;
     }
 
     /* Returns value of setting */
     public T get(Context context) {
         synchronized (valueLocker) {
             if (cachedValueBytes == null) {
-                byte[] bytes = getValueBytes(context);
-                cachedValueBytes = bytes != null ? bytes : new byte[0];
+                updateCacheValueBytes(context);
             }
-            return cachedValueBytes.length > 0
+            return cachedValueBytes != EMPTY_VALUE
                     ? fromBytes(cachedValueBytes)
-                    : (defaultValueBytes != null ? fromBytes(defaultValueBytes) : null);
+                    : null;
         }
     }
 
     /* Sets value of setting. Returns false if it is not changed */
     public boolean set(Context context, T value) {
         synchronized (valueLocker) {
-            if (Utils.objectsEquals(value, get(context))) {
-                return true;
+            byte[] valueBytes = new byte[0];
+            try {
+                valueBytes = value != null ? toBytes(value) : EMPTY_VALUE;
+            } catch (Exception e) {
+                Lc.e("Setting " + getName() + " cannot be serialized: " + value.toString() + '\n' + e.getMessage());
+                return false;
+            }
+            if (cachedValueBytes == null) {
+                updateCacheValueBytes(context);
+            }
+
+            if (Arrays.equals(cachedValueBytes, valueBytes)) {
+                return false;
             }
 
             if (valueValidator != null && !valueValidator.isValid(value)) {
@@ -67,9 +88,11 @@ public abstract class Setting<T> {
             SettingsDatabaseHelper database = SettingsDatabaseHelper.getInstance(context);
             if (value == null) {
                 database.getDbTable(SettingDatabaseModel.class).deleteById(name);
+                cachedValueBytes = defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE;
             } else {
-                SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, toBytes(value));
+                SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, valueBytes);
                 database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
+                cachedValueBytes = valueBytes;
             }
             raiseOnSettingChanged(context);
             return true;
@@ -84,7 +107,11 @@ public abstract class Setting<T> {
 
     public Setting(String name, T defaultValue) {
         this.name = name;
-        this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
+        try {
+            this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         this.valueValidator = null;
     }
 
@@ -96,7 +123,11 @@ public abstract class Setting<T> {
 
     public Setting(String name, T defaultValue, ValueValidator<T> valueValidator) {
         this.name = name;
-        this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
+        try {
+            this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         this.valueValidator = valueValidator;
     }
 
@@ -106,7 +137,7 @@ public abstract class Setting<T> {
 
     protected abstract T fromBytes(byte[] data);
 
-    protected abstract byte[] toBytes(T value);
+    protected abstract byte[] toBytes(T value) throws Exception;
 
     private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         private final static String SETTINGS_DATABASE_NAME = "inner_settings";
