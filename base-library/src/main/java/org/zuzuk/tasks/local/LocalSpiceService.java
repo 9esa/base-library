@@ -16,6 +16,11 @@ import com.octo.android.robospice.persistence.exception.CacheSavingException;
 public class LocalSpiceService extends SpiceService {
 
     @Override
+    public int getThreadCount() {
+        return 5;
+    }
+
+    @Override
     public CacheManager createCacheManager(Application application) {
         // Just return an empty CacheManager
         return new CacheManager() {
