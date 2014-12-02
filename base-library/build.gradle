@@ -15,7 +15,6 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId libPackageName
         minSdkVersion 7
         targetSdkVersion 20
     }
