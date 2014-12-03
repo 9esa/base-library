@@ -66,12 +66,20 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
             return getCallback();
         } else {
             try {
-                Field f = Drawable.class.getDeclaredField("mCallback");
-                f.setAccessible(true);
-                return (Callback) f.get(this);
+                Field field = Drawable.class.getDeclaredField("mCallback");
+                field.setAccessible(true);
+                return (Callback) field.get(this);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
+        }
+    }
+
+    @Override
+    public void unscheduleSelf(Runnable what) {
+        super.unscheduleSelf(what);
+        if (getInternalCallback() == null) {
+            getImageLoader().cancelDisplayTask(this);
         }
     }
 
