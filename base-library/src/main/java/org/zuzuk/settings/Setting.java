@@ -41,14 +41,6 @@ public abstract class Setting<T> {
                 : (defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE);
     }
 
-    /* Returns value bytes of setting */
-    protected byte[] getValueBytes(Context context) {
-        if (cachedValueBytes == null) {
-            updateCacheValueBytes(context);
-        }
-        return cachedValueBytes;
-    }
-
     /* Returns value of setting */
     public T get(Context context) {
         synchronized (valueLocker) {
@@ -64,7 +56,7 @@ public abstract class Setting<T> {
     /* Sets value of setting. Returns false if it is not changed */
     public boolean set(Context context, T value) {
         synchronized (valueLocker) {
-            byte[] valueBytes = new byte[0];
+            byte[] valueBytes;
             try {
                 valueBytes = value != null ? toBytes(value) : EMPTY_VALUE;
             } catch (Exception e) {

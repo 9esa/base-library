@@ -32,6 +32,7 @@ public class ObjectSetting<T extends Serializable> extends Setting<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected T fromBytes(byte[] data) {
         if (data == null) {
             return null;
