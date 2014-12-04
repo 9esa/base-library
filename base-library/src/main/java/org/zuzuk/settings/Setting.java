@@ -1,7 +1,9 @@
 package org.zuzuk.settings;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
 import org.zuzuk.utils.Lc;
@@ -15,16 +17,26 @@ import java.util.Arrays;
  */
 public abstract class Setting<T> {
     private final static byte[] EMPTY_VALUE = new byte[0];
+    private final static String RESET_BROADCAST_EVENT = "RESET_BROADCAST_EVENT";
 
     private final String name;
     private final byte[] defaultValueBytes;
     private final ValueValidator<T> valueValidator;
     private byte[] cachedValueBytes;
+
     protected final Object valueLocker = new Object();
+    private boolean isResetReceiverRegistered = false;
+    private final BroadcastReceiver resetReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateCacheValueBytes(context);
+            context.sendBroadcast(new Intent(getName()));
+        }
+    };
 
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context) {
-        context.sendBroadcast(new Intent(getName()));
+        context.sendBroadcast(new Intent(getName() + "/" + RESET_BROADCAST_EVENT));
         Lc.d("Setting " + name + " changed to " + valueToString(get(context)));
     }
 
@@ -39,6 +51,10 @@ public abstract class Setting<T> {
         cachedValueBytes = settingModel != null
                 ? settingModel.getData()
                 : (defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE);
+
+        if (!isResetReceiverRegistered) {
+            context.getApplicationContext().registerReceiver(resetReceiver, new IntentFilter(getName() + "/" + RESET_BROADCAST_EVENT));
+        }
     }
 
     /* Returns value of setting */
