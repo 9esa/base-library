@@ -30,13 +30,18 @@ public abstract class Setting<T> {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateCacheValueBytes(context);
-            context.sendBroadcast(new Intent(getName()));
+            onSettingChanged(context);
         }
     };
 
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context) {
         context.sendBroadcast(new Intent(getName() + "/" + RESET_BROADCAST_EVENT));
+    }
+
+    /* Raised after setting changed */
+    protected void onSettingChanged(Context context) {
+        context.sendBroadcast(new Intent(getName()));
         Lc.d("Setting " + name + " changed to " + valueToString(get(context)));
     }
 
@@ -54,6 +59,7 @@ public abstract class Setting<T> {
 
         if (!isResetReceiverRegistered) {
             context.getApplicationContext().registerReceiver(resetReceiver, new IntentFilter(getName() + "/" + RESET_BROADCAST_EVENT));
+            isResetReceiverRegistered = true;
         }
     }
 
