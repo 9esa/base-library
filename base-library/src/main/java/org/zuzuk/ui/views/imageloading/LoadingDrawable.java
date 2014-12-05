@@ -49,6 +49,7 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
 
     /* Start reloading image. Use it only when loading parameters is changed */
     protected void reload() {
+        drawable = null;
         getImageLoader().cancelDisplayTask(this);
         if (canLoad()) {
             getImageLoader().displayImage(getUrl(), this, getDisplayImageOptions());
@@ -186,6 +187,7 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
                 drawMatrix.postTranslate((int) dx, (int) dy);
                 break;
             }
+            case FIT_CENTER:
             case CENTER_INSIDE: {
                 drawMatrix = new Matrix();
 
@@ -200,7 +202,6 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
                 break;
             }
             case MATRIX:
-            case FIT_CENTER:
             case FIT_END:
             case FIT_START:
                 throw new IllegalStateException("Scale type not supported: " + imageScaleType);
