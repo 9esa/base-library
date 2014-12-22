@@ -6,22 +6,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import org.zuzuk.events.BroadcastEvents;
-import org.zuzuk.events.EventAnnotation;
 import org.zuzuk.events.EventListener;
 import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.ui.fragments.BaseFragment;
-import org.zuzuk.ui.fragments.OnFragmentChangedListener;
-import org.zuzuk.ui.fragments.StaticFragment;
-
-import java.util.HashMap;
-import java.util.UUID;
+import org.zuzuk.ui.fragments.OnFragmentStartedListener;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
@@ -29,15 +22,10 @@ import java.util.UUID;
  */
 public abstract class BaseActivity extends ActionBarActivity
         implements FragmentManager.OnBackStackChangedListener,
-        OnFragmentChangedListener,
+        OnFragmentStartedListener,
         EventListener {
-    private final static String STATIC_FRAGMENTS_EXTRA = "STATIC_FRAGMENTS_EXTRA";
-    private final static String BOTTOM_FRAGMENT_EXTRA = "BOTTOM_FRAGMENT_EXTRA";
+    private final static String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
 
-    private HashMap<Class, String> staticFragmentsTags = new HashMap<>();
-    private String bottomFragmentTag;
-    private Fragment bottomFragment;
-    private BaseFragment currentFragment;
     private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
 
     /* Returns id of main fragments container where navigation-node fragments should be */
@@ -45,9 +33,14 @@ public abstract class BaseActivity extends ActionBarActivity
         throw new UnsupportedOperationException("Implement getFragmentContainerId method to use fragment managing");
     }
 
-    /* Returns current navigation-node fragment */
-    protected Fragment getCurrentFragment() {
-        return currentFragment;
+    /* Returns if last fragment in stack is top (added by setFragment) like fragment from sidebar menu */
+    public boolean isCurrentFragmentTop() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        return fragmentManager.getBackStackEntryCount() == 0
+                || fragmentManager
+                .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
+                .getName()
+                .contains(TOP_FRAGMENT_TAG_MARK);
     }
 
     @Override
@@ -64,7 +57,7 @@ public abstract class BaseActivity extends ActionBarActivity
     }
 
     @Override
-    public void onEvent(Context context, String eventName, Intent intent) {
+    public void onEvent(Context context, @NonNull String eventName, Intent intent) {
     }
 
     @Override
@@ -80,8 +73,7 @@ public abstract class BaseActivity extends ActionBarActivity
     }
 
     @Override
-    public void onFragmentChanged(BaseFragment fragment) {
-        currentFragment = fragment;
+    public void onFragmentStarted(BaseFragment fragment) {
     }
 
     /* Raises when back stack changes */
@@ -89,134 +81,65 @@ public abstract class BaseActivity extends ActionBarActivity
     public void onBackStackChanged() {
     }
 
-    public void setStaticFragment(Class fragmentClass) {
-        setStaticFragment(fragmentClass, null);
+    /* Setting fragment of special class as first in stack */
+    public void setFirstFragment(Class<?> fragmentClass) {
+        setFirstFragment(fragmentClass, null);
     }
 
-    /**
-     * Setting fragment of special class as single on top and one of static fragments.
-     * Static fragments are fragments that is stored in background after loading so they can
-     * restores faster with last state.
-     */
-    public void setStaticFragment(Class fragmentClass, Bundle args) {
+    /* Setting fragment of special class as first in stack with args */
+    public void setFirstFragment(Class<?> fragmentClass, Bundle args) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-
-        String fragmentTag = staticFragmentsTags.get(fragmentClass);
-        if (fragmentTag == null) {
-            fragmentTag = UUID.randomUUID().toString();
-            staticFragmentsTags.put(fragmentClass, fragmentTag);
-        }
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        if (fragmentTag.equals(bottomFragmentTag)) {
-            return;
-        }
-
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        removeBottomFragment(transaction);
-
-        Fragment fragment = fragmentManager.findFragmentByTag(fragmentTag);
-        if (fragment == null) {
-            fragment = Fragment.instantiate(this, fragmentClass.getName());
-            transaction.add(getFragmentContainerId(), fragment, fragmentTag);
-        } else {
-            transaction.attach(fragment);
-        }
-
-        if (!(fragment instanceof StaticFragment))
-            throw new IllegalStateException(fragmentClass.getName() + " should implement StaticFragment interface");
-
-        if (args != null) {
-            ((StaticFragment) fragment).applyArguments(args);
-        }
-
-        transaction.commit();
-
-        bottomFragmentTag = fragmentTag;
-        bottomFragment = fragment;
+        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
+        fragmentManager.beginTransaction()
+                .replace(getFragmentContainerId(), fragment, null)
+                .commit();
     }
 
-    /* Setting fragment of special class as single on top */
+    private void addFragmentToStack(Class<?> fragmentClass, Bundle args, String backStackTag) {
+        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
+        getSupportFragmentManager().beginTransaction()
+                .replace(getFragmentContainerId(), fragment, backStackTag)
+                .addToBackStack(backStackTag)
+                .commit();
+    }
+
+    /* Setting fragment of special class as top */
     public void setFragment(Class fragmentClass) {
         setFragment(fragmentClass, null);
     }
 
-    /* Setting fragment of special class as single on top with args */
+    /* Setting fragment of special class as top with args */
     public void setFragment(Class fragmentClass, Bundle args) {
-        if (staticFragmentsTags.containsKey(fragmentClass))
-            throw new IllegalStateException("Fragment " + fragmentClass + " should be set as home fragment as it already is");
-
-        String fragmentTag = UUID.randomUUID().toString();
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        if (fragmentManager.getBackStackEntryCount() > 0) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        }
-
-        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        removeBottomFragment(transaction);
-
-        transaction.add(getFragmentContainerId(), fragment, fragmentTag).commit();
-
-        bottomFragmentTag = fragmentTag;
-        bottomFragment = fragment;
+        addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
     }
 
-    private void removeBottomFragment(FragmentTransaction transaction) {
-        if (bottomFragmentTag == null) {
-            return;
-        }
-
-        if (bottomFragment == null) {
-            bottomFragment = getSupportFragmentManager().findFragmentByTag(bottomFragmentTag);
-            if (bottomFragment == null) {
-                return;
-            }
-        }
-
-        for (String tag : staticFragmentsTags.values()) {
-            if (tag.equals(bottomFragmentTag)) {
-                transaction.detach(bottomFragment);
-                return;
-            }
-        }
-        transaction.remove(bottomFragment);
-    }
-
-    /* Pushing fragment of special class on top of fragments stack */
+    /* Pushing fragment of special class to fragments stack */
     public void pushFragment(Class fragmentClass) {
         pushFragment(fragmentClass, null);
     }
 
-    /* Pushing fragment of special class with args on top of fragments stack */
+    /* Pushing fragment of special class with args to fragments stack */
     public void pushFragment(Class fragmentClass, Bundle args) {
-        if (staticFragmentsTags.containsKey(fragmentClass))
-            throw new IllegalStateException("Fragment " + fragmentClass + " shouldn't be push as it is home fragment");
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        if (fragmentManager.getBackStackEntryCount() == 0) {
-            removeBottomFragment(transaction);
-        }
-
-        transaction.replace(getFragmentContainerId(), fragment)
-                .addToBackStack(fragmentClass.getName())
-                .commit();
+        addFragmentToStack(fragmentClass, args, fragmentClass.getName());
     }
 
     /* Raises when device back button pressed */
     @Override
     public void onBackPressed() {
-        if (currentFragment == null || !currentFragment.onBackPressed()) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        boolean result = false;
+        for (Fragment fragment : fragmentManager.getFragments()) {
+            if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                result = result || ((BaseFragment) fragment).onBackPressed();
+            }
+        }
+
+        if (!result) {
             super.onBackPressed();
         }
     }
@@ -225,7 +148,14 @@ public abstract class BaseActivity extends ActionBarActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                if (currentFragment == null || currentFragment.onHomePressed()) {
+                boolean homePressResult = false;
+                for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+                    if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                        homePressResult = homePressResult || ((BaseFragment) fragment).onHomePressed();
+                    }
+                }
+
+                if (homePressResult) {
                     return true;
                 }
 
@@ -273,20 +203,5 @@ public abstract class BaseActivity extends ActionBarActivity
     public void showSoftInput(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putSerializable(STATIC_FRAGMENTS_EXTRA, staticFragmentsTags);
-        outState.putString(BOTTOM_FRAGMENT_EXTRA, bottomFragmentTag);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        staticFragmentsTags = (HashMap<Class, String>) savedInstanceState.getSerializable(STATIC_FRAGMENTS_EXTRA);
-        bottomFragmentTag = savedInstanceState.getString(BOTTOM_FRAGMENT_EXTRA);
     }
 }

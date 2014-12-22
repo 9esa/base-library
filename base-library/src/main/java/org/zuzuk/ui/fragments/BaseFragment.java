@@ -1,34 +1,30 @@
 package org.zuzuk.ui.fragments;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.zuzuk.events.BroadcastEvents;
-import org.zuzuk.events.EventAnnotation;
 import org.zuzuk.events.EventListener;
 import org.zuzuk.events.EventListenerHelper;
-import org.zuzuk.ui.UIUtils;
 import org.zuzuk.ui.activities.BaseActivity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Fragment that include base logic to hold views and navigation logic
  */
-public abstract class BaseFragment extends Fragment implements EventListener {
+public abstract class BaseFragment extends Fragment implements EventListener,
+        OnFragmentStartedListener {
     private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
     private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
@@ -43,12 +39,8 @@ public abstract class BaseFragment extends Fragment implements EventListener {
         return (BaseActivity) getActivity();
     }
 
-    /**
-     * Returns if fragment is a part of another fragment or not.
-     * If fragment is nested then it won't be as current fragment in BaseActivity
-     */
-    protected boolean isNestedFragment() {
-        return getParentFragment() != null;
+    @Override
+    public void onFragmentStarted(BaseFragment fragment) {
     }
 
     /* Returns title of fragment. Class name by default */
@@ -72,14 +64,13 @@ public abstract class BaseFragment extends Fragment implements EventListener {
     @Override
     public void onStart() {
         super.onStart();
-
-        if (!isNestedFragment()) {
-            getBaseActivity().onFragmentChanged(this);
-        } else {
-            Fragment parentFragment = getParentFragment();
-            if (parentFragment != null && parentFragment instanceof OnFragmentChangedListener) {
-                ((OnFragmentChangedListener) parentFragment).onFragmentChanged(this);
+        Fragment parentFragment = getParentFragment();
+        if (parentFragment != null) {
+            if (parentFragment instanceof OnFragmentStartedListener) {
+                ((OnFragmentStartedListener) parentFragment).onFragmentStarted(this);
             }
+        } else {
+            getBaseActivity().onFragmentStarted(this);
         }
     }
 
@@ -91,16 +82,40 @@ public abstract class BaseFragment extends Fragment implements EventListener {
 
     /* Raises when device back button pressed */
     public boolean onBackPressed() {
-        return false;
+        FragmentManager fragmentManager = getChildFragmentManager();
+        boolean result = false;
+
+        if (fragmentManager.getFragments() == null) {
+            return false;
+        }
+
+        for (Fragment fragment : fragmentManager.getFragments()) {
+            if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                result = result || ((BaseFragment) fragment).onBackPressed();
+            }
+        }
+        return result;
     }
 
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed() {
-        return false;
+        FragmentManager fragmentManager = getChildFragmentManager();
+        boolean result = false;
+
+        if (fragmentManager.getFragments() == null) {
+            return false;
+        }
+
+        for (Fragment fragment : fragmentManager.getFragments()) {
+            if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                result = result || ((BaseFragment) fragment).onHomePressed();
+            }
+        }
+        return result;
     }
 
     @Override
-    public void onEvent(Context context, String eventName, Intent intent) {
+    public void onEvent(Context context, @NonNull String eventName, Intent intent) {
     }
 
     @Override

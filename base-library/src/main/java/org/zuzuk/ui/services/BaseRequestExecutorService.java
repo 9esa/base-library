@@ -3,6 +3,7 @@ package org.zuzuk.ui.services;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
@@ -42,7 +43,7 @@ public abstract class BaseRequestExecutorService extends Service implements Even
     }
 
     @Override
-    public void onEvent(Context context, String eventName, Intent intent) {
+    public void onEvent(Context context, @NonNull String eventName, Intent intent) {
     }
 
     @Override
