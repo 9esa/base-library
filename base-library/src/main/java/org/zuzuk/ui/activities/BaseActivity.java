@@ -173,10 +173,10 @@ public abstract class BaseActivity extends ActionBarActivity
                         for (int i = stackSize - 2; i >= 0; i--) {
                             String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
                             if (currentFragmentName == null || !currentFragmentName.equals(lastFragmentName)) {
-                                fragmentManager.popBackStack(currentFragmentName, 0);
+                                fragmentManager.popBackStackImmediate(currentFragmentName, 0);
                                 break;
                             } else if (i == 0) {
-                                fragmentManager.popBackStack(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                                fragmentManager.popBackStackImmediate(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                             } else {
                                 lastFragmentName = currentFragmentName;
                             }
