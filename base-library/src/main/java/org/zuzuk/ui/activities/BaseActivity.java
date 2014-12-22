@@ -91,7 +91,7 @@ public abstract class BaseActivity extends ActionBarActivity
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
         Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
