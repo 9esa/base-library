@@ -1,11 +1,10 @@
 package org.zuzuk.tasks.remote.base;
 
+import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.persistence.DurationInMillis;
-import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.tasks.base.Task;
-
-import java.io.Serializable;
+import org.zuzuk.tasks.remote.cache.AllowOnlyOfflineCacheRequest;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
@@ -14,17 +13,12 @@ import java.io.Serializable;
 public abstract class RemoteRequest<T> extends Task<T> {
 
     /* Returns associated cache request */
-    public CachedSpiceRequest<T> wrapAsCacheRequest() {
-        CachedSpiceRequest<T> cachedSpiceRequest = new CachedSpiceRequest<>(this, getCacheKey(), getCacheExpiryDuration());
+    public AllowOnlyOfflineCacheRequest<T> wrapAsCacheRequest(SpiceManager spiceManager) {
+        AllowOnlyOfflineCacheRequest<T> cachedSpiceRequest
+                = new AllowOnlyOfflineCacheRequest<>(spiceManager, this, getCacheKey(), getCacheExpiryDuration());
         cachedSpiceRequest.setOffline(isOffline());
         cachedSpiceRequest.setAggregatable(true);
-        cachedSpiceRequest.setAcceptingDirtyCache(isAcceptDirtyCache());
         return cachedSpiceRequest;
-    }
-
-    /* Returns if request could use expired cache data */
-    public boolean isAcceptDirtyCache() {
-        return false;
     }
 
     /* Returns is request offline (may be cached) or not */

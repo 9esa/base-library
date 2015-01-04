@@ -134,8 +134,8 @@ public abstract class AbsListViewFragment extends LoadingFragment {
     }
 
     @Override
-    public void onLoaded() {
-        super.onLoaded();
+    public void onLoaded(boolean isInBackground, boolean isFromCache) {
+        super.onLoaded(isInBackground, isFromCache);
         if (!isListViewStateValid) {
             getPostHandler().post(updatePositionAction);
         }

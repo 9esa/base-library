@@ -1,5 +1,7 @@
 package org.zuzuk.tasks;
 
+import java.util.List;
+
 /**
  * Created by Gavriil Sitnikov on 18/09/2014.
  * An object that can detect executing several Task objects and observe them as one long task.
@@ -11,17 +13,17 @@ public abstract interface AggregationTask {
     boolean isLoadingNeeded();
 
     /* Returns is task loaded all needed info */
-    boolean isLoaded();
+    boolean isLoaded(boolean isFromCache);
 
     /* Reloading data */
-    void load(boolean isInBackground);
+    void load(boolean isInBackground, boolean isFromCache);
 
     /* Calls when loading have started */
-    void onLoadingStarted(boolean isInBackground);
+    void onLoadingStarted(boolean isInBackground, boolean isFromCache);
 
-    /* Calls when loading have started */
-    void onLoaded();
+    /* Calls when loading have completed */
+    void onLoaded(boolean isInBackground, boolean isFromCache);
 
-    /* Calls when loading failed with exception */
-    void onFailed(Exception ex);
+    /* Calls when loading have failed with exceptions */
+    void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions);
 }

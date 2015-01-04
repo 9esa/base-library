@@ -23,10 +23,9 @@ public class CacheEntry implements Serializable {
 
     public CacheEntry(long initializationTime, RemoteRequest remoteRequest) {
         this.initializationTime = initializationTime;
-        CachedSpiceRequest cachedRequest = remoteRequest.wrapAsCacheRequest();
-        this.responseType = cachedRequest.getResultType();
-        this.cacheKey = cachedRequest.getRequestCacheKey();
-        this.cacheDuration = cachedRequest.getCacheDuration();
+        this.responseType = remoteRequest.getResultType();
+        this.cacheKey = remoteRequest.getCacheKey();
+        this.cacheDuration = remoteRequest.getCacheExpiryDuration();
     }
 
     /* Returns if cache is expired */

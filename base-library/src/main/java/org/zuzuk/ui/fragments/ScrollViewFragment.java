@@ -31,8 +31,8 @@ public abstract class ScrollViewFragment extends LoadingFragment {
     }
 
     @Override
-    public void onLoaded() {
-        super.onLoaded();
+    public void onLoaded(boolean isInBackground, boolean isFromCache) {
+        super.onLoaded(isInBackground, isFromCache);
         getPostHandler().post(updatePositionAction);
     }
 

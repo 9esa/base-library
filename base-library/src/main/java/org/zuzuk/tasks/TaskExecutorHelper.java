@@ -1,14 +1,13 @@
 package org.zuzuk.tasks;
 
 import android.content.Context;
-import android.content.Intent;
 
 import com.octo.android.robospice.SpiceManager;
+import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
+import com.octo.android.robospice.request.CachedSpiceRequest;
 import com.octo.android.robospice.request.listener.RequestListener;
 
-import org.zuzuk.events.EventListener;
-import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
@@ -18,23 +17,18 @@ import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventListener {
+public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
     private Context context;
-    private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
-    private final HashMap<AggregationTaskController, List<RequestListener>> tasksControllers = new HashMap<>();
-    private final HashSet<AggregationTaskController> temporaryTasksControllers = new HashSet<>();
     private AggregationTaskController currentTaskController;
-    private boolean isCurrentTaskTemporary;
     private boolean isPaused = true;
 
     @Override
@@ -42,11 +36,9 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
         return remoteSpiceManager;
     }
 
-    private void setCurrentTaskController(AggregationTaskController currentTaskController) {
-        if (this.currentTaskController != null)
-            throw new RuntimeException("You cannot start another task while current task is already set. Let current task end before start new task. Use post() method as simpliest solution");
-
-        this.currentTaskController = currentTaskController;
+    /* Returns if executor in paused state so it can't execute requests */
+    boolean isPaused() {
+        return isPaused;
     }
 
     /* Creates task for someone who using helper not only as loader but as task executor */
@@ -63,16 +55,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
             remoteSpiceManager = ((SpiceManagerProvider) applicationContext).createRemoteSpiceManager();
         } else
             throw new RuntimeException("To use TaskExecutorHelper your Application class should implement SpiceManagerProvider");
-
-        eventListenerHelper.onCreate(context);
-    }
-
-    /**
-     * Adding aggregation task that will try rise every onResume or call onLoaded
-     * if loading is not needed. Add all tasks in onCreate
-     */
-    public void addLoadingTask(AggregationTask loadingTask) {
-        tasksControllers.put(new AggregationTaskController(loadingTask), new ArrayList<RequestListener>());
     }
 
     /* Associated lifecycle method */
@@ -80,95 +62,75 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
         isPaused = false;
-        eventListenerHelper.onResume();
-    }
-
-    @Override
-    public void onEvent(Context context, String eventName, Intent intent) {
-    }
-
-    /* Executes all tasks that needed to be reloaded */
-    public void reload(final boolean isInBackground) {
-        for (final AggregationTaskController taskController : tasksControllers.keySet()) {
-            executeAggregationTask(taskController, isInBackground);
-        }
     }
 
     /* Executes aggregation task */
     public void executeAggregationTask(AggregationTask aggregationTask, boolean isInBackground) {
-        AggregationTaskController controller = new AggregationTaskController(aggregationTask);
-        tasksControllers.put(controller, new ArrayList<RequestListener>());
-        temporaryTasksControllers.add(controller);
+        AggregationTaskController controller = new AggregationTaskController(this, aggregationTask, isInBackground, false);
         executeAggregationTask(controller, isInBackground);
     }
 
-    private void executeAggregationTask(final AggregationTaskController taskController, final boolean isInBackground) {
-        final boolean isLoaded = taskController.task.isLoaded();
-        if (isLoaded) {
-            taskController.task.onLoaded();
+    private void executeAggregationTask(AggregationTaskController taskController, boolean isInBackground) {
+        boolean isCachedDataLoaded = taskController.task.isLoaded(true);
+        // if task loaded from cache and it is not cache loading aggregation task (pre-loading)
+        if (isCachedDataLoaded && !taskController.isLoadingFromCache) {
+            taskController.task.onLoaded(false, true);
         }
 
-        executeTaskBackground(new Task<Boolean>(Boolean.class) {
-            @Override
-            public Boolean execute() throws Exception {
-                return taskController.task.isLoadingNeeded();
-            }
-        }, new RequestListener<Boolean>() {
-
-            @Override
-            public void onRequestSuccess(Boolean isLoadingNeeded) {
-                if (isLoadingNeeded) {
-                    setCurrentTaskController(taskController);
-                    taskController.task.load(isInBackground || isLoaded);
-                    if (!tasksControllers.get(taskController).isEmpty()) {
-                        taskController.task.onLoadingStarted(isInBackground || isLoaded);
-                    } else {
-                        finishTask(taskController);
-                    }
-                    currentTaskController = null;
-                }
-            }
-
-            @Override
-            public void onRequestFailure(SpiceException spiceException) {
-                throw new RuntimeException(spiceException);
-            }
-        });
+        PreLoadingTask preLoadingTask = new PreLoadingTask(taskController, isCachedDataLoaded);
+        PreLoadingTaskListener preLoadingTaskListener = new PreLoadingTaskListener(preLoadingTask, isInBackground, isCachedDataLoaded);
+        executeTaskBackground(preLoadingTask, preLoadingTaskListener);
     }
 
     @Override
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
-        beforeExecution();
-        executeRequestBackground(request, requestListener);
-        afterExecution();
+        executeRequestInternal(request, requestListener);
     }
 
     @Override
     public <T> void executeRequestBackground(RemoteRequest<T> request,
                                              RequestListener<T> requestListener) {
-        checkManagersState(request);
-        if (currentTaskController != null) {
-            remoteSpiceManager.execute(request.wrapAsCacheRequest(), wrapToAggregationTask(requestListener));
-        } else {
-            remoteSpiceManager.execute(request.wrapAsCacheRequest(), requestListener);
-        }
+        executeRequestBackgroundInternal(request, requestListener);
     }
 
     @Override
     public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        beforeExecution();
-        executeRequestBackground(requestWrapper);
-        afterExecution();
+        executeRequestInternal(requestWrapper.getPreparedRequest(), requestWrapper);
     }
 
     @Override
     public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper) {
-        checkManagersState(requestWrapper);
+        executeRequestBackgroundInternal(requestWrapper.getPreparedRequest(), requestWrapper);
+    }
+
+    private <T> void executeRequestInternal(RemoteRequest<T> request,
+                                            RequestListener<T> requestListener) {
+        boolean wasNoCurrentTaskController = currentTaskController == null;
+        // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
+        if (wasNoCurrentTaskController) {
+            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false, false);
+            currentTaskController.task.onLoadingStarted(false, currentTaskController.isLoadingFromCache);
+        }
+
+        executeRequestBackground(request, requestListener);
+
+        if (wasNoCurrentTaskController) {
+            currentTaskController = null;
+        }
+    }
+
+    private <T> void executeRequestBackgroundInternal(RemoteRequest<T> request,
+                                                      RequestListener<T> requestListener) {
+        checkManagersState(request);
+        CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager);
+        if (currentTaskController != null && currentTaskController.isLoadingFromCache) {
+            cacheSpiceRequest.setOffline(true);
+        }
         if (currentTaskController != null) {
-            remoteSpiceManager.execute(requestWrapper.getPreparedRequest().wrapAsCacheRequest(), wrapToAggregationTask(requestWrapper));
+            remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
         } else {
-            remoteSpiceManager.execute(requestWrapper.getPreparedRequest().wrapAsCacheRequest(), requestWrapper);
+            remoteSpiceManager.execute(cacheSpiceRequest, requestListener);
         }
     }
 
@@ -185,19 +147,30 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
     @Override
     public <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
-        beforeExecution();
+        boolean wasNoCurrentTaskController = currentTaskController == null;
+        // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
+        if (wasNoCurrentTaskController) {
+            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false, false);
+            currentTaskController.task.onLoadingStarted(false, currentTaskController.isLoadingFromCache);
+        }
+
         executeTaskBackground(task, requestListener);
-        afterExecution();
+
+        if (wasNoCurrentTaskController) {
+            currentTaskController = null;
+        }
     }
 
     @Override
     public <T> void executeTaskBackground(Task<T> task,
                                           RequestListener<T> requestListener) {
         checkManagersState(task);
+        CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
+        nonCachedTask.setOffline(true);
         if (currentTaskController != null) {
-            localSpiceManager.execute(task, wrapToAggregationTask(requestListener));
+            localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
         } else {
-            localSpiceManager.execute(task, requestListener);
+            localSpiceManager.execute(nonCachedTask, requestListener);
         }
     }
 
@@ -206,7 +179,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
         isPaused = true;
         localSpiceManager.shouldStop();
         remoteSpiceManager.shouldStop();
-        eventListenerHelper.onPause();
     }
 
     /* Associated lifecycle method */
@@ -214,7 +186,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
         context = null;
         localSpiceManager = null;
         remoteSpiceManager = null;
-        eventListenerHelper.onDestroy();
     }
 
     private void checkManagersState(Object request) {
@@ -222,110 +193,113 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
             throw new RuntimeException(request.getClass().getName() + " is requested after onPause");
     }
 
-    private void beforeExecution() {
-        isCurrentTaskTemporary = currentTaskController == null;
-        if (isCurrentTaskTemporary) {
-            currentTaskController = new AggregationTaskController(createTemporaryTask());
-            tasksControllers.put(currentTaskController, new ArrayList<RequestListener>());
-            temporaryTasksControllers.add(currentTaskController);
-            currentTaskController.task.onLoadingStarted(false);
-        }
+    void startWrappingRequestsAsAggregation(AggregationTaskController aggregationTaskController) {
+        if (this.currentTaskController != null)
+            throw new RuntimeException("You cannot start another task while current task is already set. Let current task end before start new task. Use post() method as simpliest solution");
+
+        currentTaskController = aggregationTaskController;
     }
 
-    private void afterExecution() {
-        if (isCurrentTaskTemporary) {
-            currentTaskController = null;
-        }
+    void stopWrapRequestsAsAggregation() {
+        currentTaskController = null;
     }
 
-    private <T> AggregationTaskRequestListener<T> wrapToAggregationTask(RequestListener<T> requestListener) {
-        AggregationTaskRequestListener<T> result = new AggregationTaskRequestListener<>(requestListener);
-        tasksControllers.get(currentTaskController).add(result);
+    private <T> AggregationTaskRequestListener<T> wrapForAggregationTask(RequestListener<T> requestListener) {
+        AggregationTaskRequestListener<T> result = new AggregationTaskRequestListener<>(this, currentTaskController, requestListener);
+        currentTaskController.registerListener(result);
         return result;
     }
 
-    private void finishTask(AggregationTaskController controller) {
-        if (controller.task.isLoaded()) {
-            controller.task.onLoaded();
-        } else {
-            controller.task.onFailed(controller.fails.size() > 0 ? controller.fails.get(controller.fails.size() - 1) : null);
-        }
+    // task that executes before main loading and it tries to load cache before and also check isLoadingNeeded flag
+    private class PreLoadingTask extends Task<Boolean> {
+        private final AggregationTaskController taskController;
+        private final boolean isCachedDataLoaded;
 
-        if (isCurrentTaskTemporary) {
-            temporaryTasksControllers.remove(controller);
-            tasksControllers.remove(controller);
-        }
-    }
-
-    private class AggregationTaskController {
-        private final AggregationTask task;
-        private final List<Exception> fails = new ArrayList<>();
-
-        private void addFail(Exception ex) {
-            fails.add(ex);
-        }
-
-        private AggregationTaskController(AggregationTask task) {
-            this.task = task;
-        }
-    }
-
-    private class AggregationTaskRequestListener<T> implements RequestListener<T> {
-        private final RequestListener<T> requestListener;
-        private final AggregationTaskController parentTaskController;
-
-        private AggregationTaskRequestListener(RequestListener<T> requestListener) {
-            this.parentTaskController = currentTaskController;
-            this.requestListener = requestListener;
+        PreLoadingTask(AggregationTaskController taskController, boolean isCachedDataLoaded) {
+            super(Boolean.class);
+            this.taskController = taskController;
+            this.isCachedDataLoaded = isCachedDataLoaded;
         }
 
         @Override
-        public void onRequestSuccess(T response) {
-            if (isPaused) {
+        public Boolean execute() throws Exception {
+            if (!isCachedDataLoaded && !taskController.isLoadingFromCache) {
+                final CountDownLatch cacheLoadingWaiter = new CountDownLatch(1);
+
+                AggregationTask cacheLoadingTask = new DefaultTemporaryTask() {
+
+                    @Override
+                    public void load(boolean isInBackground, boolean isFromCache) {
+                        taskController.task.load(true, true);
+                    }
+
+                    @Override
+                    public void onLoaded(boolean isInBackground, boolean isFromCache) {
+                        cacheLoadingWaiter.countDown();
+                    }
+
+                    @Override
+                    public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
+                        cacheLoadingWaiter.countDown();
+                    }
+                };
+
+                AggregationTaskController cacheLoadingController = new AggregationTaskController(TaskExecutorHelper.this, cacheLoadingTask, true, false);
+                executeAggregationTask(cacheLoadingController, false);
+                //TODO: possible deadlock by thread pool, :D (should be fixed in future)
+                //wait until cache loading task executes
+                cacheLoadingWaiter.await();
+            }
+
+            return taskController.task.isLoadingNeeded();
+        }
+    }
+
+    private class PreLoadingTaskListener implements RequestListener<Boolean> {
+        private final PreLoadingTask preLoadingTask;
+        private final boolean isInBackground;
+        private final boolean isCachedDataLoaded;
+
+        PreLoadingTaskListener(PreLoadingTask preLoadingTask,
+                               boolean isInBackground,
+                               boolean isCachedDataLoaded) {
+            this.preLoadingTask = preLoadingTask;
+            this.isInBackground = isInBackground;
+            this.isCachedDataLoaded = isCachedDataLoaded;
+        }
+
+        @Override
+        public void onRequestSuccess(Boolean isLoadingNeeded) {
+            boolean isLoadedFromCacheDuringPreLoading = preLoadingTask.taskController.task.isLoaded(true);
+            // if firstly there was no data loaded but it have just loaded from cache
+            if (!isCachedDataLoaded && isLoadedFromCacheDuringPreLoading) {
+                preLoadingTask.taskController.task.onLoaded(isInBackground, true);
+            }
+
+            if (!isLoadingNeeded) {
                 return;
             }
 
-            setCurrentTaskController(parentTaskController);
-            isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
+            startWrappingRequestsAsAggregation(preLoadingTask.taskController);
 
-            if (requestListener != null) {
-                requestListener.onRequestSuccess(response);
+            boolean isReallyInBackground = isInBackground
+                    || isLoadedFromCacheDuringPreLoading
+                    || preLoadingTask.taskController.isLoadingFromCache;
+
+            // now load it seriously from network etc.
+            preLoadingTask.taskController.task.load(isReallyInBackground, false);
+            if (preLoadingTask.taskController.isNoOneListenToRequests()) {
+                preLoadingTask.taskController.finishTask();
+            } else {
+                preLoadingTask.taskController.task.onLoadingStarted(isReallyInBackground, false);
             }
 
-            List<RequestListener> listeners = tasksControllers.get(parentTaskController);
-            listeners.remove(this);
-
-            if (listeners.isEmpty()) {
-                finishTask(parentTaskController);
-            }
-
-            currentTaskController = null;
-            isCurrentTaskTemporary = false;
+            stopWrapRequestsAsAggregation();
         }
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
-            if (isPaused) {
-                return;
-            }
-
-            setCurrentTaskController(parentTaskController);
-            isCurrentTaskTemporary = temporaryTasksControllers.contains(parentTaskController);
-
-            if (requestListener != null) {
-                requestListener.onRequestFailure(spiceException);
-            }
-
-            List<RequestListener> listeners = tasksControllers.get(parentTaskController);
-            listeners.remove(this);
-            parentTaskController.addFail(spiceException);
-
-            if (listeners.isEmpty()) {
-                finishTask(parentTaskController);
-            }
-
-            currentTaskController = null;
-            isCurrentTaskTemporary = false;
+            throw new RuntimeException(spiceException);
         }
     }
 
@@ -333,28 +307,28 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, EventL
 
         @Override
         public boolean isLoadingNeeded() {
-            return false;
-        }
-
-        @Override
-        public boolean isLoaded() {
             return true;
         }
 
         @Override
-        public void load(boolean b) {
+        public boolean isLoaded(boolean isFromCache) {
+            return true;
         }
 
         @Override
-        public void onLoadingStarted(boolean b) {
+        public void load(boolean isInBackground, boolean isFromCache) {
         }
 
         @Override
-        public void onLoaded() {
+        public void onLoadingStarted(boolean isInBackground, boolean isFromCache) {
         }
 
         @Override
-        public void onFailed(Exception e) {
+        public void onLoaded(boolean isInBackground, boolean isFromCache) {
+        }
+
+        @Override
+        public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
         }
     }
 }

@@ -20,6 +20,8 @@ import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
 
+import java.util.List;
+
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Fragment that include base logic of loading, remote requesting and refreshing data.
@@ -35,19 +37,13 @@ public abstract class LoadingFragment extends BaseFragment
     }
 
     @Override
-    public boolean isLoaded() {
+    public boolean isLoaded(boolean isFromCache) {
         return true;
     }
 
     @Override
     public SpiceManager getSpiceManager() {
         return taskExecutorHelper.getSpiceManager();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        taskExecutorHelper.addLoadingTask(this);
     }
 
     /* Returns content view. It will blocks on loading and screen requests */
@@ -77,7 +73,7 @@ public abstract class LoadingFragment extends BaseFragment
 
         findViewById(R.id.loadingRefreshButton).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                taskExecutorHelper.reload(false);
+                reload(false);
             }
         });
 
@@ -89,28 +85,23 @@ public abstract class LoadingFragment extends BaseFragment
     }
 
     @Override
-    public void load(boolean isInBackground) {
-        loadFragment();
-    }
-
-    @Override
-    public void onLoadingStarted(boolean isInBackground) {
-        if (!isInBackground) {
+    public void onLoadingStarted(boolean isInBackground, boolean isFromCache) {
+        if (!isInBackground && !isFromCache) {
             findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
             findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
-            findViewById(R.id.loadingContentContainer).setVisibility(isLoaded() ? View.VISIBLE : View.INVISIBLE);
+            findViewById(R.id.loadingContentContainer).setVisibility(isLoaded(false) ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
     @Override
-    public void onLoaded() {
+    public void onLoaded(boolean isInBackground, boolean isFromCache) {
         findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
         findViewById(R.id.loadingContentContainer).setVisibility(View.VISIBLE);
         findViewById(R.id.loadingRefreshButton).setVisibility(View.GONE);
     }
 
     @Override
-    public void onFailed(Exception ex) {
+    public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
         findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
         findViewById(R.id.loadingContentContainer).setVisibility(View.INVISIBLE);
         findViewById(R.id.loadingRefreshButton).setVisibility(View.VISIBLE);
@@ -120,11 +111,8 @@ public abstract class LoadingFragment extends BaseFragment
     public void onResume() {
         super.onResume();
         taskExecutorHelper.onResume();
-        taskExecutorHelper.reload(false);
+        reload(false);
     }
-
-    /* Logic of loading fragment's content */
-    protected abstract void loadFragment();
 
     @Override
     public void onPause() {
@@ -140,7 +128,7 @@ public abstract class LoadingFragment extends BaseFragment
 
     /* Reloads fragment */
     public void reload(boolean isInBackground) {
-        taskExecutorHelper.reload(isInBackground);
+        taskExecutorHelper.executeAggregationTask(this, isInBackground);
     }
 
     @Override
@@ -194,17 +182,17 @@ public abstract class LoadingFragment extends BaseFragment
             return new DefaultTemporaryTask() {
 
                 @Override
-                public void onLoadingStarted(boolean b) {
+                public void onLoadingStarted(boolean isInBackground, boolean isFromCache) {
                     findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
                 }
 
                 @Override
-                public void onLoaded() {
+                public void onLoaded(boolean isInBackground, boolean isFromCache) {
                     findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
                 }
 
                 @Override
-                public void onFailed(Exception e) {
+                public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
                     findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
                 }
             };
