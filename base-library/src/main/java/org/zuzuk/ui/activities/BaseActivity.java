@@ -132,14 +132,17 @@ public abstract class BaseActivity extends ActionBarActivity
     @Override
     public void onBackPressed() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        boolean result = false;
-        for (Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
-                result = result || ((BaseFragment) fragment).onBackPressed();
+
+        boolean backPressResult = false;
+        if (fragmentManager.getFragments() != null) {
+            for (Fragment fragment : fragmentManager.getFragments()) {
+                if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                    backPressResult = backPressResult || ((BaseFragment) fragment).onBackPressed();
+                }
             }
         }
 
-        if (!result) {
+        if (!backPressResult) {
             super.onBackPressed();
         }
     }
@@ -148,10 +151,14 @@ public abstract class BaseActivity extends ActionBarActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                FragmentManager fragmentManager = getSupportFragmentManager();
+
                 boolean homePressResult = false;
-                for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                    if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
-                        homePressResult = homePressResult || ((BaseFragment) fragment).onHomePressed();
+                if (fragmentManager.getFragments() != null) {
+                    for (Fragment fragment : fragmentManager.getFragments()) {
+                        if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                            homePressResult = homePressResult || ((BaseFragment) fragment).onHomePressed();
+                        }
                     }
                 }
 
@@ -159,7 +166,6 @@ public abstract class BaseActivity extends ActionBarActivity
                     return true;
                 }
 
-                FragmentManager fragmentManager = getSupportFragmentManager();
                 int stackSize = fragmentManager.getBackStackEntryCount();
 
                 switch (stackSize) {
