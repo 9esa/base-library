@@ -4,6 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
 import org.zuzuk.utils.Lc;
@@ -155,7 +158,8 @@ public abstract class Setting<T> {
 
     private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         private final static String SETTINGS_DATABASE_NAME = "inner_settings";
-        private final static int SETTINGS_VERSION = 1;
+        private final static int DEFAULT_SETTINGS_VERSION = 1;
+        private final static String SETTINGS_VERSION_MANIFEST_KEY = "org.zuzuk.settings.version";
 
         private static SettingsDatabaseHelper instance;
 
@@ -167,7 +171,17 @@ public abstract class Setting<T> {
         }
 
         public SettingsDatabaseHelper(Context context) {
-            super(context, context.getFilesDir() + File.separator + SETTINGS_DATABASE_NAME, null, SETTINGS_VERSION);
+            super(context, context.getFilesDir() + File.separator + SETTINGS_DATABASE_NAME, null, getSettingsVersion(context));
+        }
+
+        private static int getSettingsVersion(Context context) {
+            try {
+                ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+                Bundle metaData = applicationInfo.metaData;
+                return metaData.getInt(SETTINGS_VERSION_MANIFEST_KEY, DEFAULT_SETTINGS_VERSION);
+            } catch (PackageManager.NameNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
