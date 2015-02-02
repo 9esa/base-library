@@ -1,6 +1,7 @@
 package org.zuzuk;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.nostra13.universalimageloader.cache.disc.impl.LimitedAgeDiscCache;
@@ -39,6 +40,26 @@ public class InitializationHelper {
                         break;
                     case Log.ERROR:
                         Log.e(tag, message);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unsupported log level: " + logLevel);
+                }
+            }
+
+            @Override
+            public void processLogMessage(int logLevel, String tag, String message, @NonNull Throwable ex) {
+                switch (logLevel) {
+                    case Log.DEBUG:
+                        Log.d(tag, message, ex);
+                        break;
+                    case Log.INFO:
+                        Log.i(tag, message, ex);
+                        break;
+                    case Log.WARN:
+                        Log.w(tag, message, ex);
+                        break;
+                    case Log.ERROR:
+                        Log.e(tag, message, ex);
                         break;
                     default:
                         throw new IllegalStateException("Unsupported log level: " + logLevel);
