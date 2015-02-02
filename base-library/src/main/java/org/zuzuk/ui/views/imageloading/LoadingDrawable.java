@@ -15,6 +15,7 @@ import android.widget.ImageView;
 
 import com.nostra13.universalimageloader.core.assist.ViewScaleType;
 import com.nostra13.universalimageloader.core.imageaware.ImageAware;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.lang.reflect.Field;
 
@@ -26,6 +27,12 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
     private Drawable drawable;
     private Matrix drawMatrix;
     private ImageView.ScaleType imageScaleType = ImageView.ScaleType.CENTER_CROP;
+    private ImageLoadingListener imageLoadingListener;
+
+    /* Sets listener to listen image loading events */
+    public void setImageLoadingListener(ImageLoadingListener imageLoadingListener) {
+        this.imageLoadingListener = imageLoadingListener;
+    }
 
     /* Returns ImageView-like scale type */
     public ImageView.ScaleType getImageScaleType() {
@@ -52,7 +59,10 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         drawable = null;
         getImageLoader().cancelDisplayTask(this);
         if (canLoad()) {
-            getImageLoader().displayImage(getUrl(), this, getDisplayImageOptions());
+            getImageLoader().displayImage(getUrl(),
+                    this,
+                    getDisplayImageOptions(),
+                    imageLoadingListener);
         }
     }
 

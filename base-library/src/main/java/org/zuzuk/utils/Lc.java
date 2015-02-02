@@ -1,5 +1,6 @@
 package org.zuzuk.utils;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -40,7 +41,7 @@ public class Lc {
         Ln.setPrint(new Ln.Print() {
             @Override
             public int println(int priority, String msg) {
-                logMessage(priority, msg, 1);
+                logMessage(priority, msg, null, 1);
                 return 0;
             }
         });
@@ -49,25 +50,45 @@ public class Lc {
 
     /* Debug level log */
     public static void d(String message) {
-        logMessage(Log.DEBUG, message);
+        logMessage(Log.DEBUG, message, null);
     }
 
     /* Info level log */
     public static void i(String message) {
-        logMessage(Log.INFO, message);
+        logMessage(Log.INFO, message, null);
     }
 
     /* Warning level log */
     public static void w(String message) {
-        logMessage(Log.WARN, message);
+        logMessage(Log.WARN, message, null);
     }
 
     /* Error level log */
     public static void e(String message) {
-        logMessage(Log.ERROR, message);
+        logMessage(Log.ERROR, message, null);
     }
 
-    private static void logMessage(int priority, String message, int stackTraceAdditionalDepth) {
+    /* Debug level log with exception */
+    public static void d(String message, @NonNull Throwable ex) {
+        logMessage(Log.DEBUG, message, ex);
+    }
+
+    /* Info level log with exception */
+    public static void i(String message, @NonNull Throwable ex) {
+        logMessage(Log.INFO, message, ex);
+    }
+
+    /* Warning level log with exception */
+    public static void w(String message, @NonNull Throwable ex) {
+        logMessage(Log.WARN, message, ex);
+    }
+
+    /* Error level log with exception */
+    public static void e(String message, @NonNull Throwable ex) {
+        logMessage(Log.ERROR, message, ex);
+    }
+
+    private static void logMessage(int priority, String message, Throwable ex, int stackTraceAdditionalDepth) {
         if (priority >= LogLevel) {
             StackTraceElement trace = Thread.currentThread().getStackTrace()[5 + stackTraceAdditionalDepth];
             String tag = trace.getFileName() + ":" + trace.getLineNumber();
@@ -75,12 +96,16 @@ public class Lc {
                     DateTimeFormatter.get().format(System.currentTimeMillis()),
                     Thread.currentThread().getName(), message);
 
-            LogProcessor.processLogMessage(priority, tag, messageExtended);
+            if (ex != null) {
+                LogProcessor.processLogMessage(priority, tag, messageExtended, ex);
+            } else {
+                LogProcessor.processLogMessage(priority, tag, messageExtended);
+            }
         }
     }
 
-    private static void logMessage(int priority, String message) {
-        logMessage(priority, message, 0);
+    private static void logMessage(int priority, String message, Throwable ex) {
+        logMessage(priority, message, ex, 0);
     }
 
     /* Prints stack trace in log with DEBUG level */
@@ -94,5 +119,8 @@ public class Lc {
 
         /* Processes log message (e.g. log it in Console or log it in Crashlytics) */
         void processLogMessage(int logLevel, String tag, String message);
+
+        /* Processes log message with exception (e.g. log it in Console or log it in Crashlytics) */
+        void processLogMessage(int logLevel, String tag, String message, @NonNull Throwable ex);
     }
 }

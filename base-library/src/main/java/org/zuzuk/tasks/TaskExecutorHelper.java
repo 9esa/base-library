@@ -15,8 +15,8 @@ import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
+import org.zuzuk.utils.Lc;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -122,11 +122,15 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     private <T> void executeRequestBackgroundInternal(RemoteRequest<T> request,
                                                       RequestListener<T> requestListener) {
-        checkManagersState(request);
+        if (!checkManagersState(request)) {
+            return;
+        }
+
         CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager);
         if (currentTaskController != null && currentTaskController.isLoadingFromCache) {
             cacheSpiceRequest.setOffline(true);
         }
+
         if (currentTaskController != null) {
             remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
         } else {
@@ -164,9 +168,13 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     @Override
     public <T> void executeTaskBackground(Task<T> task,
                                           RequestListener<T> requestListener) {
-        checkManagersState(task);
+        if (!checkManagersState(task)) {
+            return;
+        }
+
         CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
         nonCachedTask.setOffline(true);
+
         if (currentTaskController != null) {
             localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
         } else {
@@ -188,9 +196,12 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         remoteSpiceManager = null;
     }
 
-    private void checkManagersState(Object request) {
-        if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted())
-            throw new RuntimeException(request.getClass().getName() + " is requested after onPause");
+    private boolean checkManagersState(Object request) {
+        if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted()) {
+            Lc.e(request.getClass().getName() + " is requested after onPause");
+            return false;
+        }
+        return true;
     }
 
     void startWrappingRequestsAsAggregation(AggregationTaskController aggregationTaskController) {

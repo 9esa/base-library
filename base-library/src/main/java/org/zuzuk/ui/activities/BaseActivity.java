@@ -15,6 +15,7 @@ import org.zuzuk.events.EventListener;
 import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.ui.fragments.BaseFragment;
 import org.zuzuk.ui.fragments.OnFragmentStartedListener;
+import org.zuzuk.utils.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
@@ -27,6 +28,7 @@ public abstract class BaseActivity extends ActionBarActivity
     private final static String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
 
     private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
+    private boolean isPaused = false;
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -52,6 +54,7 @@ public abstract class BaseActivity extends ActionBarActivity
 
     @Override
     protected void onResume() {
+        isPaused = false;
         super.onResume();
         eventListenerHelper.onResume();
     }
@@ -62,6 +65,7 @@ public abstract class BaseActivity extends ActionBarActivity
 
     @Override
     protected void onPause() {
+        isPaused = true;
         super.onPause();
         eventListenerHelper.onPause();
     }
@@ -88,6 +92,11 @@ public abstract class BaseActivity extends ActionBarActivity
 
     /* Setting fragment of special class as first in stack with args */
     public void setFirstFragment(Class<?> fragmentClass, Bundle args) {
+        if (isPaused) {
+            Lc.e("Calling to fragment manager while activity is paused", new Exception());
+            return;
+        }
+
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
@@ -101,6 +110,11 @@ public abstract class BaseActivity extends ActionBarActivity
     }
 
     private void addFragmentToStack(Class<?> fragmentClass, Bundle args, String backStackTag) {
+        if (isPaused) {
+            Lc.e("Calling to fragment manager while activity is paused", new Exception());
+            return;
+        }
+
         Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
         getSupportFragmentManager().beginTransaction()
                 .replace(getFragmentContainerId(), fragment, backStackTag)
