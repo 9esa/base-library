@@ -1,10 +1,9 @@
-package org.zuzuk.tasks;
+package org.zuzuk.tasks.aggregationtask;
 
 import android.content.Context;
 
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.persistence.DurationInMillis;
-import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.CachedSpiceRequest;
 import com.octo.android.robospice.request.listener.RequestListener;
 
@@ -16,9 +15,6 @@ import org.zuzuk.tasks.remote.base.RequestExecutor;
 import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
 import org.zuzuk.utils.Lc;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Gavriil Sitnikov on 14/09/2014.
@@ -41,9 +37,9 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         return isPaused;
     }
 
-    /* Creates task for someone who using helper not only as loader but as task executor */
+    /* Creates task for someone who using helper without caring of creating their own aggregation task */
     public AggregationTask createTemporaryTask() {
-        throw new RuntimeException("This method should be override to use temporary tasks");
+        throw new RuntimeException("This method should be override to use temporary non-background tasks");
     }
 
     /* Associated lifecycle method */
@@ -66,20 +62,12 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     /* Executes aggregation task */
     public void executeAggregationTask(AggregationTask aggregationTask, boolean isInBackground) {
-        AggregationTaskController controller = new AggregationTaskController(this, aggregationTask, isInBackground, false);
+        AggregationTaskController controller = new AggregationTaskController(this, aggregationTask, isInBackground);
         executeAggregationTask(controller, isInBackground);
     }
 
-    private void executeAggregationTask(AggregationTaskController taskController, boolean isInBackground) {
-        boolean isCachedDataLoaded = taskController.task.isLoaded(true);
-        // if task loaded from cache and it is not cache loading aggregation task (pre-loading)
-        if (isCachedDataLoaded && !taskController.isLoadingFromCache) {
-            taskController.task.onLoaded(false, true);
-        }
-
-        PreLoadingTask preLoadingTask = new PreLoadingTask(taskController, isCachedDataLoaded);
-        PreLoadingTaskListener preLoadingTaskListener = new PreLoadingTaskListener(preLoadingTask, isInBackground, isCachedDataLoaded);
-        executeTaskBackground(preLoadingTask, preLoadingTaskListener);
+    private void executeAggregationTask(final AggregationTaskController taskController, final boolean isInBackground) {
+        taskController.nextStep();
     }
 
     @Override
@@ -109,8 +97,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         boolean wasNoCurrentTaskController = currentTaskController == null;
         // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
         if (wasNoCurrentTaskController) {
-            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false, false);
-            currentTaskController.task.onLoadingStarted(false, currentTaskController.isLoadingFromCache);
+            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false);
+            currentTaskController.taskStage = AggregationTaskStage.LOADING_REMOTELY;
         }
 
         executeRequestBackground(request, requestListener);
@@ -127,7 +115,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         }
 
         CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager);
-        if (currentTaskController != null && currentTaskController.isLoadingFromCache) {
+        if (currentTaskController != null
+                && currentTaskController.taskStage == AggregationTaskStage.LOADING_LOCALLY) {
             cacheSpiceRequest.setOffline(true);
         }
 
@@ -154,8 +143,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         boolean wasNoCurrentTaskController = currentTaskController == null;
         // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
         if (wasNoCurrentTaskController) {
-            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false, false);
-            currentTaskController.task.onLoadingStarted(false, currentTaskController.isLoadingFromCache);
+            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false);
+            currentTaskController.taskStage = AggregationTaskStage.LOADING_REMOTELY;
         }
 
         executeTaskBackground(task, requestListener);
@@ -211,6 +200,12 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         currentTaskController = aggregationTaskController;
     }
 
+    void loadAggregationTask(AggregationTaskController taskController) {
+        startWrappingRequestsAsAggregation(taskController);
+        taskController.task.load(taskController.isInBackground, taskController.taskStage);
+        stopWrapRequestsAsAggregation();
+    }
+
     void stopWrapRequestsAsAggregation() {
         currentTaskController = null;
     }
@@ -219,127 +214,5 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         AggregationTaskRequestListener<T> result = new AggregationTaskRequestListener<>(this, currentTaskController, requestListener);
         currentTaskController.registerListener(result);
         return result;
-    }
-
-    // task that executes before main loading and it tries to load cache before and also check isLoadingNeeded flag
-    private class PreLoadingTask extends Task<Boolean> {
-        private final AggregationTaskController taskController;
-        private final boolean isCachedDataLoaded;
-
-        PreLoadingTask(AggregationTaskController taskController, boolean isCachedDataLoaded) {
-            super(Boolean.class);
-            this.taskController = taskController;
-            this.isCachedDataLoaded = isCachedDataLoaded;
-        }
-
-        @Override
-        public Boolean execute() throws Exception {
-            if (!isCachedDataLoaded && !taskController.isLoadingFromCache) {
-                final CountDownLatch cacheLoadingWaiter = new CountDownLatch(1);
-
-                AggregationTask cacheLoadingTask = new DefaultTemporaryTask() {
-
-                    @Override
-                    public void load(boolean isInBackground, boolean isFromCache) {
-                        taskController.task.load(true, true);
-                    }
-
-                    @Override
-                    public void onLoaded(boolean isInBackground, boolean isFromCache) {
-                        cacheLoadingWaiter.countDown();
-                    }
-
-                    @Override
-                    public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
-                        cacheLoadingWaiter.countDown();
-                    }
-                };
-
-                AggregationTaskController cacheLoadingController = new AggregationTaskController(TaskExecutorHelper.this, cacheLoadingTask, true, false);
-                executeAggregationTask(cacheLoadingController, false);
-                //TODO: possible deadlock by thread pool, :D (should be fixed in future)
-                //wait until cache loading task executes
-                cacheLoadingWaiter.await();
-            }
-
-            return taskController.task.isLoadingNeeded();
-        }
-    }
-
-    private class PreLoadingTaskListener implements RequestListener<Boolean> {
-        private final PreLoadingTask preLoadingTask;
-        private final boolean isInBackground;
-        private final boolean isCachedDataLoaded;
-
-        PreLoadingTaskListener(PreLoadingTask preLoadingTask,
-                               boolean isInBackground,
-                               boolean isCachedDataLoaded) {
-            this.preLoadingTask = preLoadingTask;
-            this.isInBackground = isInBackground;
-            this.isCachedDataLoaded = isCachedDataLoaded;
-        }
-
-        @Override
-        public void onRequestSuccess(Boolean isLoadingNeeded) {
-            boolean isLoadedFromCacheDuringPreLoading = preLoadingTask.taskController.task.isLoaded(true);
-            // if firstly there was no data loaded but it have just loaded from cache
-            if (!isCachedDataLoaded && isLoadedFromCacheDuringPreLoading) {
-                preLoadingTask.taskController.task.onLoaded(isInBackground, true);
-            }
-
-            if (!isLoadingNeeded) {
-                return;
-            }
-
-            startWrappingRequestsAsAggregation(preLoadingTask.taskController);
-
-            boolean isReallyInBackground = isInBackground
-                    || isLoadedFromCacheDuringPreLoading
-                    || preLoadingTask.taskController.isLoadingFromCache;
-
-            // now load it seriously from network etc.
-            preLoadingTask.taskController.task.load(isReallyInBackground, false);
-            if (preLoadingTask.taskController.isNoOneListenToRequests()) {
-                preLoadingTask.taskController.finishTask();
-            } else {
-                preLoadingTask.taskController.task.onLoadingStarted(isReallyInBackground, false);
-            }
-
-            stopWrapRequestsAsAggregation();
-        }
-
-        @Override
-        public void onRequestFailure(SpiceException spiceException) {
-            throw new RuntimeException(spiceException);
-        }
-    }
-
-    public static class DefaultTemporaryTask implements AggregationTask {
-
-        @Override
-        public boolean isLoadingNeeded() {
-            return true;
-        }
-
-        @Override
-        public boolean isLoaded(boolean isFromCache) {
-            return true;
-        }
-
-        @Override
-        public void load(boolean isInBackground, boolean isFromCache) {
-        }
-
-        @Override
-        public void onLoadingStarted(boolean isInBackground, boolean isFromCache) {
-        }
-
-        @Override
-        public void onLoaded(boolean isInBackground, boolean isFromCache) {
-        }
-
-        @Override
-        public void onFailed(boolean isInBackground, boolean isFromCache, List<Exception> exceptions) {
-        }
     }
 }

@@ -1,11 +1,13 @@
-package org.zuzuk.tasks;
+package org.zuzuk.tasks.aggregationtask;
 
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 /**
  * Created by Gavriil Sitnikov on 14/09/2014.
- * Wrapped request listener to control aggregation task state
+ * Wrapped request listener to help aggregation task controller
+ * to listen all requests which started inside load() method of aggregation task
+ * and also all requests which started inside other requests callbacks
  */
 class AggregationTaskRequestListener<T> implements RequestListener<T> {
     private final TaskExecutorHelper taskExecutorHelper;
