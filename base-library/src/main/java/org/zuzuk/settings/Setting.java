@@ -7,11 +7,17 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
 import org.zuzuk.utils.Lc;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 /**
@@ -45,7 +51,11 @@ public abstract class Setting<T> {
     /* Raised after setting changed */
     protected void onSettingChanged(Context context) {
         context.sendBroadcast(new Intent(getName()));
-        Lc.d("Setting " + name + " changed to " + valueToString(get(context)));
+
+        if (Lc.getLogLevel() <= Log.DEBUG) {
+            // valueToString() is hard operation
+            Lc.d("Setting " + name + " changed to " + valueToString(get(context)));
+        }
     }
 
     /* Returns name of setting */
@@ -152,9 +162,33 @@ public abstract class Setting<T> {
         return value != null ? value.toString() : "null";
     }
 
-    protected abstract T fromBytes(byte[] data);
+    @SuppressWarnings("unchecked")
+    protected T fromBytes(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        try {
+            ObjectInputStream is = new ObjectInputStream(in);
+            return (T) is.readObject();
+        } catch (Exception e) {
+            Lc.e("Setting " + getName() + " cannot be deserialized: " + '\n' + e.getMessage());
+            return null;
+        }
+    }
 
-    protected abstract byte[] toBytes(T value) throws Exception;
+    protected byte[] toBytes(T value) throws IOException {
+        if (value != null) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream os = new ObjectOutputStream(out);
+            os.writeObject(value);
+            byte[] result = out.toByteArray();
+            out.close();
+            return result;
+        } else {
+            return null;
+        }
+    }
 
     private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         private final static String SETTINGS_DATABASE_NAME = "inner_settings";
