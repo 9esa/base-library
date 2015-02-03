@@ -15,6 +15,11 @@ public class Lc {
     private static int LogLevel;
     private static LogProcessor LogProcessor;
 
+    /* Returns logging level */
+    public static int getLogLevel() {
+        return LogLevel;
+    }
+
     private static final ThreadLocal<SimpleDateFormat> DateTimeFormatter =
             new ThreadLocal<SimpleDateFormat>() {
                 @Override
