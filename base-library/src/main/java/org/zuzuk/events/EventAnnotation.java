@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 public @interface EventAnnotation {
     String value() default "";
 
-    boolean isLocal() default true;
+    boolean isGlobalBroadcast() default false;
 
     boolean isOnlyWhileResumed() default true;
 }
