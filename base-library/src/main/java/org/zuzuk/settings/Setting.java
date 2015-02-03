@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
@@ -50,7 +51,7 @@ public abstract class Setting<T> {
 
     /* Raised after setting changed */
     protected void onSettingChanged(Context context) {
-        context.sendBroadcast(new Intent(getName()));
+        LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent(getName()));
 
         if (Lc.getLogLevel() <= Log.DEBUG) {
             // valueToString() is hard operation
