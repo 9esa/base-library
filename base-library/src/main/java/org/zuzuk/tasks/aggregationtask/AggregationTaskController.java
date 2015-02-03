@@ -66,7 +66,7 @@ class AggregationTaskController {
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
             if (aggregationTaskStageState.isLoaded) {
                 task.onLoaded(isInBackground, aggregationTaskStageState.isLoadingNeeded ? taskStage : AggregationTaskStage.LOADED);
-            } else {
+            } else if (taskStage != AggregationTaskStage.PRE_LOADING) {
                 task.onFailed(isInBackground, taskStage, collectedFails);
             }
 
@@ -81,9 +81,6 @@ class AggregationTaskController {
                         taskStage = AggregationTaskStage.LOADING_REMOTELY;
                         task.onLoadingStarted(isInBackground, taskStage);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
-                        break;
-                    case LOADING_REMOTELY:
-                        task.onFailed(isInBackground, AggregationTaskStage.LOADED, collectedFails);
                         break;
                 }
             }
