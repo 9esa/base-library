@@ -23,7 +23,7 @@ public enum KryoSerializer implements Serializer {
     @Override
     public <TObject> byte[] serialize(TObject object) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(4000);
-        kryoThreadLocal.get().writeObject(new Output(byteArrayOutputStream), object);
+        kryoThreadLocal.get().writeClassAndObject(new Output(byteArrayOutputStream), object);
         try {
             byteArrayOutputStream.close();
         } catch (IOException e) {
