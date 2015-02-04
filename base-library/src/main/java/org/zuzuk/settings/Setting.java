@@ -19,7 +19,7 @@ import java.util.Arrays;
  * Created by Gavriil Sitnikov on 09/2014.
  * Base class that represents setting. Settings are storing into database
  */
-public abstract class Setting<T> {
+public class Setting<T> {
     private final static byte[] EMPTY_VALUE = new byte[0];
     private final static String RESET_BROADCAST_EVENT = "RESET_BROADCAST_EVENT";
 
