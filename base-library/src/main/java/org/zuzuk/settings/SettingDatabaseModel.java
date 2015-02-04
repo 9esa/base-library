@@ -12,7 +12,7 @@ import com.j256.ormlite.table.DatabaseTable;
 class SettingDatabaseModel {
     @DatabaseField(id = true, canBeNull = false)
     private String name;
-    @DatabaseField(dataType = DataType.BYTE_ARRAY)
+    @DatabaseField(dataType = DataType.BYTE_ARRAY, canBeNull = false)
     private byte[] data;
 
     /* Returns name of setting */
