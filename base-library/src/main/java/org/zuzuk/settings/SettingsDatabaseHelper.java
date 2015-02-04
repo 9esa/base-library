@@ -34,7 +34,9 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         try {
             ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             Bundle metaData = applicationInfo.metaData;
-            return metaData.getInt(SETTINGS_VERSION_MANIFEST_KEY, DEFAULT_SETTINGS_VERSION);
+            return metaData != null
+                    ? metaData.getInt(SETTINGS_VERSION_MANIFEST_KEY, DEFAULT_SETTINGS_VERSION)
+                    : DEFAULT_SETTINGS_VERSION;
         } catch (PackageManager.NameNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -42,7 +44,7 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
 
     @Override
     protected Class[] getTables() {
-        return new Class[]{ SettingDatabaseModel.class };
+        return new Class[]{SettingDatabaseModel.class};
     }
 
 }
