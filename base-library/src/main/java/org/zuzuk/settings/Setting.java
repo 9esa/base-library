@@ -144,7 +144,7 @@ public class Setting<T> {
     }
 
     private byte[] getBytesOrNull(T value, byte[] nullValue) {
-        return value != null ? serializer.serialize(value) : null;
+        return value != null ? serializer.serialize(value) : nullValue;
     }
 
     private String valueToString(T value) {

@@ -1,15 +1,16 @@
-package org.zuzuk.tasks.remote.mycache;
+package org.zuzuk.tasks.remote.cache;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable
-public class MyCacheDbEntry {
+public class ORMLiteDatabaseCacheDbEntry {
+
     @DatabaseField(id = true, canBeNull = false)
     private String key;
 
-    @DatabaseField
+    @DatabaseField(canBeNull = false)
     private long lastModified;
 
     @DatabaseField(dataType = DataType.BYTE_ARRAY)
@@ -27,10 +28,10 @@ public class MyCacheDbEntry {
         return data;
     }
 
-    private MyCacheDbEntry() {
+    private ORMLiteDatabaseCacheDbEntry() {
     }
 
-    public MyCacheDbEntry(Object key, byte[] data) {
+    public ORMLiteDatabaseCacheDbEntry(Object key, byte[] data) {
         this.key = key.toString();
         this.lastModified = System.currentTimeMillis();
         this.data = data;

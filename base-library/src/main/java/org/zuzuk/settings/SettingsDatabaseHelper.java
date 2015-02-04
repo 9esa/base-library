@@ -42,7 +42,7 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
 
     @Override
     protected Class[] getTables() {
-        return new Class[]{SettingDatabaseModel.class};
+        return new Class[]{ SettingDatabaseModel.class };
     }
 
 }
