@@ -1,5 +1,6 @@
 package org.zuzuk.tasks.remote.base;
 
+import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
@@ -25,7 +26,7 @@ import java.net.URLEncoder;
 public abstract class HttpRequest<T> extends RemoteRequest<T> {
     private final static String CACHE_PARAMETER_SEPARATOR = "#";
     private final static int CACHE_MAX_KEY_SIZE = 128;
-    protected final static HttpTransport DefaultHttpTransport = new NetHttpTransport();
+    protected final static HttpTransport DefaultHttpTransport = AndroidHttp.newCompatibleTransport();
 
     /* Returns base url without parameters */
     protected abstract String getUrl();
