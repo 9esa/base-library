@@ -57,4 +57,5 @@ public class CacheEntry implements Serializable {
         this.cacheKey = in.readObject();
         this.cacheDuration = in.readLong();
     }
+
 }
