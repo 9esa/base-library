@@ -44,7 +44,7 @@ dependencies {
     /* Network requests */
     provided 'com.octo.android.robospice:robospice:1.4.14'
 
-    provided 'de.ruedigermoeller:fst:+'
+    provided 'com.esotericsoftware:kryo:3.0.0'
 
     provided('com.google.http-client:google-http-client-android:1.19.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
