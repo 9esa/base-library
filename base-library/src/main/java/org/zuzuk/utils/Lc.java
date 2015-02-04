@@ -94,6 +94,9 @@ public class Lc {
     }
 
     private static void logMessage(int priority, String message, Throwable ex, int stackTraceAdditionalDepth) {
+        if (LogProcessor == null)
+            throw new IllegalStateException("Please initialize logging by calling Lc.initialize(...) method");
+
         if (priority >= LogLevel) {
             StackTraceElement trace = Thread.currentThread().getStackTrace()[5 + stackTraceAdditionalDepth];
             String tag = trace.getFileName() + ":" + trace.getLineNumber();
