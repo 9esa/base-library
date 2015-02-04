@@ -11,10 +11,10 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.utils.StorageUtils;
-import com.octo.android.robospice.Jackson2GoogleHttpClientSpiceService;
 import com.octo.android.robospice.SpiceManager;
 
 import org.zuzuk.tasks.local.LocalSpiceService;
+import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
 import org.zuzuk.utils.Lc;
 
 /**
@@ -75,14 +75,14 @@ public class InitializationHelper {
 
     /* Standard spice manager for local tasks */
     public static SpiceManager createDefaultJsonSpiceManager() {
-        return new SpiceManager(Jackson2GoogleHttpClientSpiceService.class);
+        return new SpiceManager(ORMLiteDatabaseCacheService.class);
     }
 
     /* Standard DisplayImageOptions */
     public static DisplayImageOptions.Builder createDefaultDisplayImageOptions() {
         return new DisplayImageOptions.Builder()
                 .cacheOnDisk(true)
-                .cacheInMemory(true)
+                .resetViewBeforeLoading(true)
                 .displayer(new FadeInBitmapDisplayer(300, true, true, false))
                 .delayBeforeLoading(100);
     }
@@ -100,4 +100,5 @@ public class InitializationHelper {
     public static void initializeDefaultImageLoader(Context context) {
         ImageLoader.getInstance().init(createDefaultImageLoaderConfiguration(context).build());
     }
+
 }

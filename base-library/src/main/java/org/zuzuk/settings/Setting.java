@@ -4,28 +4,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import org.zuzuk.database.BaseOrmLiteHelper;
-import org.zuzuk.utils.Lc;
+import com.j256.ormlite.dao.RuntimeExceptionDao;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import org.zuzuk.utils.Lc;
+import org.zuzuk.utils.serialization.FSTSerializer;
+import org.zuzuk.utils.serialization.Serializer;
+
 import java.util.Arrays;
 
 /**
  * Created by Gavriil Sitnikov on 09/2014.
  * Base class that represents setting. Settings are storing into database
  */
-public abstract class Setting<T> {
+public class Setting<T> {
     private final static byte[] EMPTY_VALUE = new byte[0];
     private final static String RESET_BROADCAST_EVENT = "RESET_BROADCAST_EVENT";
 
@@ -43,6 +37,31 @@ public abstract class Setting<T> {
             onSettingChanged(context);
         }
     };
+    private Serializer serializer = FSTSerializer.Instance;
+
+    public Setting(String name) {
+        this.name = name;
+        this.defaultValueBytes = null;
+        this.valueValidator = null;
+    }
+
+    public Setting(String name, T defaultValue) {
+        this.name = name;
+        this.defaultValueBytes = getBytesOrNull(defaultValue, null);
+        this.valueValidator = null;
+    }
+
+    public Setting(String name, ValueValidator<T> valueValidator) {
+        this.name = name;
+        this.defaultValueBytes = null;
+        this.valueValidator = valueValidator;
+    }
+
+    public Setting(String name, T defaultValue, ValueValidator<T> valueValidator) {
+        this.name = name;
+        this.defaultValueBytes = getBytesOrNull(defaultValue, null);
+        this.valueValidator = valueValidator;
+    }
 
     /* Raises when value changes */
     public void raiseOnSettingChanged(Context context) {
@@ -65,8 +84,7 @@ public abstract class Setting<T> {
     }
 
     private void updateCacheValueBytes(Context context) {
-        SettingsDatabaseHelper database = SettingsDatabaseHelper.getInstance(context);
-        SettingDatabaseModel settingModel = database.getDbTable(SettingDatabaseModel.class).queryForId(name);
+        SettingDatabaseModel settingModel = getSettingsDbTable(context).queryForId(name);
         cachedValueBytes = settingModel != null
                 ? settingModel.getData()
                 : (defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE);
@@ -84,7 +102,7 @@ public abstract class Setting<T> {
                 updateCacheValueBytes(context);
             }
             return cachedValueBytes != EMPTY_VALUE
-                    ? fromBytes(cachedValueBytes)
+                    ? serializer.<T>deserialize(cachedValueBytes)
                     : null;
         }
     }
@@ -92,13 +110,8 @@ public abstract class Setting<T> {
     /* Sets value of setting. Returns false if it is not changed */
     public boolean set(Context context, T value) {
         synchronized (valueLocker) {
-            byte[] valueBytes;
-            try {
-                valueBytes = value != null ? toBytes(value) : EMPTY_VALUE;
-            } catch (Exception e) {
-                Lc.e("Setting " + getName() + " cannot be serialized: " + value.toString() + '\n' + e.getMessage());
-                return false;
-            }
+            byte[] valueBytes = getBytesOrNull(value, EMPTY_VALUE);
+
             if (cachedValueBytes == null) {
                 updateCacheValueBytes(context);
             }
@@ -113,13 +126,12 @@ public abstract class Setting<T> {
                 return false;
             }
 
-            SettingsDatabaseHelper database = SettingsDatabaseHelper.getInstance(context);
             if (value == null) {
-                database.getDbTable(SettingDatabaseModel.class).deleteById(name);
+                getSettingsDbTable(context).deleteById(name);
                 cachedValueBytes = defaultValueBytes != null ? defaultValueBytes : EMPTY_VALUE;
             } else {
                 SettingDatabaseModel settingsModel = new SettingDatabaseModel(name, valueBytes);
-                database.getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
+                getSettingsDbTable(context).createOrUpdate(settingsModel);
                 cachedValueBytes = valueBytes;
             }
             raiseOnSettingChanged(context);
@@ -127,101 +139,20 @@ public abstract class Setting<T> {
         }
     }
 
-    public Setting(String name) {
-        this.name = name;
-        this.defaultValueBytes = null;
-        this.valueValidator = null;
+    private RuntimeExceptionDao<SettingDatabaseModel, Object> getSettingsDbTable(Context context) {
+        return SettingsDatabaseHelper.getInstance(context).getDbTable(SettingDatabaseModel.class);
     }
 
-    public Setting(String name, T defaultValue) {
-        this.name = name;
-        try {
-            this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        this.valueValidator = null;
-    }
-
-    public Setting(String name, ValueValidator<T> valueValidator) {
-        this.name = name;
-        this.defaultValueBytes = null;
-        this.valueValidator = valueValidator;
-    }
-
-    public Setting(String name, T defaultValue, ValueValidator<T> valueValidator) {
-        this.name = name;
-        try {
-            this.defaultValueBytes = defaultValue != null ? toBytes(defaultValue) : null;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        this.valueValidator = valueValidator;
+    private byte[] getBytesOrNull(T value, byte[] nullValue) {
+        return value != null ? serializer.serialize(value) : nullValue;
     }
 
     private String valueToString(T value) {
         return value != null ? value.toString() : "null";
     }
 
-    @SuppressWarnings("unchecked")
-    protected T fromBytes(byte[] data) {
-        if (data == null) {
-            return null;
-        }
-        ByteArrayInputStream in = new ByteArrayInputStream(data);
-        try {
-            ObjectInputStream is = new ObjectInputStream(in);
-            return (T) is.readObject();
-        } catch (Exception e) {
-            Lc.e("Setting " + getName() + " cannot be deserialized: " + '\n' + e.getMessage());
-            return null;
-        }
+    protected void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
     }
 
-    protected byte[] toBytes(T value) throws IOException {
-        if (value != null) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream os = new ObjectOutputStream(out);
-            os.writeObject(value);
-            byte[] result = out.toByteArray();
-            out.close();
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    private static class SettingsDatabaseHelper extends BaseOrmLiteHelper {
-        private final static String SETTINGS_DATABASE_NAME = "inner_settings";
-        private final static int DEFAULT_SETTINGS_VERSION = 1;
-        private final static String SETTINGS_VERSION_MANIFEST_KEY = "org.zuzuk.settings.version";
-
-        private static SettingsDatabaseHelper instance;
-
-        private synchronized static SettingsDatabaseHelper getInstance(Context context) {
-            if (instance == null) {
-                instance = new SettingsDatabaseHelper(context);
-            }
-            return instance;
-        }
-
-        public SettingsDatabaseHelper(Context context) {
-            super(context, context.getFilesDir() + File.separator + SETTINGS_DATABASE_NAME, null, getSettingsVersion(context));
-        }
-
-        private static int getSettingsVersion(Context context) {
-            try {
-                ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-                Bundle metaData = applicationInfo.metaData;
-                return metaData.getInt(SETTINGS_VERSION_MANIFEST_KEY, DEFAULT_SETTINGS_VERSION);
-            } catch (PackageManager.NameNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        protected Class[] getTables() {
-            return new Class[]{SettingDatabaseModel.class};
-        }
-    }
 }
