@@ -79,7 +79,7 @@ public class EventListenerHelper {
         BroadcastEvents events = eventListener.getClass().getAnnotation(BroadcastEvents.class);
         if (events != null) {
             for (EventAnnotation eventAnnotation : events.value()) {
-                if (eventAnnotation.isGlobalBroadcast()) {
+                if (!eventAnnotation.isGlobalBroadcast()) {
                     if (eventAnnotation.isOnlyWhileResumed()) {
                         localOnResumeEvents.add(eventAnnotation.value());
                     } else {

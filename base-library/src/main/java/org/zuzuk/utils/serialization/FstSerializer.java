@@ -18,6 +18,7 @@ public enum FSTSerializer implements Serializer {
         return fstConfigurationThreadLocal.get().asByteArray(object);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <TObject> TObject deserialize(byte[] byteArray) {
         return (TObject) fstConfigurationThreadLocal.get().asObject(byteArray);
