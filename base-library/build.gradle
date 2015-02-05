@@ -44,7 +44,10 @@ dependencies {
     /* Network requests */
     provided 'com.octo.android.robospice:robospice:1.4.14'
 
-    provided 'de.ruedigermoeller:fst:2.21'
+    compile files('libs/fst-2.21.jar')
+
+    compile group: 'org.javassist', name: 'javassist', version: '3.18.1-GA'
+    compile 'org.objenesis:objenesis:2.1'
 
     provided('com.google.http-client:google-http-client-android:1.19.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
