@@ -9,7 +9,7 @@ import com.octo.android.robospice.persistence.exception.CacheLoadingException;
 import com.octo.android.robospice.persistence.exception.CacheSavingException;
 
 import org.zuzuk.database.DBUtils;
-import org.zuzuk.utils.serialization.KryoSerializer;
+import org.zuzuk.utils.serialization.FSTSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TObject> {
 
-    private Serializer serializer = KryoSerializer.Instance;
+    private Serializer serializer = FSTSerializer.Instance;
 
     public ORMLiteDatabaseObjectPersister(Application application, Class<TObject> clazz) {
         super(application, clazz);
