@@ -42,9 +42,7 @@ dependencies {
     provided 'com.j256.ormlite:ormlite-android:4.48'
 
     /* Serialization */
-    compile files('libs/fst-2.21.jar')
-    compile group: 'org.javassist', name: 'javassist', version: '3.18.1-GA'
-    compile 'org.objenesis:objenesis:2.1'
+    provided 'de.ruedigermoeller:fst:2.22'
 
     /* Network requests */
     provided 'com.octo.android.robospice:robospice:1.4.14'
