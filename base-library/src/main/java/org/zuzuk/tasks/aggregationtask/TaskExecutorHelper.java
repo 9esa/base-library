@@ -110,21 +110,14 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     <T> void executeRequestInternal(RemoteRequest<T> request,
                                     RequestListener<T> requestListener) {
-        if (!checkThread() || !checkManagersState(request)) {
+        if (!checkThread() || !checkManagersState(request) || !checkIfTaskExecutedAsPartOfAggregationTask()) {
             return;
         }
 
-        CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager);
-        if (currentTaskController != null
-                && currentTaskController.taskStage == AggregationTaskStage.LOADING_LOCALLY) {
-            cacheSpiceRequest.setOffline(true);
-        }
+        CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager,
+                currentTaskController.taskStage == AggregationTaskStage.LOADING_LOCALLY);
 
-        if (currentTaskController != null) {
-            remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
-        } else {
-            remoteSpiceManager.execute(cacheSpiceRequest, requestListener);
-        }
+        remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
     }
 
     @Override
@@ -154,18 +147,13 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     <T> void executeTaskInternal(Task<T> task,
                                  RequestListener<T> requestListener) {
-        if (!checkThread() || !checkManagersState(task)) {
+        if (!checkThread() || !checkManagersState(task) || !checkIfTaskExecutedAsPartOfAggregationTask()) {
             return;
         }
 
         CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
         nonCachedTask.setOffline(true);
-
-        if (currentTaskController != null) {
-            localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
-        } else {
-            localSpiceManager.execute(nonCachedTask, requestListener);
-        }
+        localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
     }
 
     /* Associated lifecycle method */
@@ -182,15 +170,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         remoteSpiceManager = null;
     }
 
-    private boolean checkIsAggregationTaskAvailableToRun() {
-        if (currentTaskController != null) {
-            Lc.fatalException(new IllegalStateException("AggregationTask cannot be loaded while another aggregation task is loading." +
-                    " Make sure that you are starting AggregationTask in right moment"));
-            return false;
-        }
-        return true;
-    }
-
     private boolean checkManagersState(Object request) {
         if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted()) {
             Lc.fatalException(new IllegalStateException(request.getClass().getName() + " is requested after onPause"));
@@ -202,6 +181,24 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private boolean checkThread() {
         if (ownerThread.get() != Thread.currentThread()) {
             Lc.fatalException(new IllegalStateException("TaskExecutorHelper could be accessed from one thread. Create new TaskExecutorHelper for new thread"));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkIsAggregationTaskAvailableToRun() {
+        if (currentTaskController != null) {
+            Lc.fatalException(new IllegalStateException("AggregationTask cannot be loaded while another aggregation task is loading." +
+                    " Make sure that you are starting AggregationTask in right moment"));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkIfTaskExecutedAsPartOfAggregationTask() {
+        if (currentTaskController == null) {
+            Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
+                    "or in any RequestListener callback"));
             return false;
         }
         return true;

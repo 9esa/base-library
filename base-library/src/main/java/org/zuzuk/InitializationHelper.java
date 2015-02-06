@@ -39,10 +39,9 @@ public class InitializationHelper {
                         Log.w(tag, message);
                         break;
                     case Log.ERROR:
+                    case Log.ASSERT:
                         Log.e(tag, message);
                         break;
-                    default:
-                        throw new IllegalStateException("Unsupported log level: " + logLevel);
                 }
             }
 

@@ -13,10 +13,11 @@ import org.zuzuk.tasks.remote.cache.AllowOnlyOfflineCacheRequest;
 public abstract class RemoteRequest<T> extends Task<T> {
 
     /* Returns associated cache request */
-    public AllowOnlyOfflineCacheRequest<T> wrapAsCacheRequest(SpiceManager spiceManager) {
+    public AllowOnlyOfflineCacheRequest<T> wrapAsCacheRequest(SpiceManager spiceManager, boolean isLoadingFromCache) {
+        long cacheExpiryTime = isLoadingFromCache || !ignoreCacheOnRealLoading() ? getCacheExpiryDuration() : 1;
         AllowOnlyOfflineCacheRequest<T> cachedSpiceRequest
-                = new AllowOnlyOfflineCacheRequest<>(spiceManager, this, getCacheKey(), getCacheExpiryDuration());
-        cachedSpiceRequest.setOffline(isOffline());
+                = new AllowOnlyOfflineCacheRequest<>(spiceManager, this, getCacheKey(), cacheExpiryTime);
+        cachedSpiceRequest.setOffline(isLoadingFromCache || isOffline());
         cachedSpiceRequest.setAggregatable(true);
         return cachedSpiceRequest;
     }
@@ -28,6 +29,11 @@ public abstract class RemoteRequest<T> extends Task<T> {
 
     /* Returns cache key */
     public abstract Object getCacheKey();
+
+    /* Returns if cache should be ignored while request trying to executes remotely */
+    public boolean ignoreCacheOnRealLoading() {
+        return false;
+    }
 
     /* Returns cache expiration time */
     public long getCacheExpiryDuration() {

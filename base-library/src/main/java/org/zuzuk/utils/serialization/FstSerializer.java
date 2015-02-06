@@ -3,7 +3,6 @@ package org.zuzuk.utils.serialization;
 import org.nustaq.serialization.FSTConfiguration;
 
 public enum FSTSerializer implements Serializer {
-
     Instance;
 
     private static ThreadLocal<FSTConfiguration> fstConfigurationThreadLocal = new ThreadLocal<FSTConfiguration>() {

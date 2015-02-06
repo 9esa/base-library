@@ -13,6 +13,7 @@ import android.os.Build;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ViewScaleType;
 import com.nostra13.universalimageloader.core.imageaware.ImageAware;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
@@ -27,6 +28,39 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
     private Drawable drawable;
     private Matrix drawMatrix;
     private ImageView.ScaleType imageScaleType = ImageView.ScaleType.CENTER_CROP;
+    private String lastLoadedUri = null;
+    private ImageLoadingListener innerImageLoadingListener = new ImageLoadingListener() {
+        @Override
+        public void onLoadingStarted(String imageUri, View view) {
+            if (imageLoadingListener != null) {
+                onLoadingStarted(imageUri, view);
+            }
+        }
+
+        @Override
+        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+            if (imageLoadingListener != null) {
+                onLoadingFailed(imageUri, view, failReason);
+            }
+        }
+
+        @Override
+        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+            BitmapsGlobalRecycler.Instance.addReference(imageUri, loadedImage);
+            lastLoadedUri = imageUri;
+            if (imageLoadingListener != null) {
+                onLoadingComplete(imageUri, view, loadedImage);
+            }
+        }
+
+        @Override
+        public void onLoadingCancelled(String imageUri, View view) {
+            if (imageLoadingListener != null) {
+                onLoadingCancelled(imageUri, view);
+            }
+        }
+    };
+
     private ImageLoadingListener imageLoadingListener;
 
     /* Sets listener to listen image loading events */
@@ -58,11 +92,16 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
     protected void reload() {
         drawable = null;
         getImageLoader().cancelDisplayTask(this);
+        if (lastLoadedUri != null) {
+            BitmapsGlobalRecycler.Instance.removeReference(lastLoadedUri);
+            lastLoadedUri = null;
+        }
+
         if (canLoad()) {
             getImageLoader().displayImage(getUrl(),
                     this,
                     getDisplayImageOptions(),
-                    imageLoadingListener);
+                    innerImageLoadingListener);
         }
     }
 
