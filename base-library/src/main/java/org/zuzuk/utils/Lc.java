@@ -12,12 +12,23 @@ import java.util.Locale;
 import roboguice.util.temp.Ln;
 
 public class Lc {
-    private static int LogLevel;
-    private static LogProcessor LogProcessor;
+    private static int logLevel;
+    private static boolean crashOnFatalExceptions = true;
+    private static LogProcessor logProcessor;
+
+    /* Returns if library should crash on fatal exceptions (default - true, set false for production) */
+    public static boolean isCrashOnFatalExceptions() {
+        return crashOnFatalExceptions;
+    }
+
+    /* Sets if library should crash on fatal exceptions (default - true, set false for production) */
+    public static void setCrashOnFatalExceptions(boolean crashOnFatalExceptions) {
+        Lc.crashOnFatalExceptions = crashOnFatalExceptions;
+    }
 
     /* Returns logging level */
     public static int getLogLevel() {
-        return LogLevel;
+        return logLevel;
     }
 
     private static final ThreadLocal<SimpleDateFormat> DateTimeFormatter =
@@ -40,8 +51,8 @@ public class Lc {
 
     /* Logging initialization with different log level for Robospice and custom log processor */
     public static void initialize(int logLevel, int robospiceLogLevel, LogProcessor logProcessor) {
-        LogLevel = logLevel;
-        LogProcessor = logProcessor;
+        Lc.logLevel = logLevel;
+        Lc.logProcessor = logProcessor;
         Ln.getConfig().setLoggingLevel(robospiceLogLevel);
         Ln.setPrint(new Ln.Print() {
             @Override
@@ -93,11 +104,20 @@ public class Lc {
         logMessage(Log.ERROR, message, ex);
     }
 
+    /* Error level log with exception */
+    public static void fatalException(@NonNull Throwable ex) {
+        if (crashOnFatalExceptions) {
+            throw new RuntimeException(ex);
+        } else {
+            logMessage(Log.ASSERT, "Fatal exception", ex);
+        }
+    }
+
     private static void logMessage(int priority, String message, Throwable ex, int stackTraceAdditionalDepth) {
-        if (LogProcessor == null)
+        if (logProcessor == null)
             throw new IllegalStateException("Please initialize logging by calling Lc.initialize(...) method");
 
-        if (priority >= LogLevel) {
+        if (priority >= logLevel) {
             StackTraceElement trace = Thread.currentThread().getStackTrace()[5 + stackTraceAdditionalDepth];
             String tag = trace.getFileName() + ":" + trace.getLineNumber();
             String messageExtended = String.format("%s %s %s",
@@ -105,9 +125,9 @@ public class Lc {
                     Thread.currentThread().getName(), message);
 
             if (ex != null) {
-                LogProcessor.processLogMessage(priority, tag, messageExtended, ex);
+                logProcessor.processLogMessage(priority, tag, messageExtended, ex);
             } else {
-                LogProcessor.processLogMessage(priority, tag, messageExtended);
+                logProcessor.processLogMessage(priority, tag, messageExtended);
             }
         }
     }
@@ -118,7 +138,7 @@ public class Lc {
 
     /* Prints stack trace in log with DEBUG level */
     public static void printStackTrace(String tag) {
-        if (LogLevel <= Log.DEBUG) {
+        if (logLevel <= Log.DEBUG) {
             Log.d(tag, TextUtils.join("\n", Thread.currentThread().getStackTrace()));
         }
     }

@@ -20,7 +20,7 @@ import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
  * Created by Gavriil Sitnikov on 03/10/2014.
  * Base service that can execute requests
  */
-public abstract class BaseRequestExecutorService extends Service implements EventListener {
+public abstract class BaseExecutorService extends Service implements EventListener {
     private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
     private SpiceManager remoteSpiceManager;
     private SpiceManager localSpiceManager;

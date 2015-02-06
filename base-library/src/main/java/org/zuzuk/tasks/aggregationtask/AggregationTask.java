@@ -16,14 +16,14 @@ public abstract interface AggregationTask {
     boolean isLoaded(AggregationTaskStage currentTaskStage);
 
     /* Loading data at current stage */
-    void load(boolean isInBackground, AggregationTaskStage currentTaskStage);
+    void load(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
     /* Calls when loading of some stage have started */
-    void onLoadingStarted(boolean isInBackground, AggregationTaskStage currentTaskStage);
+    void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
     /* Calls when loading of some stage have completed successfully */
-    void onLoaded(boolean isInBackground, AggregationTaskStage currentTaskStage);
+    void onLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
     /* Calls when loading of some stage have failed with exceptions */
-    void onFailed(boolean isInBackground, AggregationTaskStage currentTaskStage, List<Exception> exceptions);
+    void onFailed(AggregationTaskStage currentTaskStage, List<Exception> exceptions, AggregationTaskStageState currentTaskStageState);
 }

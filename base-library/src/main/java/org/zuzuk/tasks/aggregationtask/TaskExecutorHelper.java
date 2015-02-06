@@ -16,16 +16,24 @@ import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
 import org.zuzuk.utils.Lc;
 
+import java.lang.ref.WeakReference;
+import java.util.List;
+
 /**
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
 public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
+    private final WeakReference<Thread> ownerThread;
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
     private Context context;
     private AggregationTaskController currentTaskController;
     private boolean isPaused = true;
+
+    public TaskExecutorHelper() {
+        this.ownerThread = new WeakReference<>(Thread.currentThread());
+    }
 
     @Override
     public SpiceManager getSpiceManager() {
@@ -35,11 +43,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     /* Returns if executor in paused state so it can't execute requests */
     boolean isPaused() {
         return isPaused;
-    }
-
-    /* Creates task for someone who using helper without caring of creating their own aggregation task */
-    public AggregationTask createTemporaryTask() {
-        throw new RuntimeException("This method should be override to use temporary non-background tasks");
     }
 
     /* Associated lifecycle method */
@@ -61,12 +64,16 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     }
 
     /* Executes aggregation task */
-    public void executeAggregationTask(AggregationTask aggregationTask, boolean isInBackground) {
-        AggregationTaskController controller = new AggregationTaskController(this, aggregationTask, isInBackground);
-        executeAggregationTask(controller, isInBackground);
+    public void executeAggregationTask(AggregationTask aggregationTask) {
+        if (!checkIsAggregationTaskAvailableToRun()) {
+            return;
+        }
+
+        AggregationTaskController controller = new AggregationTaskController(this, aggregationTask);
+        executeAggregationTask(controller);
     }
 
-    private void executeAggregationTask(final AggregationTaskController taskController, final boolean isInBackground) {
+    private void executeAggregationTask(final AggregationTaskController taskController) {
         taskController.nextStep();
     }
 
@@ -77,40 +84,33 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     }
 
     @Override
-    public <T> void executeRequestBackground(RemoteRequest<T> request,
-                                             RequestListener<T> requestListener) {
-        executeRequestBackgroundInternal(request, requestListener);
-    }
-
-    @Override
     public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
         executeRequestInternal(requestWrapper.getPreparedRequest(), requestWrapper);
     }
 
     @Override
-    public <T> void executeRequestBackground(RequestWrapper<T> requestWrapper) {
-        executeRequestBackgroundInternal(requestWrapper.getPreparedRequest(), requestWrapper);
+    public <T> void executeRealLoadingRequest(RequestWrapper<T> requestWrapper,
+                                              AggregationTaskListener taskListener) {
+        executeRealLoadingRequest(requestWrapper.getPreparedRequest(), requestWrapper, taskListener);
     }
 
-    private <T> void executeRequestInternal(RemoteRequest<T> request,
-                                            RequestListener<T> requestListener) {
-        boolean wasNoCurrentTaskController = currentTaskController == null;
-        // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
-        if (wasNoCurrentTaskController) {
-            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false);
-            currentTaskController.taskStage = AggregationTaskStage.LOADING_REMOTELY;
+    @Override
+    public <T> void executeRealLoadingRequest(RemoteRequest<T> request,
+                                              RequestListener<T> requestListener,
+                                              AggregationTaskListener taskListener) {
+        if (!checkIsAggregationTaskAvailableToRun()) {
+            return;
         }
 
-        executeRequestBackground(request, requestListener);
-
-        if (wasNoCurrentTaskController) {
-            currentTaskController = null;
-        }
+        currentTaskController = new AggregationTaskController(this, new JustRealLoadingAggregationTask(taskListener));
+        currentTaskController.taskStage = AggregationTaskStage.REAL_LOADING;
+        executeRequestInternal(request, requestListener);
+        currentTaskController = null;
     }
 
-    private <T> void executeRequestBackgroundInternal(RemoteRequest<T> request,
-                                                      RequestListener<T> requestListener) {
-        if (!checkManagersState(request)) {
+    <T> void executeRequestInternal(RemoteRequest<T> request,
+                                    RequestListener<T> requestListener) {
+        if (!checkThread() || !checkManagersState(request)) {
             return;
         }
 
@@ -129,35 +129,32 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     @Override
     public void executeTask(LocalTask task) {
-        executeTask(task, null);
-    }
-
-    @Override
-    public void executeTaskBackground(LocalTask task) {
-        executeTaskBackground(task, null);
+        executeTaskInternal(task, null);
     }
 
     @Override
     public <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
-        boolean wasNoCurrentTaskController = currentTaskController == null;
-        // if there is no AggregationTask so we should wrap executing by new temporary AggregationTask
-        if (wasNoCurrentTaskController) {
-            currentTaskController = new AggregationTaskController(this, createTemporaryTask(), false);
-            currentTaskController.taskStage = AggregationTaskStage.LOADING_REMOTELY;
-        }
-
-        executeTaskBackground(task, requestListener);
-
-        if (wasNoCurrentTaskController) {
-            currentTaskController = null;
-        }
+        executeTaskInternal(task, requestListener);
     }
 
     @Override
-    public <T> void executeTaskBackground(Task<T> task,
-                                          RequestListener<T> requestListener) {
-        if (!checkManagersState(task)) {
+    public <T> void executeRealLoadingTask(Task<T> task,
+                                           RequestListener<T> requestListener,
+                                           AggregationTaskListener taskListener) {
+        if (!checkIsAggregationTaskAvailableToRun()) {
+            return;
+        }
+
+        currentTaskController = new AggregationTaskController(this, new JustRealLoadingAggregationTask(taskListener));
+        currentTaskController.taskStage = AggregationTaskStage.REAL_LOADING;
+        executeTaskInternal(task, requestListener);
+        currentTaskController = null;
+    }
+
+    <T> void executeTaskInternal(Task<T> task,
+                                 RequestListener<T> requestListener) {
+        if (!checkThread() || !checkManagersState(task)) {
             return;
         }
 
@@ -185,9 +182,26 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         remoteSpiceManager = null;
     }
 
+    private boolean checkIsAggregationTaskAvailableToRun() {
+        if (currentTaskController != null) {
+            Lc.fatalException(new IllegalStateException("AggregationTask cannot be loaded while another aggregation task is loading." +
+                    " Make sure that you are starting AggregationTask in right moment"));
+            return false;
+        }
+        return true;
+    }
+
     private boolean checkManagersState(Object request) {
         if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted()) {
-            Lc.e(request.getClass().getName() + " is requested after onPause");
+            Lc.fatalException(new IllegalStateException(request.getClass().getName() + " is requested after onPause"));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkThread() {
+        if (ownerThread.get() != Thread.currentThread()) {
+            Lc.fatalException(new IllegalStateException("TaskExecutorHelper could be accessed from one thread. Create new TaskExecutorHelper for new thread"));
             return false;
         }
         return true;
@@ -202,7 +216,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     void loadAggregationTask(AggregationTaskController taskController) {
         startWrappingRequestsAsAggregation(taskController);
-        taskController.task.load(taskController.isInBackground, taskController.taskStage);
+        taskController.task.load(taskController.taskStage, taskController.lastLoadedStageState);
         stopWrapRequestsAsAggregation();
     }
 
@@ -214,5 +228,45 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         AggregationTaskRequestListener<T> result = new AggregationTaskRequestListener<>(this, currentTaskController, requestListener);
         currentTaskController.registerListener(result);
         return result;
+    }
+
+    private class JustRealLoadingAggregationTask implements AggregationTask {
+        private final AggregationTaskListener taskListener;
+
+        private JustRealLoadingAggregationTask(AggregationTaskListener taskListener) {
+            this.taskListener = taskListener;
+        }
+
+        @Override
+        public boolean isLoadingNeeded(AggregationTaskStage currentTaskStage) {
+            return true;
+        }
+
+        @Override
+        public boolean isLoaded(AggregationTaskStage currentTaskStage) {
+            return true;
+        }
+
+        @Override
+        public void load(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        }
+
+        @Override
+        public void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+            if (taskListener != null) {
+                taskListener.onLoadingStarted(currentTaskStage);
+            }
+        }
+
+        @Override
+        public void onLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+            if (taskListener != null) {
+                taskListener.onLoadingFinished(currentTaskStage);
+            }
+        }
+
+        @Override
+        public void onFailed(AggregationTaskStage currentTaskStage, List<Exception> exceptions, AggregationTaskStageState currentTaskStageState) {
+        }
     }
 }

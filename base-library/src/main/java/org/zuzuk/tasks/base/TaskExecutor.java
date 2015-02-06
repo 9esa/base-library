@@ -2,6 +2,7 @@ package org.zuzuk.tasks.base;
 
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
 import org.zuzuk.tasks.local.LocalTask;
 
 /**
@@ -17,10 +18,8 @@ public interface TaskExecutor {
     /* Executes local task in foreground */
     public void executeTask(LocalTask task);
 
-    /* Executes task in background */
-    public <T> void executeTaskBackground(Task<T> task,
-                                RequestListener<T> requestListener);
-
-    /* Executes local task in background */
-    public void executeTaskBackground(LocalTask task);
+    /* Add task to generated AggregationTask and executes it only on REAL_LOADING stage */
+    public <T> void executeRealLoadingTask(Task<T> task,
+                                           RequestListener<T> requestListener,
+                                           AggregationTaskListener taskListener);
 }

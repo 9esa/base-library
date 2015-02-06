@@ -9,18 +9,21 @@ import org.zuzuk.tasks.base.Task;
 class AggregationTaskStageStateTask extends Task<AggregationTaskStageState> {
     private final AggregationTaskController taskController;
     private final AggregationTaskStage taskStage;
+    private final AggregationTaskStageState previousStageState;
 
     public AggregationTaskStageStateTask(AggregationTaskController taskController,
-                                         AggregationTaskStage taskStage) {
+                                         AggregationTaskStage taskStage, AggregationTaskStageState previousStageState) {
         super(AggregationTaskStageState.class);
         this.taskController = taskController;
         this.taskStage = taskStage;
+        this.previousStageState = previousStageState;
     }
 
     @Override
     public AggregationTaskStageState execute() throws Exception {
         return new AggregationTaskStageState(taskStage,
                 taskController.task.isLoaded(taskStage),
-                taskController.task.isLoadingNeeded(taskStage));
+                taskController.task.isLoadingNeeded(taskStage),
+                previousStageState);
     }
 }

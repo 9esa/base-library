@@ -7,10 +7,8 @@ package org.zuzuk.tasks.aggregationtask;
 public enum AggregationTaskStage {
     // task started
     PRE_LOADING,
-    // task locally loading data from cache (even if cache is dirty)
+    // task locally loading data from cache or something (even if cache is dirty)
     LOADING_LOCALLY,
     // task remotely (or even locally) loading data from source
-    LOADING_REMOTELY,
-    // task loaded
-    LOADED
+    REAL_LOADING
 }

@@ -66,11 +66,10 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
     }
 
     private void updateIterator(final Integer startPosition) {
-        taskExecutor.executeTaskBackground(queryBuilder != null
+        taskExecutor.executeRealLoadingTask(queryBuilder != null
                         ? new IteratorInitializationRequest<>(queryBuilder, dao, isKnownCount)
                         : new IteratorInitializationRequest<>(where, dao, isKnownCount),
                 new RequestListener<IteratorInitializationRequest.Response>() {
-
                     @Override
                     public void onRequestFailure(SpiceException spiceException) {
                         onInitializationFailed(spiceException);
@@ -91,16 +90,15 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
                         }
 
                     }
-                });
+                }, null);
     }
 
     @Override
     protected void requestPage(final int index) {
         if (getRequestingPages().isEmpty()) {
             getRequestingPages().add(index);
-            taskExecutor.executeTaskBackground(createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
+            taskExecutor.executeRealLoadingTask(createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
                     new RequestListener<List>() {
-
                         @Override
                         public void onRequestSuccess(List list) {
                             onPageLoaded(index, parseResponse(list));
@@ -110,7 +108,7 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
                         public void onRequestFailure(SpiceException spiceException) {
                             onPageLoadingFailed(index, spiceException);
                         }
-                    });
+                    }, null);
         } else {
             waitingForRequestPages.push(index);
         }

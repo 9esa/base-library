@@ -3,6 +3,8 @@ package org.zuzuk.tasks.aggregationtask;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.utils.Lc;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ class AggregationTaskController {
     private final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     // fails that occurred during task execution
     private final List<Exception> collectedFails = new ArrayList<>();
-    final boolean isInBackground;
+    AggregationTaskStageState lastLoadedStageState = null;
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -27,18 +29,14 @@ class AggregationTaskController {
     }
 
     AggregationTaskController(TaskExecutorHelper taskExecutorHelper,
-                              AggregationTask task,
-                              boolean isInBackground) {
+                              AggregationTask task) {
         this.taskExecutorHelper = taskExecutorHelper;
         this.task = task;
-        this.isInBackground = isInBackground;
     }
 
     /* Changing state of task from PRE_LOADING to LOADED */
     void nextStep() {
-        if (taskStage != AggregationTaskStage.LOADED) {
-            taskExecutorHelper.executeTaskBackground(new AggregationTaskStageStateTask(this, taskStage), taskStageStateListener);
-        }
+        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, taskStage, lastLoadedStageState), taskStageStateListener);
     }
 
     /* Start listening to some task */
@@ -65,32 +63,35 @@ class AggregationTaskController {
         @Override
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
             if (aggregationTaskStageState.isLoaded) {
-                task.onLoaded(isInBackground, aggregationTaskStageState.isLoadingNeeded ? taskStage : AggregationTaskStage.LOADED);
+                task.onLoaded(taskStage, aggregationTaskStageState);
             } else if (taskStage != AggregationTaskStage.PRE_LOADING) {
-                task.onFailed(isInBackground, taskStage, collectedFails);
+                task.onFailed(taskStage, collectedFails, aggregationTaskStageState);
             }
 
             if (aggregationTaskStageState.isLoadingNeeded) {
                 switch (taskStage) {
                     case PRE_LOADING:
                         taskStage = AggregationTaskStage.LOADING_LOCALLY;
-                        task.onLoadingStarted(isInBackground, taskStage);
+                        task.onLoadingStarted(taskStage, aggregationTaskStageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                     case LOADING_LOCALLY:
-                        taskStage = AggregationTaskStage.LOADING_REMOTELY;
-                        task.onLoadingStarted(isInBackground, taskStage);
+                        taskStage = AggregationTaskStage.REAL_LOADING;
+                        task.onLoadingStarted(taskStage, aggregationTaskStageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                 }
             }
+            lastLoadedStageState = aggregationTaskStageState;
         }
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
             ArrayList<Exception> exceptions = new ArrayList<>(1);
             exceptions.add(spiceException);
-            task.onFailed(isInBackground, taskStage, exceptions);
+            lastLoadedStageState = new AggregationTaskStageState(taskStage, false, true, lastLoadedStageState);
+            task.onFailed(taskStage, exceptions, lastLoadedStageState);
+            Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + taskStage);
         }
     };
 }

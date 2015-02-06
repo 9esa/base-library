@@ -63,23 +63,21 @@ public class RequestPagingProvider<TItem extends Serializable, TResponse> extend
     protected void requestPage(final int index) {
         getRequestingPages().add(index);
         final RemoteRequest<TResponse> request = (RemoteRequest<TResponse>) requestCreator.createTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE);
-        requestExecutor.executeRequestBackground(request, new RequestListener<TResponse>() {
-
-                    @Override
-                    public void onRequestSuccess(TResponse response) {
-                        onPageLoaded(index, requestCreator.parseResponse(response));
-                        cacheInfo.put(index, new CacheEntry(System.currentTimeMillis(), request));
-                        if (initializationTime == null) {
-                            initializationTime = System.currentTimeMillis();
-                        }
-                    }
-
-                    @Override
-                    public void onRequestFailure(SpiceException spiceException) {
-                        onPageLoadingFailed(index, spiceException);
-                    }
+        requestExecutor.executeRealLoadingRequest(request, new RequestListener<TResponse>() {
+            @Override
+            public void onRequestSuccess(TResponse response) {
+                onPageLoaded(index, requestCreator.parseResponse(response));
+                cacheInfo.put(index, new CacheEntry(System.currentTimeMillis(), request));
+                if (initializationTime == null) {
+                    initializationTime = System.currentTimeMillis();
                 }
-        );
+            }
+
+            @Override
+            public void onRequestFailure(SpiceException spiceException) {
+                onPageLoadingFailed(index, spiceException);
+            }
+        }, null);
     }
 
     @Override
