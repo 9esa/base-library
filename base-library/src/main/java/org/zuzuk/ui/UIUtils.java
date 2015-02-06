@@ -3,6 +3,7 @@ package org.zuzuk.ui;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableString;
 
@@ -30,5 +31,10 @@ public class UIUtils {
             result.addAction(eventName);
         }
         return result;
+    }
+
+    /* Returns if current thread is Main UI thread */
+    public static boolean isCurrentThreadMain() {
+        return Looper.myLooper() == Looper.getMainLooper();
     }
 }

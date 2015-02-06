@@ -1,6 +1,7 @@
 package org.zuzuk.ui.views.imageloading;
 
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
@@ -14,7 +15,8 @@ import java.util.HashMap;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
- * Class that recycles bitmaps if there is no other objects using them
+ * Class that recycles bitmaps if there is no other objects using them.
+ * NOTE: it is enable ONLY for 2.3 devices because it is make memory cache unable to use
  */
 public enum BitmapsGlobalRecycler {
     Instance;
@@ -24,13 +26,18 @@ public enum BitmapsGlobalRecycler {
 
     /* Adds reference to groups of bitmap */
     public void addReference(@NonNull String signature, Bitmap bitmap, ImageLoader imageLoader) {
+        // enable it only for pre-HONEYCOMB devices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            return;
+        }
+
         synchronized (lock) {
             BitmapReferencesEntry entry = BitmapReferences.get(signature);
             if (entry == null) {
                 entry = new BitmapReferencesEntry();
                 BitmapReferences.put(signature, entry);
             }
-            if (bitmap != null && !entry.bitmapsToRecycle.contains(bitmap)) {
+            if (bitmap != null && !entry.contains(bitmap)) {
                 entry.bitmapsToRecycle.add(new Pair<>(imageLoader, bitmap));
             }
             entry.referencesCount++;
@@ -42,6 +49,11 @@ public enum BitmapsGlobalRecycler {
      * Passed bitmap can be null
      */
     public void removeReference(@NonNull String signature) {
+        // enable it only for pre-HONEYCOMB devices
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            return;
+        }
+
         synchronized (lock) {
             BitmapReferencesEntry entry = BitmapReferences.get(signature);
             if (entry == null) {
@@ -71,5 +83,14 @@ public enum BitmapsGlobalRecycler {
     private class BitmapReferencesEntry {
         private int referencesCount;
         private ArrayList<Pair<ImageLoader, Bitmap>> bitmapsToRecycle = new ArrayList<>();
+
+        private boolean contains(Bitmap bitmap) {
+            for (Pair<ImageLoader, Bitmap> entry : bitmapsToRecycle) {
+                if (entry.second == bitmap) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

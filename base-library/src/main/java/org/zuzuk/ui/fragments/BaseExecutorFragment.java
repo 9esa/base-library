@@ -25,15 +25,9 @@ public class BaseExecutorFragment extends BaseFragment
     private TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        taskExecutorHelper.onCreate(getActivity());
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
-        taskExecutorHelper.onResume();
+        taskExecutorHelper.onResume(getActivity());
     }
 
     public void executeAggregationTask(AggregationTask aggregationTask) {
@@ -91,11 +85,5 @@ public class BaseExecutorFragment extends BaseFragment
     public void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        taskExecutorHelper.onDestroy();
     }
 }

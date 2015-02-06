@@ -1,7 +1,5 @@
 package org.zuzuk.tasks.aggregationtask;
 
-import java.util.List;
-
 /**
  * Created by Gavriil Sitnikov on 18/09/2014.
  * An object that can detect executing several Task objects and observe them as one long task.
@@ -9,21 +7,39 @@ import java.util.List;
  */
 public abstract interface AggregationTask {
 
-    /* Returns is task still needs something to load on current stage */
-    boolean isLoadingNeeded(AggregationTaskStage currentTaskStage);
+    /**
+     * Returns is task still needs something to load on current stage
+     * It is executing in non-UI worker thread.
+     */
+    boolean isLoadingNeeded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
-    /* Returns is task loaded all needed info at current stage */
-    boolean isLoaded(AggregationTaskStage currentTaskStage);
+    /**
+     * Returns is task loaded all needed info at current stage
+     * It is executing in non-UI worker thread.
+     */
+    boolean isLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
-    /* Loading data at current stage */
+    /**
+     * Loading data at current stage
+     * It is executing in main UI thread.
+     */
     void load(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
-    /* Calls when loading of some stage have started */
+    /**
+     * Calls when loading of some stage have started
+     * It is executing in main UI thread.
+     */
     void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
-    /* Calls when loading of some stage have completed successfully */
+    /**
+     * Calls when loading of some stage have completed successfully
+     * It is executing in main UI thread.
+     */
     void onLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
-    /* Calls when loading of some stage have failed with exceptions */
-    void onFailed(AggregationTaskStage currentTaskStage, List<Exception> exceptions, AggregationTaskStageState currentTaskStageState);
+    /**
+     * Calls when loading of some stage have failed with exceptions
+     * It is executing in main UI thread.
+     */
+    void onFailed(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 }

@@ -8,22 +8,20 @@ import org.zuzuk.tasks.base.Task;
  */
 class AggregationTaskStageStateTask extends Task<AggregationTaskStageState> {
     private final AggregationTaskController taskController;
-    private final AggregationTaskStage taskStage;
-    private final AggregationTaskStageState previousStageState;
+    private final AggregationTaskStageState stageState;
 
-    public AggregationTaskStageStateTask(AggregationTaskController taskController,
-                                         AggregationTaskStage taskStage, AggregationTaskStageState previousStageState) {
+    public AggregationTaskStageStateTask(AggregationTaskController taskController, AggregationTaskStageState stageState) {
         super(AggregationTaskStageState.class);
         this.taskController = taskController;
-        this.taskStage = taskStage;
-        this.previousStageState = previousStageState;
+        this.stageState = stageState;
     }
 
     @Override
     public AggregationTaskStageState execute() throws Exception {
-        return new AggregationTaskStageState(taskStage,
-                taskController.task.isLoaded(taskStage),
-                taskController.task.isLoadingNeeded(taskStage),
-                previousStageState);
+        boolean isLoaded = taskController.task.isLoaded(stageState.getTaskStage(), stageState);
+        stageState.setIsLoaded(isLoaded ? UnknownableBoolean.TRUE : UnknownableBoolean.FALSE);
+        boolean isLoadingNeeded = taskController.task.isLoadingNeeded(stageState.getTaskStage(), stageState);
+        stageState.setIsLoadingNeeded(isLoadingNeeded ? UnknownableBoolean.TRUE : UnknownableBoolean.FALSE);
+        return stageState;
     }
 }

@@ -38,7 +38,7 @@ public class InitializationHelper {
                 .cacheOnDisk(true)
                 .cacheInMemory(true)
                 .resetViewBeforeLoading(true)
-                .displayer(new FadeInBitmapDisplayer(300, true, true, false))
+                .displayer(new FadeInBitmapDisplayer(250, true, false, false))
                 .delayBeforeLoading(100);
     }
 

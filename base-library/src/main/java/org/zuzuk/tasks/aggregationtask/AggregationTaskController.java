@@ -14,14 +14,11 @@ import java.util.List;
  */
 class AggregationTaskController {
     private final TaskExecutorHelper taskExecutorHelper;
-    AggregationTaskStage taskStage = AggregationTaskStage.PRE_LOADING;
     // task that is controlling by this object
     final AggregationTask task;
     // listeners that is wrapped around passed into TaskExecutorHelper listener
-    private final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
-    // fails that occurred during task execution
-    private final List<Exception> collectedFails = new ArrayList<>();
-    AggregationTaskStageState lastLoadedStageState = null;
+    final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
+    AggregationTaskStageState stageState = new AggregationTaskStageState(AggregationTaskStage.PRE_LOADING, null);
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -36,17 +33,12 @@ class AggregationTaskController {
 
     /* Changing state of task from PRE_LOADING to LOADED */
     void nextStep() {
-        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, taskStage, lastLoadedStageState), taskStageStateListener, true);
+        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true);
     }
 
     /* Start listening to some task */
     void registerListener(RequestListener requestListener) {
         wrappedRequestListeners.add(requestListener);
-    }
-
-    /* Some task have failed so we collect exception */
-    void addFail(Exception ex) {
-        collectedFails.add(ex);
     }
 
     /* End listening to some task */
@@ -62,36 +54,34 @@ class AggregationTaskController {
 
         @Override
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
-            if (aggregationTaskStageState.isLoaded) {
-                task.onLoaded(taskStage, aggregationTaskStageState);
-            } else if (taskStage != AggregationTaskStage.PRE_LOADING) {
-                task.onFailed(taskStage, collectedFails, aggregationTaskStageState);
+            if (stageState.isLoaded() == UnknownableBoolean.TRUE) {
+                task.onLoaded(stageState.getTaskStage(), stageState);
+            } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
+                task.onFailed(stageState.getTaskStage(), stageState);
             }
 
-            if (aggregationTaskStageState.isLoadingNeeded) {
-                switch (taskStage) {
+            if (stageState.isLoadingNeeded() == UnknownableBoolean.TRUE) {
+                switch (stageState.getTaskStage()) {
                     case PRE_LOADING:
-                        taskStage = AggregationTaskStage.LOADING_LOCALLY;
-                        task.onLoadingStarted(taskStage, aggregationTaskStageState);
+                        stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
+                        task.onLoadingStarted(stageState.getTaskStage(), stageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                     case LOADING_LOCALLY:
-                        taskStage = AggregationTaskStage.REAL_LOADING;
-                        task.onLoadingStarted(taskStage, aggregationTaskStageState);
+                        stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
+                        task.onLoadingStarted(stageState.getTaskStage(), stageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                 }
             }
-            lastLoadedStageState = aggregationTaskStageState;
         }
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
-            ArrayList<Exception> exceptions = new ArrayList<>(1);
-            exceptions.add(spiceException);
-            lastLoadedStageState = new AggregationTaskStageState(taskStage, false, true, lastLoadedStageState);
-            task.onFailed(taskStage, exceptions, lastLoadedStageState);
-            Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + taskStage);
+            stageState = new AggregationTaskStageState(stageState.getTaskStage(), stageState);
+            stageState.addFail(spiceException);
+            task.onFailed(stageState.getTaskStage(), stageState);
+            Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + stageState.getTaskStage());
         }
     };
 }

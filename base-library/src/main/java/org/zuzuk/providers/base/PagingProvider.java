@@ -98,6 +98,9 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
     @Override
     protected void initializeInternal(int startPosition) {
         requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE);
+        if (startPosition >= DEFAULT_ITEMS_ON_PAGE) {
+            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1);
+        }
     }
 
     /* Logic of page requesting */

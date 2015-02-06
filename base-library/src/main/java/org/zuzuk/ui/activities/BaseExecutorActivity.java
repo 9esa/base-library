@@ -24,15 +24,9 @@ public class BaseExecutorActivity extends BaseActivity
     private TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        taskExecutorHelper.onCreate(this);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
-        taskExecutorHelper.onResume();
+        taskExecutorHelper.onResume(this);
     }
 
     public void executeAggregationTask(AggregationTask aggregationTask) {
@@ -90,11 +84,5 @@ public class BaseExecutorActivity extends BaseActivity
     protected void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        taskExecutorHelper.onDestroy();
     }
 }

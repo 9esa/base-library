@@ -45,9 +45,15 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
 
         taskExecutorHelper.startWrappingRequestsAsAggregation(parentTaskController);
         if (requestListener != null) {
+            int countOfListeners = parentTaskController.wrappedRequestListeners.size();
             requestListener.onRequestFailure(spiceException);
+            // add fail if nothing else started in failure callback
+            if(countOfListeners == parentTaskController.wrappedRequestListeners.size()){
+                parentTaskController.stageState.addFail(spiceException);
+            }
+        } else {
+            parentTaskController.stageState.addFail(spiceException);
         }
-        parentTaskController.addFail(spiceException);
         taskExecutorHelper.stopWrapRequestsAsAggregation();
 
         parentTaskController.unregisterListener(this);
