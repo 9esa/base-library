@@ -46,7 +46,7 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
 
         @Override
         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-            BitmapsGlobalRecycler.Instance.addReference(imageUri, loadedImage);
+            BitmapsGlobalRecycler.Instance.addReference(imageUri, loadedImage, getImageLoader());
             lastLoadedUri = imageUri;
             if (imageLoadingListener != null) {
                 onLoadingComplete(imageUri, view, loadedImage);

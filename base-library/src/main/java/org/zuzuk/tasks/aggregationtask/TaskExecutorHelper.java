@@ -80,12 +80,12 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     @Override
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
-        executeRequestInternal(request, requestListener);
+        executeRequestInternal(request, requestListener, false);
     }
 
     @Override
     public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        executeRequestInternal(requestWrapper.getPreparedRequest(), requestWrapper);
+        executeRequestInternal(requestWrapper.getPreparedRequest(), requestWrapper, false);
     }
 
     @Override
@@ -104,31 +104,38 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
         currentTaskController = new AggregationTaskController(this, new JustRealLoadingAggregationTask(taskListener));
         currentTaskController.taskStage = AggregationTaskStage.REAL_LOADING;
-        executeRequestInternal(request, requestListener);
+        executeRequestInternal(request, requestListener, false);
         currentTaskController = null;
     }
 
-    <T> void executeRequestInternal(RemoteRequest<T> request,
-                                    RequestListener<T> requestListener) {
-        if (!checkThread() || !checkManagersState(request) || !checkIfTaskExecutedAsPartOfAggregationTask()) {
+    private <T> void executeRequestInternal(RemoteRequest<T> request,
+                                            RequestListener<T> requestListener,
+                                            boolean doNotWrap) {
+        if (!checkThread()
+                || !checkManagersState(request)
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 
         CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager,
                 currentTaskController.taskStage == AggregationTaskStage.LOADING_LOCALLY);
 
-        remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
+        if (doNotWrap) {
+            remoteSpiceManager.execute(cacheSpiceRequest, requestListener);
+        } else {
+            remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener));
+        }
     }
 
     @Override
     public void executeTask(LocalTask task) {
-        executeTaskInternal(task, null);
+        executeTaskInternal(task, null, false);
     }
 
     @Override
     public <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
-        executeTaskInternal(task, requestListener);
+        executeTaskInternal(task, requestListener, false);
     }
 
     @Override
@@ -141,19 +148,26 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
         currentTaskController = new AggregationTaskController(this, new JustRealLoadingAggregationTask(taskListener));
         currentTaskController.taskStage = AggregationTaskStage.REAL_LOADING;
-        executeTaskInternal(task, requestListener);
+        executeTaskInternal(task, requestListener, false);
         currentTaskController = null;
     }
 
     <T> void executeTaskInternal(Task<T> task,
-                                 RequestListener<T> requestListener) {
-        if (!checkThread() || !checkManagersState(task) || !checkIfTaskExecutedAsPartOfAggregationTask()) {
+                                 RequestListener<T> requestListener,
+                                 boolean doNotWrap) {
+        if (!checkThread()
+                || !checkManagersState(task)
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 
         CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
         nonCachedTask.setOffline(true);
-        localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
+        if (doNotWrap) {
+            localSpiceManager.execute(nonCachedTask, requestListener);
+        } else {
+            localSpiceManager.execute(nonCachedTask, wrapForAggregationTask(requestListener));
+        }
     }
 
     /* Associated lifecycle method */

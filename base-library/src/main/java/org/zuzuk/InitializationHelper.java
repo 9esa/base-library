@@ -1,11 +1,11 @@
 package org.zuzuk;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.util.Log;
+import android.util.DisplayMetrics;
 
 import com.nostra13.universalimageloader.cache.disc.impl.LimitedAgeDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -15,57 +15,12 @@ import com.octo.android.robospice.SpiceManager;
 
 import org.zuzuk.tasks.local.LocalSpiceService;
 import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
-import org.zuzuk.utils.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 11/10/2014.
  * Helper that holds default instances creation logic
  */
 public class InitializationHelper {
-
-    /* Standard console logger */
-    public static Lc.LogProcessor createDefaultLogProcessor() {
-        return new Lc.LogProcessor() {
-            @Override
-            public void processLogMessage(int logLevel, String tag, String message) {
-                switch (logLevel) {
-                    case Log.DEBUG:
-                        Log.d(tag, message);
-                        break;
-                    case Log.INFO:
-                        Log.i(tag, message);
-                        break;
-                    case Log.WARN:
-                        Log.w(tag, message);
-                        break;
-                    case Log.ERROR:
-                    case Log.ASSERT:
-                        Log.e(tag, message);
-                        break;
-                }
-            }
-
-            @Override
-            public void processLogMessage(int logLevel, String tag, String message, @NonNull Throwable ex) {
-                switch (logLevel) {
-                    case Log.DEBUG:
-                        Log.d(tag, message, ex);
-                        break;
-                    case Log.INFO:
-                        Log.i(tag, message, ex);
-                        break;
-                    case Log.WARN:
-                        Log.w(tag, message, ex);
-                        break;
-                    case Log.ERROR:
-                        Log.e(tag, message, ex);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unsupported log level: " + logLevel);
-                }
-            }
-        };
-    }
 
     /* Standard spice manager for local tasks */
     public static SpiceManager createDefaultLocalSpiceManager() {
@@ -81,6 +36,7 @@ public class InitializationHelper {
     public static DisplayImageOptions.Builder createDefaultDisplayImageOptions() {
         return new DisplayImageOptions.Builder()
                 .cacheOnDisk(true)
+                .cacheInMemory(true)
                 .resetViewBeforeLoading(true)
                 .displayer(new FadeInBitmapDisplayer(300, true, true, false))
                 .delayBeforeLoading(100);
@@ -88,10 +44,17 @@ public class InitializationHelper {
 
     /* Standard ImageLoaderConfiguration */
     public static ImageLoaderConfiguration.Builder createDefaultImageLoaderConfiguration(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        int maxImageSizeInMemory = Math.max(metrics.widthPixels, metrics.widthPixels) / 3;
+        int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
         return new ImageLoaderConfiguration.Builder(context)
                 .diskCache(new LimitedAgeDiscCache(StorageUtils.getIndividualCacheDirectory(context),
                         StorageUtils.getIndividualCacheDirectory(context),
                         new Md5FileNameGenerator(), 24 * 60 * 60))
+                .denyCacheImageMultipleSizesInMemory()
+                .memoryCache(new LruMemoryCache(maxMemory / 8))
+                .memoryCacheExtraOptions(maxImageSizeInMemory, maxImageSizeInMemory)
                 .defaultDisplayImageOptions(createDefaultDisplayImageOptions().build());
     }
 

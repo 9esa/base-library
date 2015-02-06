@@ -41,12 +41,12 @@ public class Lc {
 
     /* Logging initialization */
     public static void initialize(int logLevel) {
-        initialize(logLevel, logLevel, InitializationHelper.createDefaultLogProcessor());
+        initialize(logLevel, logLevel, new ConsoleLogProcessor());
     }
 
     /* Logging initialization with different log level for Robospice*/
     public static void initialize(int logLevel, int robospiceLogLevel) {
-        initialize(logLevel, robospiceLogLevel, InitializationHelper.createDefaultLogProcessor());
+        initialize(logLevel, robospiceLogLevel, new ConsoleLogProcessor());
     }
 
     /* Logging initialization with different log level for Robospice and custom log processor */

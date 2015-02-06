@@ -2,6 +2,10 @@ package org.zuzuk.ui.views.imageloading;
 
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
+import android.util.Pair;
+
+import com.nostra13.universalimageloader.cache.memory.MemoryCache;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 import org.zuzuk.utils.Lc;
 
@@ -19,7 +23,7 @@ public enum BitmapsGlobalRecycler {
     private final Object lock = new Object();
 
     /* Adds reference to groups of bitmap */
-    public void addReference(@NonNull String signature, Bitmap bitmap) {
+    public void addReference(@NonNull String signature, Bitmap bitmap, ImageLoader imageLoader) {
         synchronized (lock) {
             BitmapReferencesEntry entry = BitmapReferences.get(signature);
             if (entry == null) {
@@ -27,7 +31,7 @@ public enum BitmapsGlobalRecycler {
                 BitmapReferences.put(signature, entry);
             }
             if (bitmap != null && !entry.bitmapsToRecycle.contains(bitmap)) {
-                entry.bitmapsToRecycle.add(bitmap);
+                entry.bitmapsToRecycle.add(new Pair<>(imageLoader, bitmap));
             }
             entry.referencesCount++;
         }
@@ -48,11 +52,17 @@ public enum BitmapsGlobalRecycler {
             entry.referencesCount--;
 
             if (entry.referencesCount == 0) {
-                for (Bitmap bitmapToRecycle : entry.bitmapsToRecycle) {
-                    if (!bitmapToRecycle.isRecycled()) {
-                        bitmapToRecycle.recycle();
+                for (Pair<ImageLoader, Bitmap> bitmapToRecycle : entry.bitmapsToRecycle) {
+                    if (!bitmapToRecycle.second.isRecycled()) {
+                        bitmapToRecycle.second.recycle();
+                    }
+
+                    MemoryCache memoryCache = bitmapToRecycle.first.getMemoryCache();
+                    if (memoryCache != null && memoryCache.get(signature) == bitmapToRecycle.second) {
+                        memoryCache.remove(signature);
                     }
                 }
+
                 BitmapReferences.remove(signature);
             }
         }
@@ -60,6 +70,6 @@ public enum BitmapsGlobalRecycler {
 
     private class BitmapReferencesEntry {
         private int referencesCount;
-        private ArrayList<Bitmap> bitmapsToRecycle = new ArrayList<>();
+        private ArrayList<Pair<ImageLoader, Bitmap>> bitmapsToRecycle = new ArrayList<>();
     }
 }
