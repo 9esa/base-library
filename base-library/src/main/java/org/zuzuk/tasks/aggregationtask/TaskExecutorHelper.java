@@ -289,14 +289,14 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         @Override
         public void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
             if (taskListener != null) {
-                taskListener.onLoadingStarted(currentTaskStage);
+                taskListener.onLoadingStarted(currentTaskStage, currentTaskStageState);
             }
         }
 
         @Override
         public void onLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
             if (taskListener != null) {
-                taskListener.onLoadingFinished(currentTaskStage);
+                taskListener.onLoadingFinished(currentTaskStage, currentTaskStageState);
             }
         }
 

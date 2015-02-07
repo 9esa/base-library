@@ -9,8 +9,8 @@ import java.util.List;
 public interface AggregationTaskListener {
 
     /* Calls when loading of some stage have started */
-    void onLoadingStarted(AggregationTaskStage currentTaskStage);
+    void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 
     /* Calls when loading of some stage have completed successfully */
-    void onLoadingFinished(AggregationTaskStage currentTaskStage);
+    void onLoadingFinished(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState);
 }
