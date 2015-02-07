@@ -210,10 +210,11 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
         currentTaskController = aggregationTaskController;
     }
 
-    void loadAggregationTask(AggregationTaskController taskController) {
-        startWrappingRequestsAsAggregation(taskController);
-        taskController.task.load(taskController.stageState);
+    void loadAggregationTask(AggregationTaskController aggregationTaskController) {
+        startWrappingRequestsAsAggregation(aggregationTaskController);
+        aggregationTaskController.task.load(aggregationTaskController.stageState);
         stopWrapRequestsAsAggregation();
+        aggregationTaskController.checkIfTaskFinished();
     }
 
     void stopWrapRequestsAsAggregation() {
