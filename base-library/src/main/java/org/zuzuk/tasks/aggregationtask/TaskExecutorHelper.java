@@ -116,6 +116,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
+                aggregationTaskController.task.processTask(request, aggregationTaskController.stageState);
                 CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager,
                         aggregationTaskController.stageState.getTaskStage() == AggregationTaskStage.LOADING_LOCALLY);
 
@@ -168,6 +169,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
+                aggregationTaskController.task.processTask(task, aggregationTaskController.stageState);
                 CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
                 nonCachedTask.setOffline(true);
                 if (doNotWrap) {
