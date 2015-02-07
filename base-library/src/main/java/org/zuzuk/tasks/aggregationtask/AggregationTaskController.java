@@ -33,7 +33,7 @@ class AggregationTaskController {
 
     /* Changing state of task from PRE_LOADING to LOADED */
     void nextStep() {
-        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true);
+        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true, this);
     }
 
     /* Start listening to some task */
