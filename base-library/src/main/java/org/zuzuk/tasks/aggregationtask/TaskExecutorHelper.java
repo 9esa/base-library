@@ -76,7 +76,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     @Override
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
-        executeRequestInternal(request, requestListener, false, currentTaskController);
+        executeRequestInternal(request, requestListener, currentTaskController);
     }
 
     @Override
@@ -92,16 +92,15 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
                 AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealLoadingAggregationTask(taskListener));
                 aggregationTaskController.stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, null);
-                executeRequestInternal(request, requestListener, false, aggregationTaskController);
+                executeRequestInternal(request, requestListener, aggregationTaskController);
             }
         });
     }
 
     private <T> void executeRequestInternal(final RemoteRequest<T> request,
                                             final RequestListener<T> requestListener,
-                                            final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)
-                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController))) {
+                                            final AggregationTaskController aggregationTaskController) {
+        if (!checkManagersState(request) || !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController)) {
             return;
         }
 
@@ -115,11 +114,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
                 CachedSpiceRequest<T> cacheSpiceRequest = request.wrapAsCacheRequest(remoteSpiceManager,
                         aggregationTaskController.stageState.getTaskStage() == AggregationTaskStage.LOADING_LOCALLY);
 
-                if (doNotWrap) {
-                    remoteSpiceManager.execute(cacheSpiceRequest, requestListener);
-                } else {
-                    remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener, aggregationTaskController));
-                }
+                remoteSpiceManager.execute(cacheSpiceRequest, wrapForAggregationTask(requestListener, aggregationTaskController));
             }
         });
     }
