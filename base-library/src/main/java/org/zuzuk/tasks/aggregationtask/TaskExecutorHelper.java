@@ -101,7 +101,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
                                             final RequestListener<T> requestListener,
                                             final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
         if (!checkManagersState(request)
-                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController))) {
             return;
         }
 
@@ -157,7 +157,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
                                  final RequestListener<T> requestListener,
                                  final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
         if (!checkManagersState(task)
-                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController))) {
             return;
         }
 
@@ -194,8 +194,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         return true;
     }
 
-    private boolean checkIfTaskExecutedAsPartOfAggregationTask() {
-        if (currentTaskController == null) {
+    private boolean checkIfTaskExecutedAsPartOfAggregationTask(AggregationTaskController aggregationTaskController) {
+        if (aggregationTaskController == null) {
             Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
                     "or in any RequestListener callback"));
             return false;
