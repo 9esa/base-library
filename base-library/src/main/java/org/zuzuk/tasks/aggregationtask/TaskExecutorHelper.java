@@ -100,7 +100,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private <T> void executeRequestInternal(final RemoteRequest<T> request,
                                             final RequestListener<T> requestListener,
                                             final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)) {
+        if (!checkManagersState(request)
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 
@@ -155,7 +156,8 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     <T> void executeTaskInternal(final Task<T> task,
                                  final RequestListener<T> requestListener,
                                  final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(task)) {
+        if (!checkManagersState(task)
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 
@@ -187,6 +189,15 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private boolean checkManagersState(Object request) {
         if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted()) {
             Lc.fatalException(new IllegalStateException(request.getClass().getName() + " is requested after onPause"));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkIfTaskExecutedAsPartOfAggregationTask() {
+        if (currentTaskController == null) {
+            Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
+                    "or in any RequestListener callback"));
             return false;
         }
         return true;
