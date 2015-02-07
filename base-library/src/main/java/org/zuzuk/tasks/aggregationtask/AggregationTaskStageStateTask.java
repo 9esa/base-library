@@ -18,9 +18,9 @@ class AggregationTaskStageStateTask extends Task<AggregationTaskStageState> {
 
     @Override
     public AggregationTaskStageState execute() throws Exception {
-        boolean isLoaded = taskController.task.isLoaded(stageState.getTaskStage(), stageState);
+        boolean isLoaded = taskController.task.isLoaded(stageState);
         stageState.setIsLoaded(isLoaded ? UnknownableBoolean.TRUE : UnknownableBoolean.FALSE);
-        boolean isLoadingNeeded = taskController.task.isLoadingNeeded(stageState.getTaskStage(), stageState);
+        boolean isLoadingNeeded = taskController.task.isLoadingNeeded(stageState);
         stageState.setIsLoadingNeeded(isLoadingNeeded ? UnknownableBoolean.TRUE : UnknownableBoolean.FALSE);
         return stageState;
     }

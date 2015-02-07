@@ -55,21 +55,21 @@ class AggregationTaskController {
         @Override
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
             if (stageState.isLoaded() == UnknownableBoolean.TRUE) {
-                task.onLoaded(stageState.getTaskStage(), stageState);
+                task.onLoaded(stageState);
             } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
-                task.onFailed(stageState.getTaskStage(), stageState);
+                task.onFailed(stageState);
             }
 
             if (stageState.isLoadingNeeded() == UnknownableBoolean.TRUE) {
                 switch (stageState.getTaskStage()) {
                     case PRE_LOADING:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
-                        task.onLoadingStarted(stageState.getTaskStage(), stageState);
+                        task.onLoadingStarted(stageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                     case LOADING_LOCALLY:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
-                        task.onLoadingStarted(stageState.getTaskStage(), stageState);
+                        task.onLoadingStarted(stageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                 }
@@ -80,7 +80,7 @@ class AggregationTaskController {
         public void onRequestFailure(SpiceException spiceException) {
             stageState = new AggregationTaskStageState(stageState.getTaskStage(), stageState);
             stageState.addFail(spiceException);
-            task.onFailed(stageState.getTaskStage(), stageState);
+            task.onFailed(stageState);
             Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + stageState.getTaskStage());
         }
     };

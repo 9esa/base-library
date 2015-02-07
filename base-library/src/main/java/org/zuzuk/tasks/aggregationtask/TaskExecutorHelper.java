@@ -243,7 +243,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
 
     void loadAggregationTask(AggregationTaskController taskController) {
         startWrappingRequestsAsAggregation(taskController);
-        taskController.task.load(taskController.stageState.getTaskStage(), taskController.stageState);
+        taskController.task.load(taskController.stageState);
         stopWrapRequestsAsAggregation();
     }
 
@@ -273,35 +273,35 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         }
 
         @Override
-        public boolean isLoadingNeeded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public boolean isLoadingNeeded(AggregationTaskStageState currentTaskStageState) {
             return true;
         }
 
         @Override
-        public boolean isLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public boolean isLoaded(AggregationTaskStageState currentTaskStageState) {
             return true;
         }
 
         @Override
-        public void load(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public void load(AggregationTaskStageState currentTaskStageState) {
         }
 
         @Override
-        public void onLoadingStarted(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
             if (taskListener != null) {
-                taskListener.onLoadingStarted(currentTaskStage, currentTaskStageState);
+                taskListener.onLoadingStarted(currentTaskStageState);
             }
         }
 
         @Override
-        public void onLoaded(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public void onLoaded(AggregationTaskStageState currentTaskStageState) {
             if (taskListener != null) {
-                taskListener.onLoadingFinished(currentTaskStage, currentTaskStageState);
+                taskListener.onLoadingFinished(currentTaskStageState);
             }
         }
 
         @Override
-        public void onFailed(AggregationTaskStage currentTaskStage, AggregationTaskStageState currentTaskStageState) {
+        public void onFailed(AggregationTaskStageState currentTaskStageState) {
         }
     }
 }
