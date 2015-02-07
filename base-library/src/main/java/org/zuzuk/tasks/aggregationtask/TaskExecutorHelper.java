@@ -13,7 +13,6 @@ import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
-import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
 import org.zuzuk.ui.UIUtils;
 import org.zuzuk.utils.Lc;
@@ -90,17 +89,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
         executeRequestInternal(request, requestListener, false);
-    }
-
-    @Override
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        executeRequestInternal(requestWrapper.getPreparedRequest(), requestWrapper, false);
-    }
-
-    @Override
-    public <T> void executeRealLoadingRequest(RequestWrapper<T> requestWrapper,
-                                              AggregationTaskListener taskListener) {
-        executeRealLoadingRequest(requestWrapper.getPreparedRequest(), requestWrapper, taskListener);
     }
 
     @Override

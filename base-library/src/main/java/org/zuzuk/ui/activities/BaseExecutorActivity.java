@@ -1,7 +1,5 @@
 package org.zuzuk.ui.activities;
 
-import android.os.Bundle;
-
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
@@ -13,7 +11,6 @@ import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.base.RequestExecutor;
-import org.zuzuk.tasks.remote.base.RequestWrapper;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
@@ -42,17 +39,6 @@ public class BaseExecutorActivity extends BaseActivity
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
         taskExecutorHelper.executeRequest(request, requestListener);
-    }
-
-    @Override
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        taskExecutorHelper.executeRequest(requestWrapper.getPreparedRequest(), requestWrapper);
-    }
-
-    @Override
-    public <T> void executeRealLoadingRequest(RequestWrapper<T> requestWrapper,
-                                              AggregationTaskListener taskListener) {
-        taskExecutorHelper.executeRealLoadingRequest(requestWrapper.getPreparedRequest(), requestWrapper, taskListener);
     }
 
     @Override

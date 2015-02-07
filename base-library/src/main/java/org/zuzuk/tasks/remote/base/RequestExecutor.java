@@ -17,13 +17,6 @@ public interface RequestExecutor {
     /* Executes request */
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener);
 
-    /* Executes wrapped request */
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper);
-
-    /* Add request to generated AggregationTask and executes it only on REAL_LOADING stage */
-    public <T> void executeRealLoadingRequest(RequestWrapper<T> requestWrapper,
-                                              AggregationTaskListener taskListener);
-
     /* Add wrapped request to generated AggregationTask and executes it only on REAL_LOADING stage */
     public <T> void executeRealLoadingRequest(RemoteRequest<T> request,
                                               RequestListener<T> requestListener,

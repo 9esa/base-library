@@ -13,7 +13,6 @@ import org.zuzuk.events.EventListenerHelper;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
-import org.zuzuk.tasks.remote.base.RequestWrapper;
 import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
 
 /**
@@ -60,11 +59,6 @@ public abstract class BaseExecutorService extends Service implements EventListen
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
         remoteSpiceManager.execute(request, requestListener);
-    }
-
-    /* Executes wrapped request in background */
-    public <T> void executeRequest(RequestWrapper<T> requestWrapper) {
-        remoteSpiceManager.execute(requestWrapper.getPreparedRequest(), requestWrapper);
     }
 
     /* Executes local task in background */
