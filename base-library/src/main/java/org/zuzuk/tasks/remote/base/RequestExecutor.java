@@ -12,7 +12,7 @@ import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
 public interface RequestExecutor {
 
     /* Returns spice manager that executes requests */
-    public SpiceManager getSpiceManager();
+    public SpiceManager getRemoteSpiceManager();
 
     /* Executes request */
     public <T> void executeRequest(RemoteRequest<T> request, RequestListener<T> requestListener);

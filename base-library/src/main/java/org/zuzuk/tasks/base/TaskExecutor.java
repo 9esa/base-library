@@ -1,5 +1,6 @@
 package org.zuzuk.tasks.base;
 
+import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
@@ -10,6 +11,9 @@ import org.zuzuk.tasks.local.LocalTask;
  * Interface that supply async task executing
  */
 public interface TaskExecutor {
+
+    /* Returns spice manager that executes tasks */
+    public SpiceManager getLocalSpiceManager();
 
     /* Executes task in foreground */
     public <T> void executeTask(Task<T> task,
