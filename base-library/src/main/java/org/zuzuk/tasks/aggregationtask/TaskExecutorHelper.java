@@ -21,7 +21,7 @@ import org.zuzuk.utils.Lc;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
+public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, AggregationTaskExecutor {
     private final Handler postHandler = new Handler();
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
@@ -29,8 +29,13 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
     private boolean isPaused = true;
 
     @Override
-    public SpiceManager getSpiceManager() {
+    public SpiceManager getRemoteSpiceManager() {
         return remoteSpiceManager;
+    }
+
+    @Override
+    public SpiceManager getLocalSpiceManager() {
+        return localSpiceManager;
     }
 
     /* Returns if executor in paused state so it can't execute requests */
@@ -54,7 +59,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
         isPaused = false;
     }
 
-    /* Executes aggregation task */
+    @Override
     public void executeAggregationTask(final AggregationTask aggregationTask) {
         runOnUiThread(new Runnable() {
             @Override
@@ -226,46 +231,6 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor {
             runnable.run();
         } else {
             postHandler.post(runnable);
-        }
-    }
-
-    private class JustRealLoadingAggregationTask implements AggregationTask {
-        private final AggregationTaskListener taskListener;
-
-        private JustRealLoadingAggregationTask(AggregationTaskListener taskListener) {
-            this.taskListener = taskListener;
-        }
-
-        @Override
-        public boolean isLoadingNeeded(AggregationTaskStageState currentTaskStageState) {
-            return true;
-        }
-
-        @Override
-        public boolean isLoaded(AggregationTaskStageState currentTaskStageState) {
-            return true;
-        }
-
-        @Override
-        public void load(AggregationTaskStageState currentTaskStageState) {
-        }
-
-        @Override
-        public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
-            if (taskListener != null) {
-                taskListener.onLoadingStarted(currentTaskStageState);
-            }
-        }
-
-        @Override
-        public void onLoaded(AggregationTaskStageState currentTaskStageState) {
-            if (taskListener != null) {
-                taskListener.onLoadingFinished(currentTaskStageState);
-            }
-        }
-
-        @Override
-        public void onFailed(AggregationTaskStageState currentTaskStageState) {
         }
     }
 

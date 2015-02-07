@@ -4,6 +4,7 @@ import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
 import org.zuzuk.tasks.base.Task;
@@ -17,7 +18,7 @@ import org.zuzuk.tasks.remote.base.RequestExecutor;
  * Base activity that can execute tasks and requests
  */
 public class BaseExecutorActivity extends BaseActivity
-        implements TaskExecutor, RequestExecutor {
+        implements TaskExecutor, RequestExecutor, AggregationTaskExecutor {
     private TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
 
     @Override
@@ -26,13 +27,19 @@ public class BaseExecutorActivity extends BaseActivity
         taskExecutorHelper.onResume(this);
     }
 
+    @Override
     public void executeAggregationTask(AggregationTask aggregationTask) {
         taskExecutorHelper.executeAggregationTask(aggregationTask);
     }
 
     @Override
-    public SpiceManager getSpiceManager() {
-        return taskExecutorHelper.getSpiceManager();
+    public SpiceManager getRemoteSpiceManager() {
+        return taskExecutorHelper.getRemoteSpiceManager();
+    }
+
+    @Override
+    public SpiceManager getLocalSpiceManager() {
+        return taskExecutorHelper.getLocalSpiceManager();
     }
 
     @Override
