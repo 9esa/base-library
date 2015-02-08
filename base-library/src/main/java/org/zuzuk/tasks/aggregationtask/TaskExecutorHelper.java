@@ -95,7 +95,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
-                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealLoadingAggregationTask(taskListener));
+                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener));
                 aggregationTaskController.stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, null);
                 executeRequestInternal(request, requestListener, aggregationTaskController);
             }
@@ -147,7 +147,7 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
-                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealLoadingAggregationTask(taskListener));
+                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener));
                 aggregationTaskController.stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, null);
                 executeTaskInternal(task, requestListener, false, aggregationTaskController);
             }

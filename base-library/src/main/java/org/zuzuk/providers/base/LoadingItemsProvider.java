@@ -1,16 +1,19 @@
 package org.zuzuk.providers.base;
 
+import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that needs initialization before it is available to provide items
  */
 public abstract class LoadingItemsProvider<TItem extends Serializable> extends ItemsProvider<TItem> implements InitializationListener {
-    private InitializationListener initializationListener;
     private boolean isInitialized = false;
     private boolean isInitializing = false;
 
@@ -25,19 +28,13 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
         return isInitialized;
     }
 
-    /* Starts provider initialization at specific position without listener */
-    public void initialize(int initializationPosition) {
-        initialize(null, 0);
-    }
-
     /* Starts provider initialization */
-    public void initialize(InitializationListener initializationListener) {
-        initialize(initializationListener, 0);
+    public void initialize(int initializationPosition) {
+        initialize(0, null);
     }
 
     /* Starts provider initialization at specific position */
-    public synchronized void initialize(InitializationListener initializationListener, int initializationPosition) {
-        this.initializationListener = initializationListener;
+    public void initialize(int initializationPosition, AggregationTaskStageState stageState) {
 
         if (isInitialized) {
             reset();
@@ -45,30 +42,25 @@ public abstract class LoadingItemsProvider<TItem extends Serializable> extends I
 
         if (!isInitializing) {
             isInitializing = true;
-            initializeInternal(initializationPosition);
+            initializeInternal(initializationPosition, stageState);
         }
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initializeInternal(int initializationPosition);
+    protected abstract void initializeInternal(int initializationPosition, AggregationTaskStageState stageState);
 
     /* Raises when provider initialized. Use it in child classes */
     @Override
     public void onInitialized() {
         isInitialized = true;
         isInitializing = false;
-        if (initializationListener != null) {
-            initializationListener.onInitialized();
-            initializationListener = null;
-        }
         onDataSetChanged();
     }
 
     /* Raises when provider initialization failed. Use it in child classes */
     @Override
-    public void onInitializationFailed(Exception ex) {
+    public void onInitializationFailed(List<Exception> exceptions) {
         isInitializing = false;
-        initializationListener.onInitializationFailed(ex);
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {

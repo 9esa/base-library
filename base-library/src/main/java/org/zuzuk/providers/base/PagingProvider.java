@@ -2,6 +2,8 @@ package org.zuzuk.providers.base;
 
 import android.util.SparseArray;
 
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -49,13 +51,13 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         ArrayList<TItem> pageItems = pages.get(pageIndex);
 
         if (pageItems == null && !requestingPages.contains(pageIndex)) {
-            requestPage(pageIndex);
+            requestPage(pageIndex, null);
         } else if (pageIndex > 0 && itemIndex < DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex - 1) == null && !requestingPages.contains(pageIndex - 1)) {
-            requestPage(pageIndex - 1);
+            requestPage(pageIndex - 1, null);
         } else if (totalCount == null && itemIndex > DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex + 1) == null && !requestingPages.contains(pageIndex + 1)) {
-            requestPage(pageIndex + 1);
+            requestPage(pageIndex + 1, null);
         }
 
         return pageItems != null ? pageItems.get(itemIndex) : null;
@@ -96,15 +98,15 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
     }
 
     @Override
-    protected void initializeInternal(int startPosition) {
-        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE);
+    protected void initializeInternal(int startPosition, AggregationTaskStageState stageState) {
+        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE, stageState);
         if (startPosition >= DEFAULT_ITEMS_ON_PAGE) {
-            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1);
+            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1, stageState);
         }
     }
 
     /* Logic of page requesting */
-    protected abstract void requestPage(int index);
+    protected abstract void requestPage(int index, AggregationTaskStageState stageState);
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {
@@ -134,14 +136,14 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         }
     }
 
-    protected void onPageLoadingFailed(int pageIndex, Exception exception) {
+    protected void onPageLoadingFailed(int pageIndex, List<Exception> exceptions) {
         if (!getRequestingPages().contains(pageIndex)) {
             return;
         }
 
         getRequestingPages().remove(pageIndex);
         if (!isInitialized()) {
-            onInitializationFailed(exception);
+            onInitializationFailed(exceptions);
         }
     }
 

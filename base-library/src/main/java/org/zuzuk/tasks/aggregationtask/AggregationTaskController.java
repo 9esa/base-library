@@ -18,7 +18,7 @@ class AggregationTaskController {
     final AggregationTask task;
     // listeners that is wrapped around passed into TaskExecutorHelper listener
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
-    AggregationTaskStageState stageState = new AggregationTaskStageState(AggregationTaskStage.PRE_LOADING, null);
+    AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {

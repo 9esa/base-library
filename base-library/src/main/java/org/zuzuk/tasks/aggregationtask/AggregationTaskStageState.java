@@ -8,6 +8,12 @@ import java.util.List;
  * Current status of data on some state
  */
 public class AggregationTaskStageState {
+
+    /* Create initial pre-loading stage state */
+    public static AggregationTaskStageState createPreLoadingStageState() {
+        return new AggregationTaskStageState(AggregationTaskStage.PRE_LOADING, null);
+    }
+
     private final AggregationTaskStage taskStage;
     private UnknownableBoolean isLoaded = UnknownableBoolean.UNKNOWN;
     private UnknownableBoolean isLoadingNeeded = UnknownableBoolean.UNKNOWN;
@@ -38,7 +44,7 @@ public class AggregationTaskStageState {
     }
 
     /* Returns if there was exceptions during loading */
-    public boolean hasExceptions(){
+    public boolean hasExceptions() {
         return !exceptions.isEmpty();
     }
 
