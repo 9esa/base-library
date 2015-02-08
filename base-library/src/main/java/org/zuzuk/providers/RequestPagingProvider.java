@@ -6,6 +6,7 @@ import org.zuzuk.providers.base.PagingProvider;
 import org.zuzuk.providers.base.PagingTaskCreator;
 import org.zuzuk.tasks.aggregationtask.AggregationPagingTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStageListener;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.WrappedAggregationTask;
 
@@ -66,6 +67,17 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         return requestCreator.createPagingTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE);
     }
 
+    private void processOnPageLoaded(AggregationPagingTask<TItem> aggregationTask, int index) {
+        List<TItem> items = aggregationTask.getPageItems();
+        if (items != null) {
+            RequestPagingProvider.this.items.put(index, items);
+            if (initializationTime == null) {
+                initializationTime = System.currentTimeMillis();
+            }
+            onPageLoaded(index, items);
+        }
+    }
+
     @Override
     protected void requestPage(final int index, AggregationTaskStageState stageState) {
         final AggregationPagingTask<TItem> aggregationTask = createTask(index);
@@ -81,14 +93,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
                 @Override
                 public void onLoaded(AggregationTaskStageState currentTaskStageState) {
                     super.onLoaded(currentTaskStageState);
-                    List<TItem> items = aggregationTask.getPageItems();
-                    if (items != null) {
-                        RequestPagingProvider.this.items.put(index, items);
-                        if (initializationTime == null) {
-                            initializationTime = System.currentTimeMillis();
-                        }
-                        onPageLoaded(index, items);
-                    }
+                    processOnPageLoaded(aggregationTask, index);
                 }
 
                 @Override
@@ -100,6 +105,21 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         } else {
             getRequestingPages().add(index);
             aggregationTask.load(stageState);
+            stageState.addListener(new AggregationTaskStageListener() {
+                @Override
+                public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
+                }
+
+                @Override
+                public void onLoaded(AggregationTaskStageState currentTaskStageState) {
+                    processOnPageLoaded(aggregationTask, index);
+                }
+
+                @Override
+                public void onFailed(AggregationTaskStageState currentTaskStageState) {
+                    onPageLoadingFailed(index, currentTaskStageState.getExceptions());
+                }
+            });
         }
     }
 

@@ -19,6 +19,7 @@ public class AggregationTaskStageState {
     private UnknownableBoolean isLoadingNeeded = UnknownableBoolean.UNKNOWN;
     private final AggregationTaskStageState previousStageState;
     private final List<Exception> exceptions = new ArrayList<>(0);
+    private final List<AggregationTaskStageListener> taskStageListeners = new ArrayList<>();
 
     /* Returns stage */
     public AggregationTaskStage getTaskStage() {
@@ -75,5 +76,33 @@ public class AggregationTaskStageState {
     /* Some task have failed so we collect exception */
     void addFail(Exception ex) {
         exceptions.add(ex);
+    }
+
+    /* Adds stage listener */
+    public void addListener(AggregationTaskStageListener taskStageListener){
+        taskStageListeners.add(taskStageListener);
+    }
+
+    /* Removes stage listener */
+    public void removeListener(AggregationTaskStageListener taskStageListener){
+        taskStageListeners.remove(taskStageListener);
+    }
+
+    void notifyListenerAboutLoadingStart() {
+        for (AggregationTaskStageListener taskStageListener : taskStageListeners) {
+            taskStageListener.onLoadingStarted(this);
+        }
+    }
+
+    void notifyListenerAboutLoadSuccess() {
+        for (AggregationTaskStageListener taskStageListener : taskStageListeners) {
+            taskStageListener.onLoaded(this);
+        }
+    }
+
+    void notifyListenerAboutLoadFailure() {
+        for (AggregationTaskStageListener taskStageListener : taskStageListeners) {
+            taskStageListener.onFailed(this);
+        }
     }
 }

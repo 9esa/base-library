@@ -95,9 +95,14 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
-                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener));
+                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener) {
+                    @Override
+                    protected void realLoad(AggregationTaskStageState currentTaskStageState) {
+                        executeRequest(request, requestListener);
+                    }
+                });
                 aggregationTaskController.stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, null);
-                executeRequestInternal(request, requestListener, aggregationTaskController);
+                executeAggregationTask(aggregationTaskController);
             }
         });
     }
@@ -147,9 +152,14 @@ public class TaskExecutorHelper implements RequestExecutor, TaskExecutor, Aggreg
                     return;
                 }
 
-                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener));
+                AggregationTaskController aggregationTaskController = new AggregationTaskController(TaskExecutorHelper.this, new JustRealAggregationAggregationTask(taskListener) {
+                    @Override
+                    protected void realLoad(AggregationTaskStageState currentTaskStageState) {
+                        executeTask(task, requestListener);
+                    }
+                });
                 aggregationTaskController.stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, null);
-                executeTaskInternal(task, requestListener, false, aggregationTaskController);
+                executeAggregationTask(aggregationTaskController);
             }
         });
     }

@@ -60,8 +60,10 @@ class AggregationTaskController {
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
             if (stageState.isLoaded() == UnknownableBoolean.TRUE) {
                 task.onLoaded(stageState);
+                stageState.notifyListenerAboutLoadSuccess();
             } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
                 task.onFailed(stageState);
+                stageState.notifyListenerAboutLoadFailure();
             }
 
             if (stageState.isLoadingNeeded() == UnknownableBoolean.TRUE) {
@@ -69,10 +71,12 @@ class AggregationTaskController {
                     case PRE_LOADING:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
                         task.onLoadingStarted(stageState);
+                        stageState.notifyListenerAboutLoadingStart();
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                     case LOADING_LOCALLY:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
+                        stageState.notifyListenerAboutLoadingStart();
                         task.onLoadingStarted(stageState);
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
@@ -85,6 +89,7 @@ class AggregationTaskController {
             stageState = new AggregationTaskStageState(stageState.getTaskStage(), stageState);
             stageState.addFail(spiceException);
             task.onFailed(stageState);
+            stageState.notifyListenerAboutLoadFailure();
             Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + stageState.getTaskStage());
         }
     };

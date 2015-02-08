@@ -1,6 +1,6 @@
 package org.zuzuk.tasks.aggregationtask;
 
-class JustRealAggregationAggregationTask extends SimpleAggregationTask {
+abstract class JustRealAggregationAggregationTask extends SimpleAggregationTask {
 
     private final AggregationTaskListener taskListener;
 
@@ -13,10 +13,6 @@ class JustRealAggregationAggregationTask extends SimpleAggregationTask {
         if (taskListener != null) {
             taskListener.onLoadingStarted(currentTaskStageState);
         }
-    }
-
-    @Override
-    protected void realLoad(AggregationTaskStageState currentTaskStageState) {
     }
 
     @Override

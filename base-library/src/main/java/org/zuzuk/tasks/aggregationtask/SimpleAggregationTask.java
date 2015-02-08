@@ -27,7 +27,7 @@ public abstract class SimpleAggregationTask implements AggregationTask {
     @Override
     public void load(AggregationTaskStageState currentTaskStageState) {
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
-            load(currentTaskStageState);
+            realLoad(currentTaskStageState);
         }
     }
 

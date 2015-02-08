@@ -8,8 +8,10 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.providers.base.PagingProvider;
+import org.zuzuk.tasks.aggregationtask.AggregationPagingTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStageListener;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.SimpleAggregationTask;
 import org.zuzuk.tasks.base.TaskExecutor;
@@ -94,7 +96,6 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                 } else {
                                     onDataSetChanged();
                                 }
-
                             }
 
                             @Override
@@ -109,17 +110,16 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
             }
         };
 
-        if (stageState != null) {
-            aggregationTask.load(stageState);
-        } else {
+        if (stageState == null) {
             executor.executeAggregationTask(aggregationTask);
+        } else {
+            aggregationTask.load(stageState);
         }
     }
 
     @Override
     protected void requestPage(final int index, AggregationTaskStageState stageState) {
         if (getRequestingPages().isEmpty()) {
-            getRequestingPages().add(index);
             AggregationTask aggregationTask = new SimpleAggregationTask() {
                 @Override
                 public void onStarted(AggregationTaskStageState currentTaskStageState) {
@@ -128,6 +128,8 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                 @SuppressWarnings("unchecked")
                 @Override
                 protected void realLoad(AggregationTaskStageState stageState) {
+                    //TODO: is it ok?
+                    getRequestingPages().add(index);
                     ((TaskExecutor) executor).executeTask(new IteratorRequest<>(iterator, currentPosition, index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),
                             new RequestListener<List>() {
                                 @Override
@@ -147,10 +149,12 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                 }
             };
 
-            if (stageState != null) {
-                aggregationTask.load(stageState);
-            } else {
+            if (stageState == null) {
                 executor.executeAggregationTask(aggregationTask);
+            } else {
+                //TODO: is it ok?
+                getRequestingPages().add(index);
+                aggregationTask.load(stageState);
             }
         } else {
             waitingForRequestPages.push(index);
