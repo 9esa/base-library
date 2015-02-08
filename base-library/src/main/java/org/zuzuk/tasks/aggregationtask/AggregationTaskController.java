@@ -44,6 +44,10 @@ class AggregationTaskController {
     /* End listening to some task */
     void unregisterListener(RequestListener requestListener) {
         wrappedRequestListeners.remove(requestListener);
+        checkIfTaskFinished();
+    }
+
+    void checkIfTaskFinished() {
         if (noOneListenToRequests()) {
             nextStep();
         }
