@@ -1,5 +1,7 @@
 package org.zuzuk.tasks.aggregationtask;
 
+import org.zuzuk.tasks.base.Task;
+
 class JustRealLoadingAggregationTask implements AggregationTask {
 
     private final AggregationTaskListener taskListener;
@@ -38,6 +40,10 @@ class JustRealLoadingAggregationTask implements AggregationTask {
 
     @Override
     public void onFailed(AggregationTaskStageState currentTaskStageState) {
+    }
+
+    @Override
+    public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
     }
 
 }
