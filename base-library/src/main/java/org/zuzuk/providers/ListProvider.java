@@ -2,17 +2,13 @@ package org.zuzuk.providers;
 
 import org.zuzuk.providers.base.ItemsProvider;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on simple list
  */
-public class ListProvider<TItem extends Serializable> extends ItemsProvider<TItem> {
+public class ListProvider<TItem> extends ItemsProvider<TItem> {
     private List<TItem> items;
 
     @Override
@@ -36,22 +32,13 @@ public class ListProvider<TItem extends Serializable> extends ItemsProvider<TIte
         onDataSetChanged();
     }
 
+    /* Returns items */
+    public List<TItem> getItems() {
+        return items;
+    }
+
     @Override
     protected void resetInternal() {
         items = null;
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeBoolean(isInitialized());
-        if (isInitialized()) {
-            out.writeObject(items);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        if (in.readBoolean()) {
-            items = (List<TItem>) in.readObject();
-        }
     }
 }

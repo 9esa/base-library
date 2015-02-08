@@ -37,7 +37,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
     }
 
     /* Returns data parser */
-    protected abstract ObjectParser getParser();
+    protected abstract ObjectParser getParser() throws Exception;
 
     protected HttpRequest(Class<T> responseResultType) {
         super(responseResultType);

@@ -18,7 +18,7 @@ import java.util.List;
 public class UIUtils {
 
     /* Creates text with custom typeface for action bar title */
-    public static CharSequence wrapTextWithTypeface(Context context, String text, Typeface typeface) {
+    public static CharSequence wrapTextWithTypeface(Context context, CharSequence text, Typeface typeface) {
         SpannableString spanTitle = new SpannableString(text);
         spanTitle.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return spanTitle;

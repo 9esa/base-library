@@ -1,8 +1,5 @@
 package org.zuzuk.providers.base;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +8,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 16/11/2014.
  * Basic data provider
  */
-public abstract class DataProvider implements Serializable {
+public abstract class DataProvider {
     private List<WeakReference<DataSetChangedListener>> dataSetChangedListenersReferences = new ArrayList<>();
 
     /* Returns if provider is initialized */
@@ -55,11 +52,4 @@ public abstract class DataProvider implements Serializable {
 
     /* Resets provider and made it not initialized */
     protected abstract void resetInternal();
-
-    private void writeObject(ObjectOutputStream out) {
-    }
-
-    private void readObject(ObjectInputStream in) {
-        dataSetChangedListenersReferences = new ArrayList<>();
-    }
 }

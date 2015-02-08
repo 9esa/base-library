@@ -4,10 +4,6 @@ import android.util.SparseArray;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +12,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that supports paging-based loading
  */
-public abstract class PagingProvider<TItem extends Serializable> extends LoadingItemsProvider<TItem> {
+public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> {
     public static final int DEFAULT_ITEMS_ON_PAGE = 20;
 
     private OnPageLoadedListener<TItem> onPageLoadedListener;
@@ -152,30 +148,5 @@ public abstract class PagingProvider<TItem extends Serializable> extends Loading
         getRequestingPages().clear();
         getPages().clear();
         totalCount = null;
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeInt(totalCount != null ? totalCount : -1);
-        out.writeInt(pages.size());
-        for (int i = 0; i < pages.size(); i++) {
-            out.writeInt(pages.keyAt(i));
-            out.writeObject(pages.valueAt(i));
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        totalCount = in.readInt();
-        if (totalCount == -1) {
-            totalCount = null;
-        }
-
-        pages = new SparseArray<>();
-        int pagesSize = in.readInt();
-        for (int i = 0; i < pagesSize; i++) {
-            pages.put(in.readInt(), (ArrayList<TItem>) in.readObject());
-        }
-
-        requestingPages = new HashSet<>();
     }
 }

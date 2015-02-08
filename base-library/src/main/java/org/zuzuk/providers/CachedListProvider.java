@@ -7,10 +7,6 @@ import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.tasks.remote.cache.CacheEntry;
 import org.zuzuk.tasks.remote.cache.CacheUtils;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +14,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 16/11/2014.
  * Provider that based on simple list with cached data
  */
-public class CachedListProvider<TItem extends Serializable> extends ItemsProvider<TItem> {
+public class CachedListProvider<TItem> extends ItemsProvider<TItem> {
     private List<TItem> items;
     private List<CacheEntry> cacheInfo;
 
@@ -67,21 +63,5 @@ public class CachedListProvider<TItem extends Serializable> extends ItemsProvide
     protected void resetInternal() {
         items = null;
         cacheInfo = null;
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeBoolean(isInitialized());
-        if (isInitialized()) {
-            out.writeObject(items);
-            out.writeObject(cacheInfo);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        if (in.readBoolean()) {
-            items = (List<TItem>) in.readObject();
-            cacheInfo = (List<CacheEntry>) in.readObject();
-        }
     }
 }

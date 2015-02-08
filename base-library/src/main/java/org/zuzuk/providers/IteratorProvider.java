@@ -16,10 +16,6 @@ import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.IteratorInitializationRequest;
 import org.zuzuk.tasks.local.IteratorRequest;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
@@ -28,7 +24,7 @@ import java.util.Stack;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on OrmLite (database) iterator
  */
-public class IteratorProvider<TItem extends Serializable> extends PagingProvider<TItem> {
+public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     private final AggregationTaskExecutor executor;
     private final Stack<Integer> waitingForRequestPages = new Stack<>();
     private final RuntimeExceptionDao<TItem, ?> dao;
@@ -182,13 +178,5 @@ public class IteratorProvider<TItem extends Serializable> extends PagingProvider
         if (iterator != null) {
             iterator.closeQuietly();
         }
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        throw new RuntimeException("This object cannot be serialized");
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        throw new RuntimeException("This object cannot be deserialized");
     }
 }

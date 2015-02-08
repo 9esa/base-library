@@ -1,7 +1,6 @@
 package org.zuzuk.tasks.remote.cache;
 
 import com.octo.android.robospice.SpiceManager;
-import com.octo.android.robospice.request.CachedSpiceRequest;
 
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 
@@ -57,5 +56,4 @@ public class CacheEntry implements Serializable {
         this.cacheKey = in.readObject();
         this.cacheDuration = in.readLong();
     }
-
 }

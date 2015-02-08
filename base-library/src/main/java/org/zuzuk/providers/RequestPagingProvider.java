@@ -9,10 +9,6 @@ import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.WrappedAggregationTask;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,7 +16,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on remote paging requests
  */
-public class RequestPagingProvider<TItem extends Serializable> extends PagingProvider<TItem> {
+public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
     private AggregationTaskExecutor executor;
     private PagingTaskCreator<TItem> requestCreator;
     private HashMap<Integer, List<TItem>> items = new HashMap<>();
@@ -107,25 +103,5 @@ public class RequestPagingProvider<TItem extends Serializable> extends PagingPro
     protected void resetInternal() {
         super.resetInternal();
         items.clear();
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeObject(requestCreator);
-        out.writeBoolean(isInitialized());
-        if (isInitialized()) {
-            out.writeObject(items);
-            out.writeLong(initializationTime);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        requestCreator = (PagingTaskCreator<TItem>) in.readObject();
-        if (in.readBoolean()) {
-            items = (HashMap<Integer, List<TItem>>) in.readObject();
-            initializationTime = in.readLong();
-        } else {
-            items = new HashMap<>();
-        }
     }
 }
