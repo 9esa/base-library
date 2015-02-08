@@ -68,12 +68,15 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
 
     @Override
     protected void requestPage(final int index, AggregationTaskStageState stageState) {
-        getRequestingPages().add(index);
-
         final AggregationPagingTask<TItem> aggregationTask = createTask(index);
 
         if (stageState == null) {
             executor.executeAggregationTask(new WrappedAggregationTask(aggregationTask) {
+                @Override
+                public void load(AggregationTaskStageState currentTaskStageState) {
+                    getRequestingPages().add(index);
+                    super.load(currentTaskStageState);
+                }
 
                 @Override
                 public void onLoaded(AggregationTaskStageState currentTaskStageState) {
@@ -95,6 +98,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
                 }
             });
         } else {
+            getRequestingPages().add(index);
             aggregationTask.load(stageState);
         }
     }

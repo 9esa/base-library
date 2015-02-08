@@ -27,12 +27,11 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem>
 
     /* Starts provider initialization */
     public void initialize(int initializationPosition) {
-        initialize(0, null);
+        initialize(initializationPosition, null);
     }
 
     /* Starts provider initialization at specific position */
     public void initialize(int initializationPosition, AggregationTaskStageState stageState) {
-
         if (isInitialized) {
             reset();
         }
