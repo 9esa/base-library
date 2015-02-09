@@ -1,10 +1,10 @@
 package org.zuzuk.tasks.aggregationtask;
 
-abstract class JustRealAggregationAggregationTask extends SimpleAggregationTask {
+abstract class JustRealLoadingAggregationTask extends SimpleAggregationTask {
 
     private final AggregationTaskListener taskListener;
 
-    JustRealAggregationAggregationTask(AggregationTaskListener taskListener) {
+    JustRealLoadingAggregationTask(AggregationTaskListener taskListener) {
         this.taskListener = taskListener;
     }
 
