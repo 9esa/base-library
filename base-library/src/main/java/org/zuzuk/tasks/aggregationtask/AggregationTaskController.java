@@ -76,8 +76,8 @@ class AggregationTaskController {
                         break;
                     case LOADING_LOCALLY:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
-                        stageState.notifyListenerAboutLoadingStart();
                         task.onLoadingStarted(stageState);
+                        stageState.notifyListenerAboutLoadingStart();
                         taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
                         break;
                 }
