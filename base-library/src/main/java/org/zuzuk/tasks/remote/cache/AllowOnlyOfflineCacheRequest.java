@@ -1,6 +1,7 @@
 package org.zuzuk.tasks.remote.cache;
 
 import com.octo.android.robospice.SpiceManager;
+import com.octo.android.robospice.persistence.exception.CacheLoadingException;
 import com.octo.android.robospice.request.CachedSpiceRequest;
 import com.octo.android.robospice.request.SpiceRequest;
 import com.octo.android.robospice.retry.DefaultRetryPolicy;
@@ -20,7 +21,7 @@ public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
 
     @Override
     public void setAcceptingDirtyCache(boolean isAcceptingDirtyCache) {
-        throw new RuntimeException("Dirty cache is deprecated in this request. Use isOffline() parameter to get dirty cache instead");
+        throw new IllegalStateException("Dirty cache is deprecated in this request. Use isOffline() parameter to get dirty cache instead");
     }
 
     @Override
@@ -38,7 +39,7 @@ public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
             if (result != null) {
                 return result;
             } else {
-                throw new Exception("Cached data not found for: '" + getRequestCacheKey() + "' during offline cache request");
+                throw new CacheLoadingException("Cached data not found for: '" + getRequestCacheKey() + "' during offline cache request");
             }
         }
         return super.loadDataFromNetwork();

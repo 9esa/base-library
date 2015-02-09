@@ -45,7 +45,10 @@ dependencies {
     provided 'de.ruedigermoeller:fst:2.22'
 
     /* Network requests */
-    provided 'com.octo.android.robospice:robospice:1.4.14'
+//    provided 'com.octo.android.robospice:robospice:1.4.14'
+    compile files('libs/robospice-1.4.14.jar')
+    compile files('libs/robospice-cache-1.4.14.jar')
+
     provided('com.google.http-client:google-http-client-android:1.19.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
