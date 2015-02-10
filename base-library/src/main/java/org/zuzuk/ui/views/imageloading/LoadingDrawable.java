@@ -33,14 +33,14 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
         @Override
         public void onLoadingStarted(String imageUri, View view) {
             if (imageLoadingListener != null) {
-                onLoadingStarted(imageUri, view);
+                imageLoadingListener.onLoadingStarted(imageUri, view);
             }
         }
 
         @Override
         public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
             if (imageLoadingListener != null) {
-                onLoadingFailed(imageUri, view, failReason);
+                imageLoadingListener.onLoadingFailed(imageUri, view, failReason);
             }
         }
 
@@ -49,14 +49,14 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
             BitmapsGlobalRecycler.Instance.addReference(imageUri, loadedImage, getImageLoader());
             lastLoadedUri = imageUri;
             if (imageLoadingListener != null) {
-                onLoadingComplete(imageUri, view, loadedImage);
+                imageLoadingListener.onLoadingComplete(imageUri, view, loadedImage);
             }
         }
 
         @Override
         public void onLoadingCancelled(String imageUri, View view) {
             if (imageLoadingListener != null) {
-                onLoadingCancelled(imageUri, view);
+                imageLoadingListener.onLoadingCancelled(imageUri, view);
             }
         }
     };
