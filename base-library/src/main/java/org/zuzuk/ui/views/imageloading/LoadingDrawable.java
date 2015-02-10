@@ -89,7 +89,7 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
     }
 
     /* Start reloading image. Use it only when loading parameters is changed */
-    protected void reload() {
+    public void reload() {
         drawable = null;
         getImageLoader().cancelDisplayTask(this);
         if (lastLoadedUri != null) {
@@ -289,6 +289,6 @@ public abstract class LoadingDrawable extends Drawable implements ImageAware, Im
 
     @Override
     public int getId() {
-        return ((Object) this).hashCode();
+        return hashCode();
     }
 }
