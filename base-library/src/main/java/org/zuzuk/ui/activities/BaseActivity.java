@@ -38,11 +38,11 @@ public abstract class BaseActivity extends ActionBarActivity
     /* Returns if last fragment in stack is top (added by setFragment) like fragment from sidebar menu */
     public boolean isCurrentFragmentTop() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        return fragmentManager.getBackStackEntryCount() == 0
-                || fragmentManager
+        String topFragmentTag = fragmentManager
                 .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
-                .getName()
-                .contains(TOP_FRAGMENT_TAG_MARK);
+                .getName();
+        return fragmentManager.getBackStackEntryCount() == 0
+                || (topFragmentTag != null && topFragmentTag.contains(TOP_FRAGMENT_TAG_MARK));
     }
 
     @Override
