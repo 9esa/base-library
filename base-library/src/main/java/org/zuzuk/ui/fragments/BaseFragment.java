@@ -98,23 +98,6 @@ public abstract class BaseFragment extends Fragment implements EventListener,
         return result;
     }
 
-    /* Raises when ActionBar home button pressed */
-    public boolean onHomePressed() {
-        FragmentManager fragmentManager = getChildFragmentManager();
-        boolean result = false;
-
-        if (fragmentManager.getFragments() == null) {
-            return false;
-        }
-
-        for (Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
-                result = result || ((BaseFragment) fragment).onHomePressed();
-            }
-        }
-        return result;
-    }
-
     @Override
     public void onEvent(Context context, @NonNull String eventName, Intent intent) {
     }
