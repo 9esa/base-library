@@ -8,7 +8,7 @@ public enum FSTSerializer implements Serializer {
     private static ThreadLocal<FSTConfiguration> fstConfigurationThreadLocal = new ThreadLocal<FSTConfiguration>() {
         @Override
         public FSTConfiguration initialValue() {
-            return FSTConfiguration.createDefaultConfiguration();
+            return FSTConfiguration.createDefaultConfiguration().setForceSerializable(true);
         }
     };
 
