@@ -7,6 +7,8 @@ import com.octo.android.robospice.request.SpiceRequest;
 import com.octo.android.robospice.retry.DefaultRetryPolicy;
 import com.octo.android.robospice.retry.RetryPolicy;
 
+import org.zuzuk.tasks.remote.base.OneShotRetryPolicy;
+
 /**
  * Created by Gavriil Sitnikov on 02/12/2014.
  * Cache request that is doing only local cache loading if isOffline() returns true
@@ -27,7 +29,7 @@ public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
     @Override
     public RetryPolicy getRetryPolicy() {
         if (isOffline()) {
-            return new DefaultRetryPolicy(0, 0, 0);
+            return new OneShotRetryPolicy();
         }
         return super.getRetryPolicy();
     }

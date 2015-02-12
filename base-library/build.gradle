@@ -34,6 +34,7 @@ android {
 dependencies {
     /* Common */
     provided 'com.android.support:appcompat-v7:21.0.3'
+    provided 'com.android.support:recyclerview-v7:21.0.3'
 
     /* Image loading */
     provided 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
