@@ -1,6 +1,5 @@
 package org.zuzuk.ui.activities;
 
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,7 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -90,15 +88,15 @@ public abstract class BaseActivity extends ActionBarActivity
     }
 
     /* Setting fragment of special class as first in stack */
-    public void setFirstFragment(Class<?> fragmentClass) {
-        setFirstFragment(fragmentClass, null);
+    public Fragment setFirstFragment(Class<?> fragmentClass) {
+        return setFirstFragment(fragmentClass, null);
     }
 
     /* Setting fragment of special class as first in stack with args */
-    public void setFirstFragment(Class<?> fragmentClass, Bundle args) {
+    public Fragment setFirstFragment(Class<?> fragmentClass, Bundle args) {
         if (isPaused) {
             Lc.e("Calling to fragment manager while activity is paused", new Exception());
-            return;
+            return null;
         }
 
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -111,12 +109,13 @@ public abstract class BaseActivity extends ActionBarActivity
         fragmentManager.beginTransaction()
                 .replace(getFragmentContainerId(), fragment, null)
                 .commit();
+        return fragment;
     }
 
-    private void addFragmentToStack(Class<?> fragmentClass, Bundle args, String backStackTag) {
+    private Fragment addFragmentToStack(Class<?> fragmentClass, Bundle args, String backStackTag) {
         if (isPaused) {
             Lc.e("Calling to fragment manager while activity is paused", new Exception());
-            return;
+            return null;
         }
 
         Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
@@ -124,26 +123,27 @@ public abstract class BaseActivity extends ActionBarActivity
                 .replace(getFragmentContainerId(), fragment, backStackTag)
                 .addToBackStack(backStackTag)
                 .commit();
+        return fragment;
     }
 
     /* Setting fragment of special class as top */
-    public void setFragment(Class fragmentClass) {
-        setFragment(fragmentClass, null);
+    public Fragment setFragment(Class fragmentClass) {
+        return setFragment(fragmentClass, null);
     }
 
     /* Setting fragment of special class as top with args */
-    public void setFragment(Class fragmentClass, Bundle args) {
-        addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
+    public Fragment setFragment(Class fragmentClass, Bundle args) {
+        return addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
     }
 
     /* Pushing fragment of special class to fragments stack */
-    public void pushFragment(Class fragmentClass) {
-        pushFragment(fragmentClass, null);
+    public Fragment pushFragment(Class fragmentClass) {
+        return pushFragment(fragmentClass, null);
     }
 
     /* Pushing fragment of special class with args to fragments stack */
-    public void pushFragment(Class fragmentClass, Bundle args) {
-        addFragmentToStack(fragmentClass, args, fragmentClass.getName());
+    public Fragment pushFragment(Class fragmentClass, Bundle args) {
+        return addFragmentToStack(fragmentClass, args, fragmentClass.getName());
     }
 
     /* Raises when device back button pressed */
