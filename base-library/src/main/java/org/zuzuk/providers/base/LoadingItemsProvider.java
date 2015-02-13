@@ -1,6 +1,7 @@
 package org.zuzuk.providers.base;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 
 import java.util.List;
 
@@ -27,23 +28,25 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem>
 
     /* Starts provider initialization */
     public void initialize(int initializationPosition) {
-        initialize(initializationPosition, null);
+        initialize(initializationPosition, null, null);
     }
 
     /* Starts provider initialization at specific position */
-    public void initialize(int initializationPosition, AggregationTaskStageState stageState) {
+    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void initialize(
+            int initializationPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         if (isInitialized) {
             reset();
         }
 
         if (!isInitializing) {
             isInitializing = true;
-            initializeInternal(initializationPosition, stageState);
+            initializeInternal(initializationPosition, executor, stageState);
         }
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initializeInternal(int initializationPosition, AggregationTaskStageState stageState);
+    protected abstract <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void initializeInternal(
+            int initializationPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState);
 
     /* Raises when provider initialized. Use it in child classes */
     @Override
@@ -58,4 +61,5 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem>
     public void onInitializationFailed(List<Exception> exceptions) {
         isInitializing = false;
     }
+
 }

@@ -3,6 +3,7 @@ package org.zuzuk.providers.base;
 import android.util.SparseArray;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,13 +48,13 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         ArrayList<TItem> pageItems = pages.get(pageIndex);
 
         if (pageItems == null && !requestingPages.contains(pageIndex)) {
-            requestPage(pageIndex, null);
+            requestPage(pageIndex, null, null);
         } else if (pageIndex > 0 && itemIndex < DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex - 1) == null && !requestingPages.contains(pageIndex - 1)) {
-            requestPage(pageIndex - 1, null);
+            requestPage(pageIndex - 1, null, null);
         } else if (totalCount == null && itemIndex > DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex + 1) == null && !requestingPages.contains(pageIndex + 1)) {
-            requestPage(pageIndex + 1, null);
+            requestPage(pageIndex + 1, null, null);
         }
 
         return pageItems != null ? pageItems.get(itemIndex) : null;
@@ -94,15 +95,17 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
     }
 
     @Override
-    protected void initializeInternal(int startPosition, AggregationTaskStageState stageState) {
-        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE, stageState);
+    protected <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void initializeInternal(
+            int startPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE, executor, stageState);
         if (startPosition >= DEFAULT_ITEMS_ON_PAGE) {
-            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1, stageState);
+            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1, executor, stageState);
         }
     }
 
     /* Logic of page requesting */
-    protected abstract void requestPage(int index, AggregationTaskStageState stageState);
+    protected abstract <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void requestPage(
+            int index, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState);
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {
@@ -149,4 +152,5 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         getPages().clear();
         totalCount = null;
     }
+
 }
