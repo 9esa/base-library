@@ -11,7 +11,7 @@ import org.zuzuk.providers.base.PagingProvider;
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
-import org.zuzuk.tasks.aggregationtask.OnlyRealLoadingAggregationTask;
+import org.zuzuk.tasks.realloading.OnlyRealLoadingAggregationTask;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.local.IteratorInitializationRequest;
 import org.zuzuk.tasks.local.IteratorRequest;
@@ -24,10 +24,9 @@ import java.util.Stack;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on OrmLite (database) iterator
  */
-public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
-        extends PagingProvider<TItem, TRequestAndTaskExecutor> {
+public class IteratorProvider<TItem> extends PagingProvider<TItem> {
 
-    private final AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor;
+    private final AggregationTaskExecutor aggregationTaskExecutor;
     private final Stack<Integer> waitingForRequestPages = new Stack<>();
     private final RuntimeExceptionDao<TItem, ?> dao;
     private QueryBuilder<TItem, ?> queryBuilder;
@@ -44,20 +43,20 @@ public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndT
         this.isKnownCount = isKnownCount;
     }
 
-    public IteratorProvider(AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor, QueryBuilder<TItem, ?> queryBuilder, RuntimeExceptionDao<TItem, ?> dao) {
+    public IteratorProvider(AggregationTaskExecutor aggregationTaskExecutor, QueryBuilder<TItem, ?> queryBuilder, RuntimeExceptionDao<TItem, ?> dao) {
         this.aggregationTaskExecutor = aggregationTaskExecutor;
         this.queryBuilder = queryBuilder;
         this.dao = dao;
     }
 
-    public IteratorProvider(AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor, Where<TItem, ?> where, RuntimeExceptionDao<TItem, ?> dao) {
+    public IteratorProvider(AggregationTaskExecutor aggregationTaskExecutor, Where<TItem, ?> where, RuntimeExceptionDao<TItem, ?> dao) {
         this.aggregationTaskExecutor = aggregationTaskExecutor;
         this.where = where;
         this.dao = dao;
     }
 
     @Override
-    protected void initializeInternal(int startPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    protected void initializeInternal(int startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         updateIterator(startPosition, executor, stageState);
     }
 
@@ -67,14 +66,14 @@ public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndT
     }
 
     /* Manually updating provider (if caller know that database have changed) */
-    public void updateIterator(TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    public void updateIterator(RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         updateIterator(null, executor, stageState);
     }
 
-    private void updateIterator(final Integer startPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        AggregationTask<TRequestAndTaskExecutor> aggregationTask = new OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor>() {
+    private void updateIterator(final Integer startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+        AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
             @Override
-            protected void realLoad(final TRequestAndTaskExecutor executor, final AggregationTaskStageState currentTaskStageState) {
+            protected void realLoad(final RequestAndTaskExecutor executor, final AggregationTaskStageState currentTaskStageState) {
                 executor.executeTask(queryBuilder != null ?
                                 new IteratorInitializationRequest<>(queryBuilder, dao, isKnownCount) :
                                 new IteratorInitializationRequest<>(where, dao, isKnownCount),
@@ -110,11 +109,11 @@ public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndT
     }
 
     @Override
-    protected void requestPage(final int index, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    protected void requestPage(final int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         if (getRequestingPages().isEmpty()) {
-            AggregationTask<TRequestAndTaskExecutor> aggregationTask = new OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor>() {
+            AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
                 @Override
-                protected void realLoad(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+                protected void realLoad(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                     //TODO: is it ok?
                     getRequestingPages().add(index);
                     executor.executeTask(new IteratorRequest<>(iterator, currentPosition, index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE),

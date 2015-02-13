@@ -6,7 +6,7 @@ import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 
-public class RequestAndTaskExecutor<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>> {
+public class RequestAndTaskExecutor<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
 
     private AggregationTaskController<TRequestAndTaskExecutor> aggregationTaskController;
 

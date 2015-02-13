@@ -1,23 +1,27 @@
-package org.zuzuk.tasks.aggregationtask;
+package org.zuzuk.tasks.realloading;
 
+import org.zuzuk.tasks.aggregationtask.AggregationTask;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStage;
+import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.base.Task;
 
 /**
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Simple loading task that executes only REAL_LOADING stage
  */
-public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
-        implements AggregationTask<TRequestAndTaskExecutor> {
+public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+        implements AggregationTask<TRequestAndTaskExecutor>, RealLoadingAggregationTaskListener {
 
-    protected void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
+    public void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
     }
 
     protected abstract void realLoad(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
 
-    protected void onRealLoaded(AggregationTaskStageState currentTaskStageState) {
+    public void onRealLoaded(AggregationTaskStageState currentTaskStageState) {
     }
 
-    protected void onRealFailed(AggregationTaskStageState currentTaskStageState) {
+    public void onRealFailed(AggregationTaskStageState currentTaskStageState) {
     }
 
     @Override

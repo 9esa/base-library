@@ -13,8 +13,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that supports paging-based loading
  */
-public abstract class PagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
-        extends LoadingItemsProvider<TItem, TRequestAndTaskExecutor> {
+public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> {
 
     public static final int DEFAULT_ITEMS_ON_PAGE = 20;
 
@@ -97,7 +96,7 @@ public abstract class PagingProvider<TItem, TRequestAndTaskExecutor extends Requ
     }
 
     @Override
-    protected void initializeInternal(int startPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    protected void initializeInternal(int startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE, executor, stageState);
         if (startPosition >= DEFAULT_ITEMS_ON_PAGE) {
             requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1, executor, stageState);
@@ -105,7 +104,7 @@ public abstract class PagingProvider<TItem, TRequestAndTaskExecutor extends Requ
     }
 
     /* Logic of page requesting */
-    protected abstract void requestPage(int index, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState);
+    protected abstract void requestPage(int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState);
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {

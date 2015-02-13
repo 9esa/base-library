@@ -6,7 +6,7 @@ import org.zuzuk.tasks.base.Task;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Aggregation task over aggregation. Enjoy!
  */
-public class WrappedAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
+public class WrappedAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
         implements AggregationTask<TRequestAndTaskExecutor> {
 
     private final AggregationTask<TRequestAndTaskExecutor> aggregationTaskToWrap;

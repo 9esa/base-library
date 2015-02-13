@@ -18,7 +18,7 @@ import org.zuzuk.utils.Lc;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>> implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
+public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends RequestAndTaskExecutor> implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
 
     private final Handler postHandler = new Handler();
 

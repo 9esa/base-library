@@ -9,8 +9,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that needs initialization before it is available to provide items
  */
-public abstract class LoadingItemsProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
-        extends ItemsProvider<TItem> implements InitializationListener {
+public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> implements InitializationListener {
 
     private boolean isInitialized = false;
     private boolean isInitializing = false;
@@ -32,7 +31,7 @@ public abstract class LoadingItemsProvider<TItem, TRequestAndTaskExecutor extend
     }
 
     /* Starts provider initialization at specific position */
-    public void initialize(int initializationPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    public void initialize(int initializationPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         if (isInitialized) {
             reset();
         }
@@ -44,7 +43,7 @@ public abstract class LoadingItemsProvider<TItem, TRequestAndTaskExecutor extend
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initializeInternal(int initializationPosition, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState);
+    protected abstract void initializeInternal(int initializationPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState);
 
     /* Raises when provider initialized. Use it in child classes */
     @Override
