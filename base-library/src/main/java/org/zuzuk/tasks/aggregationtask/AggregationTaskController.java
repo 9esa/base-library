@@ -14,11 +14,11 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Class that contains wrapped requests listeners and controls task state
  */
-class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
+class AggregationTaskController {
 
-    private final TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
+    private final TaskExecutorHelper taskExecutorHelper;
     // task that is controlling by this object
-    final AggregationTask<TRequestAndTaskExecutor> task;
+    final AggregationTask task;
     // listeners that is wrapped around passed into TaskExecutorHelper listener
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
@@ -28,8 +28,7 @@ class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskEx
         return wrappedRequestListeners.isEmpty();
     }
 
-    AggregationTaskController(TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper,
-                              AggregationTask<TRequestAndTaskExecutor> task) {
+    AggregationTaskController(TaskExecutorHelper taskExecutorHelper, AggregationTask task) {
         this.taskExecutorHelper = taskExecutorHelper;
         this.task = task;
     }
@@ -98,7 +97,7 @@ class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskEx
     };
 
     private void loadAggregationTask() {
-        TRequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
+        RequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
         requestAndTaskExecutor.setAggregationTaskController(this);
         task.load(requestAndTaskExecutor, stageState);
         checkIfTaskFinished();

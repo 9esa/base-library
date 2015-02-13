@@ -44,7 +44,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         return isInitialized() && !isDataExpired(spiceManager);
     }
 
-    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
+    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor>
     RequestPagingProvider(AggregationTaskExecutor aggregationTaskExecutor, PagingTaskCreator<TItem, TRequestAndTaskExecutor> requestCreator) {
         this.aggregationTaskExecutor = aggregationTaskExecutor;
         this.requestCreator = requestCreator;

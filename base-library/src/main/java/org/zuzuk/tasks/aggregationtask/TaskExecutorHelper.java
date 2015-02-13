@@ -59,7 +59,7 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
                     return;
                 }
 
-                executeAggregationTaskInternal(new AggregationTaskController<>(TaskExecutorHelper.this, aggregationTask));
+                executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
             }
         });
     }
