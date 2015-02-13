@@ -9,8 +9,8 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that needs initialization before it is available to provide items
  */
-public abstract class LoadingItemsProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends ItemsProvider<TItem>
-        implements InitializationListener {
+public abstract class LoadingItemsProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
+        extends ItemsProvider<TItem> implements InitializationListener {
 
     private boolean isInitialized = false;
     private boolean isInitializing = false;

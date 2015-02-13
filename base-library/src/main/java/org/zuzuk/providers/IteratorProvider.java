@@ -24,7 +24,8 @@ import java.util.Stack;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on OrmLite (database) iterator
  */
-public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends PagingProvider<TItem, TRequestAndTaskExecutor> {
+public class IteratorProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
+        extends PagingProvider<TItem, TRequestAndTaskExecutor> {
 
     private final AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor;
     private final Stack<Integer> waitingForRequestPages = new Stack<>();

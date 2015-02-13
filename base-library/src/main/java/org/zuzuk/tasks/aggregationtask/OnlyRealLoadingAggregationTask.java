@@ -6,7 +6,7 @@ import org.zuzuk.tasks.base.Task;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Simple loading task that executes only REAL_LOADING stage
  */
-public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
         implements AggregationTask<TRequestAndTaskExecutor> {
 
     protected void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {

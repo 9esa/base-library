@@ -14,7 +14,8 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Class that contains wrapped requests listeners and controls task state
  */
-class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
+class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>> {
+
     private final TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
     // task that is controlling by this object
     final AggregationTask<TRequestAndTaskExecutor> task;

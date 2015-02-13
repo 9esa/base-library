@@ -18,7 +18,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on remote paging requests
  */
-public class RequestPagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+public class RequestPagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
         extends PagingProvider<TItem, TRequestAndTaskExecutor> {
 
     private AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor;

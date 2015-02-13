@@ -11,13 +11,13 @@ import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
  * Created by Gavriil Sitnikov on 06/02/2015.
  * Base activity that can execute tasks and requests
  */
-public abstract class BaseExecutorActivity<TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends BaseActivity
+public abstract class BaseExecutorActivity<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>> extends BaseActivity
         implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
 
     private TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         taskExecutorHelper = createTaskExecutorHelper();
     }

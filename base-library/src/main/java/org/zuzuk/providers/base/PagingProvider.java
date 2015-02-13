@@ -13,7 +13,7 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that supports paging-based loading
  */
-public abstract class PagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+public abstract class PagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>>
         extends LoadingItemsProvider<TItem, TRequestAndTaskExecutor> {
 
     public static final int DEFAULT_ITEMS_ON_PAGE = 20;

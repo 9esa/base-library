@@ -11,7 +11,7 @@ import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
  * Created by Gavriil Sitnikov on 06/02/2015.
  * Base fragment that can execute tasks and requests
  */
-public abstract class BaseExecutorFragment<TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends BaseFragment
+public abstract class BaseExecutorFragment<TRequestAndTaskExecutor extends RequestAndTaskExecutor<TRequestAndTaskExecutor>> extends BaseFragment
         implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
 
     private TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
