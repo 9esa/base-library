@@ -14,17 +14,23 @@ public abstract class OnlyRealLoadingAggregationTaskWithListener<TRequestAndTask
 
     @Override
     public void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
-        realLoadingAggregationTaskListener.onRealLoadingStarted(currentTaskStageState);
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealLoadingStarted(currentTaskStageState);
+        }
     }
 
     @Override
     public void onRealLoaded(AggregationTaskStageState currentTaskStageState) {
-        realLoadingAggregationTaskListener.onRealLoaded(currentTaskStageState);
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealLoaded(currentTaskStageState);
+        }
     }
 
     @Override
     public void onRealFailed(AggregationTaskStageState currentTaskStageState) {
-        realLoadingAggregationTaskListener.onRealFailed(currentTaskStageState);
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealFailed(currentTaskStageState);
+        }
     }
 
 }

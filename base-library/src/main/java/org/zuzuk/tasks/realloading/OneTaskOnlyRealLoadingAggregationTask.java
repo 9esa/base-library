@@ -26,12 +26,16 @@ public class OneTaskOnlyRealLoadingAggregationTask<TRequestAndTaskExecutor exten
         executor.executeTask(task, new RequestListener() {
             @Override
             public void onRequestFailure(SpiceException exception) {
-                chainedRequestListener.onRequestFailure(exception, executor);
+                if (chainedRequestListener != null) {
+                    chainedRequestListener.onRequestFailure(exception, executor);
+                }
             }
 
             @Override
             public void onRequestSuccess(Object result) {
-                chainedRequestListener.onRequestSuccess(result, executor);
+                if (chainedRequestListener != null) {
+                    chainedRequestListener.onRequestSuccess(result, executor);
+                }
             }
         });
     }
