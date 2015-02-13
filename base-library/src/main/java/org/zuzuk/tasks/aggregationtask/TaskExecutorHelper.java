@@ -18,7 +18,7 @@ import org.zuzuk.utils.Lc;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public abstract class TaskExecutorHelper implements AggregationTaskExecutor {
+public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends RequestAndTaskExecutor> implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
 
     private final Handler postHandler = new Handler();
 
@@ -32,7 +32,7 @@ public abstract class TaskExecutorHelper implements AggregationTaskExecutor {
         return isPaused;
     }
 
-    protected abstract <TRequestAndTaskExecutor extends RequestAndTaskExecutor> TRequestAndTaskExecutor createRequestAndTaskExecutor();
+    protected abstract TRequestAndTaskExecutor createRequestAndTaskExecutor();
 
     /* Associated lifecycle method */
     public void onResume(Context context) {
@@ -51,7 +51,7 @@ public abstract class TaskExecutorHelper implements AggregationTaskExecutor {
     }
 
     @Override
-    public void executeAggregationTask(final AggregationTask aggregationTask) {
+    public void executeAggregationTask(final AggregationTask<TRequestAndTaskExecutor> aggregationTask) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -59,7 +59,7 @@ public abstract class TaskExecutorHelper implements AggregationTaskExecutor {
                     return;
                 }
 
-                executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
+                executeAggregationTaskInternal(new AggregationTaskController<>(TaskExecutorHelper.this, aggregationTask));
             }
         });
     }

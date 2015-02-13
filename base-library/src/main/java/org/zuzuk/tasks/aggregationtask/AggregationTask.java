@@ -7,7 +7,7 @@ import org.zuzuk.tasks.base.Task;
  * An object that can detect executing several Task objects and observe them as one long task.
  * All Task objects should be created in one thread (prefer UI)
  */
-public abstract interface AggregationTask {
+public abstract interface AggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
 
     /**
      * Returns is task still needs something to load on current stage
@@ -25,7 +25,7 @@ public abstract interface AggregationTask {
      * Loading data at current stage
      * It is executing in main UI thread.
      */
-    <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
+    void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
 
     /**
      * Calls when loading of some stage have started
@@ -46,4 +46,5 @@ public abstract interface AggregationTask {
     void onFailed(AggregationTaskStageState currentTaskStageState);
 
     void processTask(Task task, AggregationTaskStageState currentTaskStageState);
+
 }

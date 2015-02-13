@@ -4,7 +4,8 @@ import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 
-public class OneRequestOnlyRealLoadingAggregationTask<TResult> extends OnlyRealLoadingAggregationTask {
+public class OneRequestOnlyRealLoadingAggregationTask<TResult, TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+        extends OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor> {
 
     private final RemoteRequest<TResult> request;
     private final RequestListener<TResult> requestListener;
@@ -15,8 +16,7 @@ public class OneRequestOnlyRealLoadingAggregationTask<TResult> extends OnlyRealL
     }
 
     @Override
-    protected <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void realLoad(
-            TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+    protected void realLoad(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         executor.executeRequest(request, requestListener);
     }
 

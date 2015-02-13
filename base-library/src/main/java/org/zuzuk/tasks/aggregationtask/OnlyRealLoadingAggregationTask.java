@@ -6,13 +6,13 @@ import org.zuzuk.tasks.base.Task;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Simple loading task that executes only REAL_LOADING stage
  */
-public abstract class OnlyRealLoadingAggregationTask implements AggregationTask {
+public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+        implements AggregationTask<TRequestAndTaskExecutor> {
 
     protected void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
     }
 
-    protected abstract <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void realLoad(
-            TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
+    protected abstract void realLoad(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
 
     protected void onRealLoaded(AggregationTaskStageState currentTaskStageState) {
     }
@@ -31,7 +31,7 @@ public abstract class OnlyRealLoadingAggregationTask implements AggregationTask 
     }
 
     @Override
-    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+    public void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
             realLoad(executor, currentTaskStageState);
         }

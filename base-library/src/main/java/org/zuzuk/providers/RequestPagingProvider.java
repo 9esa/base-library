@@ -18,10 +18,11 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on remote paging requests
  */
-public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
+public class RequestPagingProvider<TItem, TRequestAndTaskExecutor extends RequestAndTaskExecutor>
+        extends PagingProvider<TItem, TRequestAndTaskExecutor> {
 
-    private AggregationTaskExecutor aggregationTaskExecutor;
-    private PagingTaskCreator<TItem> requestCreator;
+    private AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor;
+    private PagingTaskCreator<TItem, TRequestAndTaskExecutor> requestCreator;
     private HashMap<Integer, List<TItem>> items = new HashMap<>();
     private Long initializationTime;
 
@@ -44,16 +45,17 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         return isInitialized() && !isDataExpired(spiceManager);
     }
 
-    public RequestPagingProvider(AggregationTaskExecutor aggregationTaskExecutor, PagingTaskCreator<TItem> requestCreator) {
+    public RequestPagingProvider(AggregationTaskExecutor<TRequestAndTaskExecutor> aggregationTaskExecutor,
+                                 PagingTaskCreator<TItem, TRequestAndTaskExecutor> requestCreator) {
         this.aggregationTaskExecutor = aggregationTaskExecutor;
         this.requestCreator = requestCreator;
     }
 
-    private AggregationPagingTask<TItem> createTask(int index) {
+    private AggregationPagingTask<TItem, TRequestAndTaskExecutor> createTask(int index) {
         return requestCreator.createPagingTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE);
     }
 
-    private void processOnPageLoaded(AggregationPagingTask<TItem> aggregationTask, int index) {
+    private void processOnPageLoaded(AggregationPagingTask<TItem, TRequestAndTaskExecutor> aggregationTask, int index) {
         List<TItem> items = aggregationTask.getPageItems();
         if (items != null) {
             RequestPagingProvider.this.items.put(index, items);
@@ -65,15 +67,13 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
     }
 
     @Override
-    protected <TRequestAndTaskExecutor extends RequestAndTaskExecutor> void requestPage(
-            final int index, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        final AggregationPagingTask<TItem> aggregationTask = createTask(index);
+    protected void requestPage(final int index, TRequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+        final AggregationPagingTask<TItem, TRequestAndTaskExecutor> aggregationTask = createTask(index);
 
         if (executor == null) {
-            aggregationTaskExecutor.executeAggregationTask(new WrappedAggregationTask(aggregationTask) {
+            aggregationTaskExecutor.executeAggregationTask(new WrappedAggregationTask<TRequestAndTaskExecutor>(aggregationTask) {
                 @Override
-                public <TRequestAndTaskExecutorInner extends RequestAndTaskExecutor> void load(
-                        TRequestAndTaskExecutorInner executor, AggregationTaskStageState currentTaskStageState) {
+                public void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                     getRequestingPages().add(index);
                     super.load(executor, currentTaskStageState);
                 }

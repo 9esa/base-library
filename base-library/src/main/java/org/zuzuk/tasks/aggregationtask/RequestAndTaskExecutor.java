@@ -6,11 +6,11 @@ import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.local.LocalTask;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 
-public class RequestAndTaskExecutor {
+public class RequestAndTaskExecutor<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
 
-    private AggregationTaskController aggregationTaskController;
+    private AggregationTaskController<TRequestAndTaskExecutor> aggregationTaskController;
 
-    void setAggregationTaskController(AggregationTaskController aggregationTaskController) {
+    void setAggregationTaskController(AggregationTaskController<TRequestAndTaskExecutor> aggregationTaskController) {
         this.aggregationTaskController = aggregationTaskController;
     }
 

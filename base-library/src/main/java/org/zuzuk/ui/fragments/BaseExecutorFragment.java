@@ -4,15 +4,17 @@ import android.os.Bundle;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
  * Base fragment that can execute tasks and requests
  */
-public abstract class BaseExecutorFragment extends BaseFragment implements AggregationTaskExecutor {
+public abstract class BaseExecutorFragment<TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends BaseFragment
+        implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
 
-    private TaskExecutorHelper taskExecutorHelper;
+    private TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -20,7 +22,7 @@ public abstract class BaseExecutorFragment extends BaseFragment implements Aggre
         taskExecutorHelper = createTaskExecutorHelper();
     }
 
-    protected abstract TaskExecutorHelper createTaskExecutorHelper();
+    protected abstract TaskExecutorHelper<TRequestAndTaskExecutor> createTaskExecutorHelper();
 
     @Override
     public void onResume() {
@@ -29,7 +31,7 @@ public abstract class BaseExecutorFragment extends BaseFragment implements Aggre
     }
 
     @Override
-    public void executeAggregationTask(AggregationTask aggregationTask) {
+    public void executeAggregationTask(AggregationTask<TRequestAndTaskExecutor> aggregationTask) {
         taskExecutorHelper.executeAggregationTask(aggregationTask);
     }
 

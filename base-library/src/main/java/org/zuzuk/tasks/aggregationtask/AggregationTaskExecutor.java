@@ -1,7 +1,8 @@
 package org.zuzuk.tasks.aggregationtask;
 
-public interface AggregationTaskExecutor {
+public interface AggregationTaskExecutor<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
 
     /* Executes aggregation task */
-    public void executeAggregationTask(AggregationTask aggregationTask);
+    public void executeAggregationTask(AggregationTask<TRequestAndTaskExecutor> aggregationTask);
+
 }
