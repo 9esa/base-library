@@ -6,10 +6,11 @@ import org.zuzuk.tasks.base.Task;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Aggregation task over aggregation. Enjoy!
  */
-public class WrappedAggregationTask implements AggregationTask {
-    private final AggregationTask aggregationTaskToWrap;
+public class WrappedAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor> implements AggregationTask<TRequestAndTaskExecutor> {
 
-    public WrappedAggregationTask(AggregationTask aggregationTaskToWrap) {
+    private final AggregationTask<TRequestAndTaskExecutor> aggregationTaskToWrap;
+
+    public WrappedAggregationTask(AggregationTask<TRequestAndTaskExecutor> aggregationTaskToWrap) {
         this.aggregationTaskToWrap = aggregationTaskToWrap;
     }
 
@@ -24,8 +25,8 @@ public class WrappedAggregationTask implements AggregationTask {
     }
 
     @Override
-    public void load(AggregationTaskStageState currentTaskStageState) {
-        aggregationTaskToWrap.load(currentTaskStageState);
+    public void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+        aggregationTaskToWrap.load(executor, currentTaskStageState);
     }
 
     @Override
@@ -47,4 +48,5 @@ public class WrappedAggregationTask implements AggregationTask {
     public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
         aggregationTaskToWrap.processTask(task, currentTaskStageState);
     }
+
 }

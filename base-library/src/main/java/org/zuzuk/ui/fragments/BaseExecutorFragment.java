@@ -1,25 +1,27 @@
 package org.zuzuk.ui.fragments;
 
-import com.octo.android.robospice.SpiceManager;
-import com.octo.android.robospice.request.listener.RequestListener;
+import android.os.Bundle;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
-import org.zuzuk.tasks.aggregationtask.AggregationTaskListener;
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
-import org.zuzuk.tasks.base.Task;
-import org.zuzuk.tasks.base.TaskExecutor;
-import org.zuzuk.tasks.local.LocalTask;
-import org.zuzuk.tasks.remote.base.RemoteRequest;
-import org.zuzuk.tasks.remote.base.RequestExecutor;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
  * Base fragment that can execute tasks and requests
  */
-public class BaseExecutorFragment extends BaseFragment
-        implements TaskExecutor, RequestExecutor, AggregationTaskExecutor {
-    private TaskExecutorHelper taskExecutorHelper = new TaskExecutorHelper();
+public abstract class BaseExecutorFragment<TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends BaseFragment implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
+
+    private TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        taskExecutorHelper = createTaskExecutorHelper();
+    }
+
+    protected abstract TaskExecutorHelper<TRequestAndTaskExecutor> createTaskExecutorHelper();
 
     @Override
     public void onResume() {
@@ -28,55 +30,20 @@ public class BaseExecutorFragment extends BaseFragment
     }
 
     @Override
-    public void executeAggregationTask(AggregationTask aggregationTask) {
+    public void executeAggregationTask(AggregationTask<TRequestAndTaskExecutor> aggregationTask) {
         taskExecutorHelper.executeAggregationTask(aggregationTask);
-    }
-
-    @Override
-    public SpiceManager getRemoteSpiceManager() {
-        return taskExecutorHelper.getRemoteSpiceManager();
-    }
-
-    @Override
-    public SpiceManager getLocalSpiceManager() {
-        return taskExecutorHelper.getLocalSpiceManager();
-    }
-
-    @Override
-    public <T> void executeRequest(RemoteRequest<T> request,
-                                   RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequest(request, requestListener);
-    }
-
-    @Override
-    public <T> void executeRealLoadingRequest(RemoteRequest<T> request,
-                                              RequestListener<T> requestListener,
-                                              AggregationTaskListener taskListener) {
-        taskExecutorHelper.executeRealLoadingRequest(request, requestListener, taskListener);
-    }
-
-    @Override
-    public void executeTask(LocalTask task) {
-        taskExecutorHelper.executeTask(task);
-    }
-
-    @Override
-    public <T> void executeTask(Task<T> task,
-                                RequestListener<T> requestListener) {
-        taskExecutorHelper.executeTask(task, requestListener);
-    }
-
-    @Override
-    public <T> void executeRealLoadingTask(Task<T> task,
-                                           RequestListener<T> requestListener,
-                                           AggregationTaskListener taskListener) {
-        taskExecutorHelper.executeRealLoadingTask(task, requestListener, taskListener);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        taskExecutorHelper = null;
     }
 
 }

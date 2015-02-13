@@ -3,6 +3,8 @@ package org.zuzuk.tasks.aggregationtask;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.tasks.base.Task;
+import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.utils.Lc;
 
 import java.util.ArrayList;
@@ -12,10 +14,10 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Class that contains wrapped requests listeners and controls task state
  */
-class AggregationTaskController {
-    private final TaskExecutorHelper taskExecutorHelper;
+class AggregationTaskController<TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
+    private final TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
     // task that is controlling by this object
-    final AggregationTask task;
+    final AggregationTask<TRequestAndTaskExecutor> task;
     // listeners that is wrapped around passed into TaskExecutorHelper listener
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
@@ -25,8 +27,8 @@ class AggregationTaskController {
         return wrappedRequestListeners.isEmpty();
     }
 
-    AggregationTaskController(TaskExecutorHelper taskExecutorHelper,
-                              AggregationTask task) {
+    AggregationTaskController(TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper,
+                              AggregationTask<TRequestAndTaskExecutor> task) {
         this.taskExecutorHelper = taskExecutorHelper;
         this.task = task;
     }
@@ -72,13 +74,13 @@ class AggregationTaskController {
                         stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
                         task.onLoadingStarted(stageState);
                         stageState.notifyListenerAboutLoadingStart();
-                        taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
+                        loadAggregationTask();
                         break;
                     case LOADING_LOCALLY:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
                         task.onLoadingStarted(stageState);
                         stageState.notifyListenerAboutLoadingStart();
-                        taskExecutorHelper.loadAggregationTask(AggregationTaskController.this);
+                        loadAggregationTask();
                         break;
                 }
             }
@@ -93,4 +95,24 @@ class AggregationTaskController {
             Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + stageState.getTaskStage());
         }
     };
+
+    private void loadAggregationTask() {
+        //   startWrappingRequestsAsAggregation(aggregationTaskController);
+        TRequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
+        requestAndTaskExecutor.setAggregationTaskController(this);
+        task.load(requestAndTaskExecutor, stageState);
+        //     stopWrapRequestsAsAggregation();
+        checkIfTaskFinished();
+    }
+
+    <T> void executeRequest(RemoteRequest<T> request,
+                                   RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequestInternal(request, requestListener, this);
+    }
+
+    <T> void executeTask(Task<T> task,
+                                RequestListener<T> requestListener) {
+        taskExecutorHelper.executeTaskInternal(task, requestListener, false, this);
+    }
+
 }

@@ -2,17 +2,21 @@ package org.zuzuk.tasks.aggregationtask;
 
 import org.zuzuk.tasks.base.Task;
 
+import java.util.List;
+
 /**
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Simple loading task that executes only REAL_LOADING stage
  */
-public abstract class SimpleAggregationTask implements AggregationTask {
+public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor> implements AggregationTask<TRequestAndTaskExecutor> {
 
-    public abstract void onStarted(AggregationTaskStageState currentTaskStageState);
+    public abstract void onLoadingStarted();
 
-    protected abstract void realLoad(AggregationTaskStageState currentTaskStageState);
+    protected abstract void load(TRequestAndTaskExecutor executor);
 
-    public abstract void onFinished(AggregationTaskStageState currentTaskStageState);
+    public abstract void onLoaded();
+
+    public abstract void onFailed(List<Exception> exceptions);
 
     @Override
     public boolean isLoadingNeeded(AggregationTaskStageState currentTaskStageState) {
@@ -25,29 +29,33 @@ public abstract class SimpleAggregationTask implements AggregationTask {
     }
 
     @Override
-    public void load(AggregationTaskStageState currentTaskStageState) {
+    public void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
-            realLoad(currentTaskStageState);
+            load(executor);
         }
     }
 
     @Override
     public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
-            onStarted(currentTaskStageState);
+            onLoadingStarted();
         }
     }
 
     @Override
     public void onLoaded(AggregationTaskStageState currentTaskStageState) {
-        onFinished(currentTaskStageState);
+        onLoaded();
     }
 
     @Override
     public void onFailed(AggregationTaskStageState currentTaskStageState) {
+        if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
+            onFailed(currentTaskStageState.getExceptions());
+        }
     }
 
     @Override
     public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
     }
+
 }

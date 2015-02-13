@@ -8,12 +8,10 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.providers.base.PagingProvider;
-import org.zuzuk.tasks.aggregationtask.AggregationPagingTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
-import org.zuzuk.tasks.aggregationtask.AggregationTaskStageListener;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
-import org.zuzuk.tasks.aggregationtask.SimpleAggregationTask;
+import org.zuzuk.tasks.aggregationtask.OnlyRealLoadingAggregationTask;
 import org.zuzuk.tasks.base.TaskExecutor;
 import org.zuzuk.tasks.local.IteratorInitializationRequest;
 import org.zuzuk.tasks.local.IteratorRequest;
@@ -72,7 +70,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     }
 
     private void updateIterator(final Integer startPosition, AggregationTaskStageState stageState) {
-        AggregationTask aggregationTask = new SimpleAggregationTask() {
+        AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
             @Override
             public void onStarted(AggregationTaskStageState currentTaskStageState) {
             }
@@ -120,7 +118,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     @Override
     protected void requestPage(final int index, AggregationTaskStageState stageState) {
         if (getRequestingPages().isEmpty()) {
-            AggregationTask aggregationTask = new SimpleAggregationTask() {
+            AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
                 @Override
                 public void onStarted(AggregationTaskStageState currentTaskStageState) {
                 }
