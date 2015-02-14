@@ -22,6 +22,7 @@ class AggregationTaskController {
     // listeners that is wrapped around passed into TaskExecutorHelper listener
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
+    private boolean isWrappingTasks = false;
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -99,8 +100,30 @@ class AggregationTaskController {
     private void loadAggregationTask() {
         RequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
         requestAndTaskExecutor.setAggregationTaskController(this);
+        startWrappingRequestsAsAggregation();
         task.load(requestAndTaskExecutor, stageState);
+        stopWrapRequestsAsAggregation();
         checkIfTaskFinished();
+    }
+
+    void startWrappingRequestsAsAggregation() {
+        if (isWrappingTasks) {
+            Lc.fatalException(new IllegalStateException("You cannot start another task while current task is already set. Let current task end before start new task. Use post() method as simpliest solution"));
+        }
+        isWrappingTasks = true;
+    }
+
+    void stopWrapRequestsAsAggregation() {
+        isWrappingTasks = false;
+    }
+
+    boolean checkIfTaskExecutedAsPartOfAggregationTask() {
+        if (isWrappingTasks) {
+            Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
+                    "or in any RequestListener callback"));
+            return false;
+        }
+        return true;
     }
 
     <T> void executeRequest(RemoteRequest<T> request,

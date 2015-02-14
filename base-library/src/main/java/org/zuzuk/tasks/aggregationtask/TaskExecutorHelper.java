@@ -72,7 +72,7 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
     <T> void executeRequestInternal(final RemoteRequest<T> request,
                                             final RequestListener<T> requestListener,
                                             final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)) {
+        if (!checkManagersState(request)|| !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask()) {
             return;
         }
 
@@ -95,7 +95,8 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
     <T> void executeTaskInternal(final Task<T> task,
                                  final RequestListener<T> requestListener,
                                  final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(task)) {
+        if (!checkManagersState(task)
+                || (!doNotWrap && !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 

@@ -15,8 +15,8 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
     private final AggregationTaskController parentTaskController;
 
     AggregationTaskRequestListener(TaskExecutorHelper taskExecutorHelper,
-                                           AggregationTaskController parentTaskController,
-                                           RequestListener<T> requestListener) {
+                                   AggregationTaskController parentTaskController,
+                                   RequestListener<T> requestListener) {
         this.taskExecutorHelper = taskExecutorHelper;
         this.parentTaskController = parentTaskController;
         this.requestListener = requestListener;
@@ -28,9 +28,11 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
             return;
         }
 
+        parentTaskController.startWrappingRequestsAsAggregation();
         if (requestListener != null) {
             requestListener.onRequestSuccess(response);
         }
+        parentTaskController.stopWrapRequestsAsAggregation();
 
         parentTaskController.unregisterListener(this);
     }
@@ -41,6 +43,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
             return;
         }
 
+        parentTaskController.startWrappingRequestsAsAggregation();
         if (requestListener != null) {
             int countOfListeners = parentTaskController.wrappedRequestListeners.size();
             requestListener.onRequestFailure(spiceException);
@@ -51,6 +54,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
         } else {
             parentTaskController.stageState.addFail(spiceException);
         }
+        parentTaskController.stopWrapRequestsAsAggregation();
 
         parentTaskController.unregisterListener(this);
     }
