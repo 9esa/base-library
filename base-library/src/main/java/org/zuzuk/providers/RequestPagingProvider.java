@@ -67,48 +67,42 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void requestPage(final int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    protected void requestPage(final int index) {
         final AggregationPagingTask aggregationTask = createTask(index);
+        aggregationTaskExecutor.executeAggregationTask(new WrappedAggregationTask(aggregationTask) {
+            @Override
+            public void load(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+                getRequestingPages().add(index);
+                super.load(executor, currentTaskStageState);
+                currentTaskStageState.addListener(new AggregationTaskStageListener() {
+                    @Override
+                    public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
+                    }
 
-        if (executor == null) {
-            aggregationTaskExecutor.executeAggregationTask(new WrappedAggregationTask(aggregationTask) {
-                @Override
-                public void load(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
-                    getRequestingPages().add(index);
-                    super.load(executor, currentTaskStageState);
-                }
+                    @Override
+                    public void onLoaded(AggregationTaskStageState currentTaskStageState) {
+                        processOnPageLoaded(aggregationTask, index);
+                    }
 
-                @Override
-                public void onLoaded(AggregationTaskStageState currentTaskStageState) {
-                    super.onLoaded(currentTaskStageState);
-                    processOnPageLoaded(aggregationTask, index);
-                }
+                    @Override
+                    public void onFailed(AggregationTaskStageState currentTaskStageState) {
+                        onPageLoadingFailed(index, currentTaskStageState.getExceptions());
+                    }
+                });
+            }
 
-                @Override
-                public void onFailed(AggregationTaskStageState currentTaskStageState) {
-                    super.onFailed(currentTaskStageState);
-                    onPageLoadingFailed(index, currentTaskStageState.getExceptions());
-                }
-            });
-        } else {
-            getRequestingPages().add(index);
-            aggregationTask.load(executor, stageState);
-            stageState.addListener(new AggregationTaskStageListener() {
-                @Override
-                public void onLoadingStarted(AggregationTaskStageState currentTaskStageState) {
-                }
+            @Override
+            public void onLoaded(AggregationTaskStageState currentTaskStageState) {
+                super.onLoaded(currentTaskStageState);
+                processOnPageLoaded(aggregationTask, index);
+            }
 
-                @Override
-                public void onLoaded(AggregationTaskStageState currentTaskStageState) {
-                    processOnPageLoaded(aggregationTask, index);
-                }
-
-                @Override
-                public void onFailed(AggregationTaskStageState currentTaskStageState) {
-                    onPageLoadingFailed(index, currentTaskStageState.getExceptions());
-                }
-            });
-        }
+            @Override
+            public void onFailed(AggregationTaskStageState currentTaskStageState) {
+                super.onFailed(currentTaskStageState);
+                onPageLoadingFailed(index, currentTaskStageState.getExceptions());
+            }
+        });
     }
 
     @Override

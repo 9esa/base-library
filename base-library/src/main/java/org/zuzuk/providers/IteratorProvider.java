@@ -8,13 +8,12 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.providers.base.PagingProvider;
-import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
-import org.zuzuk.tasks.realloading.OnlyRealLoadingAggregationTask;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.local.IteratorInitializationRequest;
 import org.zuzuk.tasks.local.IteratorRequest;
+import org.zuzuk.tasks.realloading.OnlyRealLoadingAggregationTask;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,23 +55,18 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     }
 
     @Override
-    protected void initializeInternal(int startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        updateIterator(startPosition, executor, stageState);
+    protected void initializeInternal(int startPosition) {
+        updateIterator(startPosition);
     }
 
     /* Manually updating provider (if caller know that database have changed) */
     public void updateIterator() {
-        updateIterator(null, null, null);
-    }
-
-    /* Manually updating provider (if caller know that database have changed) */
-    public void updateIterator(RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        updateIterator(null, executor, stageState);
+        updateIterator(null);
     }
 
     @SuppressWarnings("unchecked")
-    private void updateIterator(final Integer startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask(null) {
+    private void updateIterator(final Integer startPosition) {
+        aggregationTaskExecutor.executeAggregationTask(new OnlyRealLoadingAggregationTask(null) {
             @Override
             protected void realLoad(final RequestAndTaskExecutor executor, final AggregationTaskStageState currentTaskStageState) {
                 executor.executeTask(queryBuilder != null ?
@@ -88,7 +82,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                 getRequestingPages().clear();
                                 getPages().clear();
                                 if (startPosition != null) {
-                                    IteratorProvider.super.initializeInternal(startPosition, executor, currentTaskStageState);
+                                    IteratorProvider.super.initializeInternal(startPosition);
                                 } else {
                                     onDataSetChanged();
                                 }
@@ -100,20 +94,19 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                             }
                         });
             }
-        };
 
-        if (executor == null) {
-            aggregationTaskExecutor.executeAggregationTask(aggregationTask);
-        } else {
-            aggregationTask.load(executor, stageState);
-        }
+            @Override
+            public boolean canBeWrapped() {
+                return true;
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void requestPage(final int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    protected void requestPage(final int index) {
         if (getRequestingPages().isEmpty()) {
-            AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask(null) {
+            aggregationTaskExecutor.executeAggregationTask(new OnlyRealLoadingAggregationTask(null) {
                 @Override
                 protected void realLoad(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                     //TODO: is it ok?
@@ -132,15 +125,12 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                 }
                             });
                 }
-            };
 
-            if (stageState == null) {
-                aggregationTaskExecutor.executeAggregationTask(aggregationTask);
-            } else {
-                //TODO: is it ok?
-                getRequestingPages().add(index);
-                aggregationTask.load(executor, stageState);
-            }
+                @Override
+                public boolean canBeWrapped() {
+                    return true;
+                }
+            });
         } else {
             waitingForRequestPages.push(index);
         }
@@ -151,7 +141,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
         super.onPageLoaded(pageIndex, items);
         currentPosition = pageIndex * DEFAULT_ITEMS_ON_PAGE + items.size();
         if (!waitingForRequestPages.isEmpty()) {
-            requestPage(waitingForRequestPages.pop(), null, null);
+            requestPage(waitingForRequestPages.pop());
         }
     }
 

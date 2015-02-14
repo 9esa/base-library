@@ -23,21 +23,23 @@ public class BaseTaskWrapper extends OnlyRealLoadingAggregationTask {
     @SuppressWarnings("unchecked")
     @Override
     protected void realLoad(final RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
-        executor.executeTask(task, new RequestListener() {
-            @Override
-            public void onRequestFailure(SpiceException exception) {
-                if (chainedRequestListener != null) {
-                    chainedRequestListener.onRequestFailure(exception, executor);
+        if (task != null) {
+            executor.executeTask(task, new RequestListener() {
+                @Override
+                public void onRequestFailure(SpiceException exception) {
+                    if (chainedRequestListener != null) {
+                        chainedRequestListener.onRequestFailure(exception, executor);
+                    }
                 }
-            }
 
-            @Override
-            public void onRequestSuccess(Object result) {
-                if (chainedRequestListener != null) {
-                    chainedRequestListener.onRequestSuccess(result, executor);
+                @Override
+                public void onRequestSuccess(Object result) {
+                    if (chainedRequestListener != null) {
+                        chainedRequestListener.onRequestSuccess(result, executor);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 }

@@ -23,21 +23,23 @@ public class BaseRequestWrapper extends OnlyRealLoadingAggregationTask {
     @SuppressWarnings("unchecked")
     @Override
     protected void realLoad(final RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
-        executor.executeRequest(request, new RequestListener() {
-            @Override
-            public void onRequestFailure(SpiceException exception) {
-                if (chainedRequestListener != null) {
-                    chainedRequestListener.onRequestFailure(exception, executor);
+        if (request != null) {
+            executor.executeRequest(request, new RequestListener() {
+                @Override
+                public void onRequestFailure(SpiceException exception) {
+                    if (chainedRequestListener != null) {
+                        chainedRequestListener.onRequestFailure(exception, executor);
+                    }
                 }
-            }
 
-            @Override
-            public void onRequestSuccess(Object result) {
-                if (chainedRequestListener != null) {
-                    chainedRequestListener.onRequestSuccess(result, executor);
+                @Override
+                public void onRequestSuccess(Object result) {
+                    if (chainedRequestListener != null) {
+                        chainedRequestListener.onRequestSuccess(result, executor);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 }

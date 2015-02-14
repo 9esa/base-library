@@ -2,9 +2,6 @@ package org.zuzuk.providers.base;
 
 import android.util.SparseArray;
 
-import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
-import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -49,13 +46,13 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         ArrayList<TItem> pageItems = pages.get(pageIndex);
 
         if (pageItems == null && !requestingPages.contains(pageIndex)) {
-            requestPage(pageIndex, null, null);
+            requestPage(pageIndex);
         } else if (pageIndex > 0 && itemIndex < DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex - 1) == null && !requestingPages.contains(pageIndex - 1)) {
-            requestPage(pageIndex - 1, null, null);
+            requestPage(pageIndex - 1);
         } else if (totalCount == null && itemIndex > DEFAULT_ITEMS_ON_PAGE / 2
                 && pages.get(pageIndex + 1) == null && !requestingPages.contains(pageIndex + 1)) {
-            requestPage(pageIndex + 1, null, null);
+            requestPage(pageIndex + 1);
         }
 
         return pageItems != null ? pageItems.get(itemIndex) : null;
@@ -96,15 +93,15 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
     }
 
     @Override
-    protected void initializeInternal(int startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE, executor, stageState);
+    protected void initializeInternal(int startPosition) {
+        requestPage(startPosition / DEFAULT_ITEMS_ON_PAGE);
         if (startPosition >= DEFAULT_ITEMS_ON_PAGE) {
-            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1, executor, stageState);
+            requestPage((startPosition / DEFAULT_ITEMS_ON_PAGE) - 1);
         }
     }
 
     /* Logic of page requesting */
-    protected abstract void requestPage(int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState);
+    protected abstract void requestPage(int index);
 
     /* Raises when page loaded. Use it in child classes */
     protected void onPageLoaded(int pageIndex, List<TItem> items) {

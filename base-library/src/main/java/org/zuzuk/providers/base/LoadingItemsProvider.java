@@ -1,15 +1,12 @@
 package org.zuzuk.providers.base;
 
-import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
-import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
-
 import java.util.List;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that needs initialization before it is available to provide items
  */
-public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> implements InitializationListener {
+public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> {
 
     private boolean isInitialized = false;
     private boolean isInitializing = false;
@@ -25,28 +22,22 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> i
         return isInitialized;
     }
 
-    /* Starts provider initialization */
-    public void initialize(int initializationPosition) {
-        initialize(initializationPosition, null, null);
-    }
-
     /* Starts provider initialization at specific position */
-    public void initialize(int initializationPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
+    public void initialize(int initializationPosition) {
         if (isInitialized) {
             reset();
         }
 
         if (!isInitializing) {
             isInitializing = true;
-            initializeInternal(initializationPosition, executor, stageState);
+            initializeInternal(initializationPosition);
         }
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initializeInternal(int initializationPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState);
+    protected abstract void initializeInternal(int initializationPosition);
 
     /* Raises when provider initialized. Use it in child classes */
-    @Override
     public void onInitialized() {
         isInitialized = true;
         isInitializing = false;
@@ -54,7 +45,6 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> i
     }
 
     /* Raises when provider initialization failed. Use it in child classes */
-    @Override
     public void onInitializationFailed(List<Exception> exceptions) {
         isInitializing = false;
     }
