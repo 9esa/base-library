@@ -11,7 +11,7 @@ import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
  */
 public abstract class BaseExecutorService extends BaseService implements AggregationTaskExecutor {
 
-    private TaskExecutorHelper taskExecutorHelper;
+    protected TaskExecutorHelper taskExecutorHelper;
 
     @Override
     public void onCreate() {

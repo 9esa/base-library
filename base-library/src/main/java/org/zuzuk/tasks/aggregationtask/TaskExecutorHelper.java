@@ -191,4 +191,12 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
         }
     }
 
+    public SpiceManager getLocalSpiceManager() {
+        return localSpiceManager;
+    }
+
+    public SpiceManager getRemoteSpiceManager() {
+        return remoteSpiceManager;
+    }
+
 }

@@ -5,25 +5,25 @@ import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
-import org.zuzuk.tasks.base.Task;
+import org.zuzuk.tasks.remote.base.RemoteRequest;
 
-public class TaskWrapper extends OnlyRealLoadingAggregationTask {
+public class BaseRequestWrapper extends OnlyRealLoadingAggregationTask {
 
-    private final Task task;
+    private final RemoteRequest request;
     private final ChainedRequestListener chainedRequestListener;
 
-    public <TResult> TaskWrapper(Task<TResult> task,
-                                 ChainedRequestListener<TResult> chainedRequestListener,
-                                 RealLoadingAggregationTaskListener realLoadingAggregationTaskListener) {
+    public <TResult> BaseRequestWrapper(RemoteRequest<TResult> request,
+                                        ChainedRequestListener<TResult> chainedRequestListener,
+                                        RealLoadingAggregationTaskListener realLoadingAggregationTaskListener) {
         super(realLoadingAggregationTaskListener);
-        this.task = task;
+        this.request = request;
         this.chainedRequestListener = chainedRequestListener;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void realLoad(final RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
-        executor.executeTask(task, new RequestListener() {
+        executor.executeRequest(request, new RequestListener() {
             @Override
             public void onRequestFailure(SpiceException exception) {
                 if (chainedRequestListener != null) {

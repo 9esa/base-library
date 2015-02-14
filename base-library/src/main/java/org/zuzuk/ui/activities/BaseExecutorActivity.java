@@ -13,7 +13,7 @@ import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
  */
 public abstract class BaseExecutorActivity extends BaseActivity implements AggregationTaskExecutor {
 
-    private TaskExecutorHelper taskExecutorHelper;
+    protected TaskExecutorHelper taskExecutorHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
