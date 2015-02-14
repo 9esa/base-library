@@ -11,7 +11,7 @@ import java.io.Serializable;
  * Created by Vladimir Kozhevnikov on 12/23/14.
  * Adapter based on provider. All logic should be implemented inside the provider.
  */
-public abstract class ProviderRecyclerAdapter<TItem extends Serializable, TProvider extends ItemsProvider<TItem>, TViewHolder extends RecyclerView.ViewHolder>
+public abstract class ProviderRecyclerAdapter<TItem, TProvider extends ItemsProvider<TItem>, TViewHolder extends RecyclerView.ViewHolder>
         extends ItemsRecyclerAdapter<TItem, TViewHolder>
         implements DataSetChangedListener {
     private TProvider provider;
