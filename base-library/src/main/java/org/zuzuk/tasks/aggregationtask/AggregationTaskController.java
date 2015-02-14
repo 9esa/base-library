@@ -118,7 +118,7 @@ class AggregationTaskController {
     }
 
     boolean checkIfTaskExecutedAsPartOfAggregationTask() {
-        if (isWrappingTasks) {
+        if (!isWrappingTasks) {
             Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
                     "or in any RequestListener callback"));
             return false;
