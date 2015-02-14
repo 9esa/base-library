@@ -7,15 +7,14 @@ import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
 
-public class OneRequestOnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
-        extends OnlyRealLoadingAggregationTaskWithListener<TRequestAndTaskExecutor> {
+public class RequestWrapper extends OnlyRealLoadingAggregationTask {
 
     private final RemoteRequest request;
     private final ChainedRequestListener chainedRequestListener;
 
-    public <TResult> OneRequestOnlyRealLoadingAggregationTask(RemoteRequest<TResult> request,
-                                                              ChainedRequestListener<TResult, TRequestAndTaskExecutor> chainedRequestListener,
-                                                              RealLoadingAggregationTaskListener realLoadingAggregationTaskListener) {
+    public <TResult> RequestWrapper(RemoteRequest<TResult> request,
+                                    ChainedRequestListener<TResult> chainedRequestListener,
+                                    RealLoadingAggregationTaskListener realLoadingAggregationTaskListener) {
         super(realLoadingAggregationTaskListener);
         this.request = request;
         this.chainedRequestListener = chainedRequestListener;
@@ -23,7 +22,7 @@ public class OneRequestOnlyRealLoadingAggregationTask<TRequestAndTaskExecutor ex
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void realLoad(final TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+    protected void realLoad(final RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         executor.executeRequest(request, new RequestListener() {
             @Override
             public void onRequestFailure(SpiceException exception) {

@@ -11,26 +11,12 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.utils.StorageUtils;
-import com.octo.android.robospice.SpiceManager;
-
-import org.zuzuk.tasks.local.LocalSpiceService;
-import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
 
 /**
  * Created by Gavriil Sitnikov on 11/10/2014.
  * Helper that holds default instances creation logic
  */
 public class InitializationHelper {
-
-    /* Standard spice manager for local tasks */
-    public static SpiceManager createDefaultLocalSpiceManager() {
-        return new SpiceManager(LocalSpiceService.class);
-    }
-
-    /* Standard spice manager for local tasks */
-    public static SpiceManager createDefaultJsonSpiceManager() {
-        return new SpiceManager(ORMLiteDatabaseCacheService.class);
-    }
 
     /* Standard DisplayImageOptions */
     public static DisplayImageOptions.Builder createDefaultDisplayImageOptions() {

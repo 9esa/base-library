@@ -72,7 +72,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
 
     @SuppressWarnings("unchecked")
     private void updateIterator(final Integer startPosition, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
-        AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
+        AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask(null) {
             @Override
             protected void realLoad(final RequestAndTaskExecutor executor, final AggregationTaskStageState currentTaskStageState) {
                 executor.executeTask(queryBuilder != null ?
@@ -113,7 +113,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     @Override
     protected void requestPage(final int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         if (getRequestingPages().isEmpty()) {
-            AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask() {
+            AggregationTask aggregationTask = new OnlyRealLoadingAggregationTask(null) {
                 @Override
                 protected void realLoad(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                     //TODO: is it ok?

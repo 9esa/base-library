@@ -4,10 +4,10 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 
-public interface ChainedRequestListener<TResult, TRequestAndTaskExecutor extends RequestAndTaskExecutor> {
+public interface ChainedRequestListener<TResult> {
 
-    public void onRequestSuccess(TResult result, TRequestAndTaskExecutor executor);
+    public void onRequestSuccess(TResult result, RequestAndTaskExecutor executor);
 
-    public void onRequestFailure(SpiceException spiceException, TRequestAndTaskExecutor executor);
+    public void onRequestFailure(SpiceException spiceException, RequestAndTaskExecutor executor);
 
 }

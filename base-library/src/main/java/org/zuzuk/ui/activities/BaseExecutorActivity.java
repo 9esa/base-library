@@ -4,25 +4,22 @@ import android.os.Bundle;
 
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
-import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
+import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
  * Base activity that can execute tasks and requests
  */
-public abstract class BaseExecutorActivity<TRequestAndTaskExecutor extends RequestAndTaskExecutor> extends BaseActivity
-        implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
+public abstract class BaseExecutorActivity extends BaseActivity implements AggregationTaskExecutor {
 
-    private TaskExecutorHelper<TRequestAndTaskExecutor> taskExecutorHelper;
+    private TaskExecutorHelper taskExecutorHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        taskExecutorHelper = createTaskExecutorHelper();
+        taskExecutorHelper = ((TaskExecutorHelperCreator) getApplicationContext()).createTaskExecutorHelper();
     }
-
-    protected abstract TaskExecutorHelper<TRequestAndTaskExecutor> createTaskExecutorHelper();
 
     @Override
     protected void onResume() {
@@ -31,7 +28,7 @@ public abstract class BaseExecutorActivity<TRequestAndTaskExecutor extends Reque
     }
 
     @Override
-    public void executeAggregationTask(AggregationTask<TRequestAndTaskExecutor> aggregationTask) {
+    public void executeAggregationTask(AggregationTask aggregationTask) {
         taskExecutorHelper.executeAggregationTask(aggregationTask);
     }
 

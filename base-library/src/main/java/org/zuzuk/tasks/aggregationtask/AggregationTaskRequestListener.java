@@ -28,11 +28,11 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
             return;
         }
 
-        parentTaskController.startWrappingRequestsAsAggregation();
+        taskExecutorHelper.startWrappingRequestsAsAggregation(parentTaskController);
         if (requestListener != null) {
             requestListener.onRequestSuccess(response);
         }
-        parentTaskController.stopWrapRequestsAsAggregation();
+        taskExecutorHelper.stopWrapRequestsAsAggregation(parentTaskController);
 
         parentTaskController.unregisterListener(this);
     }
@@ -43,7 +43,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
             return;
         }
 
-        parentTaskController.startWrappingRequestsAsAggregation();
+        taskExecutorHelper.startWrappingRequestsAsAggregation(parentTaskController);
         if (requestListener != null) {
             int countOfListeners = parentTaskController.wrappedRequestListeners.size();
             requestListener.onRequestFailure(spiceException);
@@ -54,7 +54,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
         } else {
             parentTaskController.stageState.addFail(spiceException);
         }
-        parentTaskController.stopWrapRequestsAsAggregation();
+        taskExecutorHelper.stopWrapRequestsAsAggregation(parentTaskController);
 
         parentTaskController.unregisterListener(this);
     }

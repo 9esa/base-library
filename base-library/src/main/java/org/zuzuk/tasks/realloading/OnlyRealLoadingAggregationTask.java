@@ -10,19 +10,36 @@ import org.zuzuk.tasks.base.Task;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Simple loading task that executes only REAL_LOADING stage
  */
-public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
-        implements AggregationTask<TRequestAndTaskExecutor>, RealLoadingAggregationTaskListener {
+public abstract class OnlyRealLoadingAggregationTask implements AggregationTask, RealLoadingAggregationTaskListener {
 
+    private RealLoadingAggregationTaskListener realLoadingAggregationTaskListener;
+
+    public OnlyRealLoadingAggregationTask(RealLoadingAggregationTaskListener realLoadingAggregationTaskListener) {
+        this.realLoadingAggregationTaskListener = realLoadingAggregationTaskListener;
+    }
+
+    @Override
     public void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealLoadingStarted(currentTaskStageState);
+        }
     }
 
-    protected abstract void realLoad(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
-
+    @Override
     public void onRealLoaded(AggregationTaskStageState currentTaskStageState) {
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealLoaded(currentTaskStageState);
+        }
     }
 
+    @Override
     public void onRealFailed(AggregationTaskStageState currentTaskStageState) {
+        if (realLoadingAggregationTaskListener != null) {
+            realLoadingAggregationTaskListener.onRealFailed(currentTaskStageState);
+        }
     }
+
+    protected abstract void realLoad(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState);
 
     @Override
     public boolean isLoadingNeeded(AggregationTaskStageState currentTaskStageState) {
@@ -35,7 +52,7 @@ public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor ext
     }
 
     @Override
-    public void load(TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
+    public void load(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
             realLoad(executor, currentTaskStageState);
         }
@@ -62,6 +79,11 @@ public abstract class OnlyRealLoadingAggregationTask<TRequestAndTaskExecutor ext
 
     @Override
     public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
+    }
+
+    @Override
+    public boolean canBeWrapped() {
+        return false;
     }
 
 }

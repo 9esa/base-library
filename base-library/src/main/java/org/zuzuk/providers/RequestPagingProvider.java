@@ -21,7 +21,7 @@ import java.util.List;
 public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
 
     private AggregationTaskExecutor aggregationTaskExecutor;
-    private PagingTaskCreator requestCreator;
+    private PagingTaskCreator<TItem> requestCreator;
     private HashMap<Integer, List<TItem>> items = new HashMap<>();
     private Long initializationTime;
 
@@ -44,8 +44,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         return isInitialized() && !isDataExpired(spiceManager);
     }
 
-    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor>
-    RequestPagingProvider(AggregationTaskExecutor aggregationTaskExecutor, PagingTaskCreator<TItem, TRequestAndTaskExecutor> requestCreator) {
+    public RequestPagingProvider(AggregationTaskExecutor aggregationTaskExecutor, PagingTaskCreator<TItem> requestCreator) {
         this.aggregationTaskExecutor = aggregationTaskExecutor;
         this.requestCreator = requestCreator;
     }

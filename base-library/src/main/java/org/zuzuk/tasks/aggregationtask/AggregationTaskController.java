@@ -3,8 +3,6 @@ package org.zuzuk.tasks.aggregationtask;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
-import org.zuzuk.tasks.base.Task;
-import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.utils.Lc;
 
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ class AggregationTaskController {
     }
 
     /* Changing state of task from PRE_LOADING to LOADED */
-    @SuppressWarnings("unchecked")
     void nextStep() {
         taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true, this);
     }
@@ -100,44 +97,10 @@ class AggregationTaskController {
 
     @SuppressWarnings("unchecked")
     private void loadAggregationTask() {
-        RequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
-        requestAndTaskExecutor.setAggregationTaskController(this);
-        startWrappingRequestsAsAggregation();
-        task.load(requestAndTaskExecutor, stageState);
-        stopWrapRequestsAsAggregation();
+        taskExecutorHelper.startWrappingRequestsAsAggregation(this);
+        task.load(taskExecutorHelper.createRequestAndTaskExecutor(), stageState);
+        taskExecutorHelper.stopWrapRequestsAsAggregation(this);
         checkIfTaskFinished();
-    }
-
-    void startWrappingRequestsAsAggregation() {
-        if (isWrappingTasks) {
-            Lc.fatalException(new IllegalStateException("You cannot start another task while current task is already set. Let current task end before start new task. Use post() method as simpliest solution"));
-        }
-        isWrappingTasks = true;
-    }
-
-    void stopWrapRequestsAsAggregation() {
-        isWrappingTasks = false;
-    }
-
-    boolean checkIfTaskExecutedAsPartOfAggregationTask() {
-        if (!isWrappingTasks) {
-            Lc.fatalException(new IllegalStateException("Any tasks ore requests should be in load() block of AggregationTask " +
-                    "or in any RequestListener callback"));
-            return false;
-        }
-        return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    <T> void executeRequest(RemoteRequest<T> request,
-                                   RequestListener<T> requestListener) {
-        taskExecutorHelper.executeRequestInternal(request, requestListener, this);
-    }
-
-    @SuppressWarnings("unchecked")
-    <T> void executeTask(Task<T> task,
-                                RequestListener<T> requestListener) {
-        taskExecutorHelper.executeTaskInternal(task, requestListener, false, this);
     }
 
 }

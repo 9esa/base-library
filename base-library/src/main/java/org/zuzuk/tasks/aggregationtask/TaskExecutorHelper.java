@@ -9,8 +9,9 @@ import com.octo.android.robospice.request.CachedSpiceRequest;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import org.zuzuk.tasks.base.Task;
+import org.zuzuk.tasks.local.LocalSpiceService;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
-import org.zuzuk.tasks.remote.base.SpiceManagerProvider;
+import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
 import org.zuzuk.ui.UIUtils;
 import org.zuzuk.utils.Lc;
 
@@ -18,11 +19,11 @@ import org.zuzuk.utils.Lc;
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
  */
-public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends RequestAndTaskExecutor>
-        implements AggregationTaskExecutor<TRequestAndTaskExecutor> {
+public class TaskExecutorHelper implements AggregationTaskExecutor {
 
     private final Handler postHandler = new Handler();
 
+    private AggregationTaskController currentTaskController;
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
 
@@ -33,18 +34,24 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
         return isPaused;
     }
 
-    protected abstract TRequestAndTaskExecutor createRequestAndTaskExecutor();
+    protected RequestAndTaskExecutor createRequestAndTaskExecutor() {
+        return new RequestAndTaskExecutor(this);
+    }
+
+    protected SpiceManager createLocalSpiceManager() {
+        return new SpiceManager(LocalSpiceService.class);
+    }
+
+    protected SpiceManager createRemoteSpiceManager() {
+        return new SpiceManager(ORMLiteDatabaseCacheService.class);
+    }
 
     /* Associated lifecycle method */
     public void onResume(Context context) {
         if (localSpiceManager == null || remoteSpiceManager == null) {
-            Context applicationContext = context.getApplicationContext();
-            if (applicationContext instanceof SpiceManagerProvider) {
-                localSpiceManager = ((SpiceManagerProvider) applicationContext).createLocalSpiceManager();
-                remoteSpiceManager = ((SpiceManagerProvider) applicationContext).createRemoteSpiceManager();
-            } else
-                throw new RuntimeException("To use TaskExecutorHelper you should pass SpiceManagerProvider into constructor or your Application class should implement SpiceManagerProvider");
-        }
+            localSpiceManager = createLocalSpiceManager();
+            remoteSpiceManager = createRemoteSpiceManager();
+         }
 
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
@@ -52,17 +59,21 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
     }
 
     @Override
-    public void executeAggregationTask(final AggregationTask<TRequestAndTaskExecutor> aggregationTask) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (isPaused) {
-                    return;
-                }
+    public void executeAggregationTask(final AggregationTask aggregationTask) {
+        if (currentTaskController != null && aggregationTask.canBeWrapped()) {
+            aggregationTask.load(createRequestAndTaskExecutor(), currentTaskController.stageState);
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (isPaused) {
+                        return;
+                    }
 
-                executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
-            }
-        });
+                    executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
+                }
+            });
+        }
     }
 
     private void executeAggregationTaskInternal(final AggregationTaskController taskController) {
@@ -72,7 +83,7 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
     <T> void executeRequestInternal(final RemoteRequest<T> request,
                                             final RequestListener<T> requestListener,
                                             final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)|| !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask()) {
+        if (!checkManagersState(request)|| !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController)) {
             return;
         }
 
@@ -92,11 +103,21 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
         });
     }
 
+    <T> void executeRequest(RemoteRequest<T> request,
+                            RequestListener<T> requestListener) {
+        executeRequestInternal(request, requestListener, currentTaskController);
+    }
+
+    <T> void executeTask(Task<T> task,
+                         RequestListener<T> requestListener) {
+        executeTaskInternal(task, requestListener, false, currentTaskController);
+    }
+
     <T> void executeTaskInternal(final Task<T> task,
                                  final RequestListener<T> requestListener,
                                  final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
         if (!checkManagersState(task)
-                || (!doNotWrap && !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask())) {
+                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController))) {
             return;
         }
 
@@ -132,6 +153,28 @@ public abstract class TaskExecutorHelper<TRequestAndTaskExecutor extends Request
             return false;
         }
         return true;
+    }
+
+    private boolean checkIfTaskExecutedAsPartOfAggregationTask(AggregationTaskController aggregationTaskController) {
+        if (aggregationTaskController == null) {
+            Lc.fatalException(new IllegalStateException("Any tasks or requests should be in load() block of AggregationTask or in any RequestListener callback"));
+            return false;
+        }
+        return true;
+    }
+
+    void startWrappingRequestsAsAggregation(AggregationTaskController aggregationTaskController) {
+        if (this.currentTaskController != null) {
+            Lc.fatalException(new IllegalStateException("startWrappingRequestsAsAggregation - strange"));
+        }
+        currentTaskController = aggregationTaskController;
+    }
+
+    void stopWrapRequestsAsAggregation(AggregationTaskController aggregationTaskController) {
+        if (this.currentTaskController != aggregationTaskController) {
+            Lc.fatalException(new IllegalStateException("stopWrapRequestsAsAggregation - strange"));
+        }
+        currentTaskController = null;
     }
 
     private <T> AggregationTaskRequestListener<T> wrapForAggregationTask(RequestListener<T> requestListener, AggregationTaskController aggregationTaskController) {

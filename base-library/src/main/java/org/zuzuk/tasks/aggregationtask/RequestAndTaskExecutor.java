@@ -8,15 +8,15 @@ import org.zuzuk.tasks.remote.base.RemoteRequest;
 
 public class RequestAndTaskExecutor {
 
-    private AggregationTaskController aggregationTaskController;
+    private TaskExecutorHelper taskExecutorHelper;
 
-    void setAggregationTaskController(AggregationTaskController aggregationTaskController) {
-        this.aggregationTaskController = aggregationTaskController;
+    public RequestAndTaskExecutor(TaskExecutorHelper taskExecutorHelper) {
+        this.taskExecutorHelper = taskExecutorHelper;
     }
 
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
-        aggregationTaskController.executeRequest(request, requestListener);
+        taskExecutorHelper.executeRequest(request, requestListener);
     }
 
     public void executeTask(LocalTask task) {
@@ -25,7 +25,12 @@ public class RequestAndTaskExecutor {
 
     public <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
-        aggregationTaskController.executeTask(task, requestListener);
+        taskExecutorHelper.executeTask(task, requestListener);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <TRequestAndTaskExecutor extends RequestAndTaskExecutor> TRequestAndTaskExecutor cast() {
+        return (TRequestAndTaskExecutor) this;
     }
 
 }
