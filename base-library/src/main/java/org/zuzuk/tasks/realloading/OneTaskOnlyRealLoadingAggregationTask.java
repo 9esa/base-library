@@ -21,6 +21,7 @@ public class OneTaskOnlyRealLoadingAggregationTask<TRequestAndTaskExecutor exten
         this.chainedRequestListener = chainedRequestListener;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void realLoad(final TRequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
         executor.executeTask(task, new RequestListener() {

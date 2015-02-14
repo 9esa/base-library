@@ -54,6 +54,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         return requestCreator.createPagingTask(index * DEFAULT_ITEMS_ON_PAGE, DEFAULT_ITEMS_ON_PAGE);
     }
 
+    @SuppressWarnings("unchecked")
     private void processOnPageLoaded(AggregationPagingTask aggregationTask, int index) {
         List<TItem> items = aggregationTask.getPageItems();
         if (items != null) {
@@ -65,6 +66,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void requestPage(final int index, RequestAndTaskExecutor executor, AggregationTaskStageState stageState) {
         final AggregationPagingTask aggregationTask = createTask(index);

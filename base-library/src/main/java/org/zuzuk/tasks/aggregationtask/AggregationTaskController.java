@@ -35,6 +35,7 @@ class AggregationTaskController {
     }
 
     /* Changing state of task from PRE_LOADING to LOADED */
+    @SuppressWarnings("unchecked")
     void nextStep() {
         taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true, this);
     }
@@ -97,6 +98,7 @@ class AggregationTaskController {
         }
     };
 
+    @SuppressWarnings("unchecked")
     private void loadAggregationTask() {
         RequestAndTaskExecutor requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
         requestAndTaskExecutor.setAggregationTaskController(this);
@@ -126,11 +128,13 @@ class AggregationTaskController {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
         taskExecutorHelper.executeRequestInternal(request, requestListener, this);
     }
 
+    @SuppressWarnings("unchecked")
     <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
         taskExecutorHelper.executeTaskInternal(task, requestListener, false, this);
