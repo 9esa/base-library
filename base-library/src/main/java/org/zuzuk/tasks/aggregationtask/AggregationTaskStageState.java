@@ -15,8 +15,8 @@ public class AggregationTaskStageState {
     }
 
     private final AggregationTaskStage taskStage;
-    private UnknownableBoolean isLoaded = UnknownableBoolean.UNKNOWN;
-    private UnknownableBoolean isLoadingNeeded = UnknownableBoolean.UNKNOWN;
+    private Boolean isLoaded = null;
+    private Boolean isLoadingNeeded = null;
     private final AggregationTaskStageState previousStageState;
     private final List<Exception> exceptions = new ArrayList<>(0);
     private final List<AggregationTaskStageListener> taskStageListeners = new ArrayList<>();
@@ -27,20 +27,20 @@ public class AggregationTaskStageState {
     }
 
     /* Returns if after stage data is loaded and could be used */
-    public UnknownableBoolean isLoaded() {
+    public Boolean isLoaded() {
         return isLoaded;
     }
 
-    void setIsLoaded(UnknownableBoolean isLoaded) {
+    void setIsLoaded(Boolean isLoaded) {
         this.isLoaded = isLoaded;
     }
 
     /* Returns if after stage it still need additional loading (on other stages) */
-    public UnknownableBoolean isLoadingNeeded() {
+    public Boolean isLoadingNeeded() {
         return isLoadingNeeded;
     }
 
-    void setIsLoadingNeeded(UnknownableBoolean isLoadingNeeded) {
+    void setIsLoadingNeeded(Boolean isLoadingNeeded) {
         this.isLoadingNeeded = isLoadingNeeded;
     }
 

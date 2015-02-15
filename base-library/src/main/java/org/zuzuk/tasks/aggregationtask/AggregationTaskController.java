@@ -59,7 +59,7 @@ class AggregationTaskController {
 
         @Override
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
-            if (stageState.isLoaded() == UnknownableBoolean.TRUE) {
+            if (stageState.isLoaded()) {
                 task.onLoaded(stageState);
                 stageState.notifyListenerAboutLoadSuccess();
             } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
@@ -67,7 +67,7 @@ class AggregationTaskController {
                 stageState.notifyListenerAboutLoadFailure();
             }
 
-            if (stageState.isLoadingNeeded() == UnknownableBoolean.TRUE) {
+            if (stageState.isLoadingNeeded()) {
                 switch (stageState.getTaskStage()) {
                     case PRE_LOADING:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
