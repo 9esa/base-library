@@ -3,7 +3,6 @@ package org.zuzuk.ui.services;
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
-import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
 
 /**
  * Created by Gavriil Sitnikov on 03/10/2014.
@@ -16,7 +15,7 @@ public abstract class BaseExecutorService extends BaseService implements Aggrega
     @Override
     public void onCreate() {
         super.onCreate();
-        taskExecutorHelper = ((TaskExecutorHelperCreator) getApplicationContext()).createTaskExecutorHelper();
+        taskExecutorHelper = TaskExecutorHelper.newInstance(this);
         taskExecutorHelper.onResume(this);
     }
 

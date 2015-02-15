@@ -11,6 +11,7 @@ import com.octo.android.robospice.request.listener.RequestListener;
 import org.zuzuk.tasks.base.Task;
 import org.zuzuk.tasks.local.LocalSpiceService;
 import org.zuzuk.tasks.remote.base.RemoteRequest;
+import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
 import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
 import org.zuzuk.ui.UIUtils;
 import org.zuzuk.utils.Lc;
@@ -44,6 +45,13 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
 
     protected SpiceManager createRemoteSpiceManager() {
         return new SpiceManager(ORMLiteDatabaseCacheService.class);
+    }
+
+    protected TaskExecutorHelper() {
+    }
+
+    public static TaskExecutorHelper newInstance(Context context) {
+        return ((TaskExecutorHelperCreator)context.getApplicationContext()).createTaskExecutorHelper();
     }
 
     /* Associated lifecycle method */

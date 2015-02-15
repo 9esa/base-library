@@ -5,7 +5,6 @@ import android.os.Bundle;
 import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
-import org.zuzuk.tasks.remote.base.TaskExecutorHelperCreator;
 
 /**
  * Created by Gavriil Sitnikov on 06/02/2015.
@@ -18,7 +17,7 @@ public abstract class BaseExecutorFragment extends BaseFragment implements Aggre
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        taskExecutorHelper = ((TaskExecutorHelperCreator) getActivity().getApplicationContext()).createTaskExecutorHelper();
+        taskExecutorHelper = TaskExecutorHelper.newInstance(getActivity());
     }
 
     @Override
