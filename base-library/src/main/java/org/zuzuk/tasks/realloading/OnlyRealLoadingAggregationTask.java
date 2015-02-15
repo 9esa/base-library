@@ -4,7 +4,6 @@ import org.zuzuk.tasks.aggregationtask.AggregationTask;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStage;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
-import org.zuzuk.tasks.base.Task;
 
 /**
  * Created by Gavriil Sitnikov on 08/02/2015.
@@ -75,10 +74,6 @@ public abstract class OnlyRealLoadingAggregationTask implements AggregationTask,
         if (currentTaskStageState.getTaskStage() == AggregationTaskStage.REAL_LOADING) {
             onRealFailed(currentTaskStageState);
         }
-    }
-
-    @Override
-    public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
     }
 
 }

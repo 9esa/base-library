@@ -94,11 +94,6 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                             }
                         });
             }
-
-            @Override
-            public boolean canBeWrapped() {
-                return true;
-            }
         });
     }
 
@@ -124,11 +119,6 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                     onPageLoadingFailed(index, Arrays.asList((Exception) spiceException));
                                 }
                             });
-                }
-
-                @Override
-                public boolean canBeWrapped() {
-                    return true;
                 }
             });
         } else {

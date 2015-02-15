@@ -23,7 +23,7 @@ class AggregationTaskController {
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
     private boolean isWrappingTasks = false;
-    private RequestAndTaskExecutor requestAndTaskExecutor;
+    RequestAndTaskExecutor requestAndTaskExecutor;
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -109,12 +109,20 @@ class AggregationTaskController {
     }
 
     <T> void executeRequest(RemoteRequest<T> request,
-                            RequestListener<T> requestListener) {
+                            RequestListener<T> requestListener,
+                            TaskProcessor taskProcessor) {
+        if (taskProcessor != null) {
+            taskProcessor.processTask(request, stageState);
+        }
         taskExecutorHelper.executeRequestInternal(request, requestListener, this);
     }
 
     <T> void executeTask(Task<T> task,
-                         RequestListener<T> requestListener) {
+                         RequestListener<T> requestListener,
+                         TaskProcessor taskProcessor) {
+        if (taskProcessor != null) {
+            taskProcessor.processTask(task, stageState);
+        }
         taskExecutorHelper.executeTaskInternal(task, requestListener, false, this);
     }
 

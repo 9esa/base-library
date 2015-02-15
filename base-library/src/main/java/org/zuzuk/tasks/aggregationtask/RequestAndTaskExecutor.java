@@ -10,13 +10,19 @@ public class RequestAndTaskExecutor {
 
     private AggregationTaskController aggregationTaskController;
 
+    private TaskProcessor taskProcessor;
+
+    public void setTaskProcessor(TaskProcessor taskProcessor) {
+        this.taskProcessor = taskProcessor;
+    }
+
     void setAggregationTaskController(AggregationTaskController aggregationTaskController) {
         this.aggregationTaskController = aggregationTaskController;
     }
 
     public <T> void executeRequest(RemoteRequest<T> request,
                                    RequestListener<T> requestListener) {
-        aggregationTaskController.executeRequest(request, requestListener);
+        aggregationTaskController.executeRequest(request, requestListener, taskProcessor);
     }
 
     public void executeTask(LocalTask task) {
@@ -25,7 +31,7 @@ public class RequestAndTaskExecutor {
 
     public <T> void executeTask(Task<T> task,
                                 RequestListener<T> requestListener) {
-        aggregationTaskController.executeTask(task, requestListener);
+        aggregationTaskController.executeTask(task, requestListener, taskProcessor);
     }
 
     public void executeWrappedAggregationTask(AggregationTask aggregationTask) {

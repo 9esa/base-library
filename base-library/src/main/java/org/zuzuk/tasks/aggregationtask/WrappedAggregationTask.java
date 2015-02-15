@@ -1,7 +1,5 @@
 package org.zuzuk.tasks.aggregationtask;
 
-import org.zuzuk.tasks.base.Task;
-
 /**
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Aggregation task over aggregation. Enjoy!
@@ -42,11 +40,6 @@ public class WrappedAggregationTask implements AggregationTask {
     @Override
     public void onFailed(AggregationTaskStageState currentTaskStageState) {
         aggregationTaskToWrap.onFailed(currentTaskStageState);
-    }
-
-    @Override
-    public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
-        aggregationTaskToWrap.processTask(task, currentTaskStageState);
     }
 
 }

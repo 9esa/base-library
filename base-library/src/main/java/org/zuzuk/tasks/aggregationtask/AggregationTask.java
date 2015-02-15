@@ -1,7 +1,5 @@
 package org.zuzuk.tasks.aggregationtask;
 
-import org.zuzuk.tasks.base.Task;
-
 /**
  * Created by Gavriil Sitnikov on 18/09/2014.
  * An object that can detect executing several Task objects and observe them as one long task.
@@ -44,7 +42,5 @@ public abstract interface AggregationTask {
      * It is executing in main UI thread.
      */
     void onFailed(AggregationTaskStageState currentTaskStageState);
-
-    void processTask(Task task, AggregationTaskStageState currentTaskStageState);
 
 }
