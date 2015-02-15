@@ -121,7 +121,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
                     return;
                 }
 
-                CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_RETURNED);
+                CachedSpiceRequest<T> nonCachedTask = new CachedSpiceRequest<>(task, null, DurationInMillis.ALWAYS_EXPIRED);
                 nonCachedTask.setOffline(true);
                 if (doNotWrap) {
                     localSpiceManager.execute(nonCachedTask, requestListener);

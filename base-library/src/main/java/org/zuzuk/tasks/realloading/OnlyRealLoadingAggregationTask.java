@@ -17,6 +17,10 @@ public abstract class OnlyRealLoadingAggregationTask implements AggregationTask,
         this.realLoadingAggregationTaskListener = realLoadingAggregationTaskListener;
     }
 
+    public OnlyRealLoadingAggregationTask() {
+        this(null);
+    }
+
     @Override
     public void onRealLoadingStarted(AggregationTaskStageState currentTaskStageState) {
         if (realLoadingAggregationTaskListener != null) {

@@ -20,6 +20,7 @@ public class AggregationTaskStageState {
     private final AggregationTaskStageState previousStageState;
     private final List<Exception> exceptions = new ArrayList<>(0);
     private final List<AggregationTaskStageListener> taskStageListeners = new ArrayList<>();
+    Boolean isTaskWrapped = null;
 
     /* Returns stage */
     public AggregationTaskStage getTaskStage() {
@@ -105,4 +106,13 @@ public class AggregationTaskStageState {
             taskStageListener.onFailed(this);
         }
     }
+
+    public Boolean isTaskWrapped() {
+        return isTaskWrapped;
+    }
+
+    public void setIsTaskWrapped(Boolean isTaskWrapped) {
+        this.isTaskWrapped = isTaskWrapped;
+    }
+
 }

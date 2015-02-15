@@ -103,7 +103,9 @@ class AggregationTaskController {
         startWrappingRequestsAsAggregation();
         requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
         requestAndTaskExecutor.setAggregationTaskController(this);
+        stageState.setIsTaskWrapped(false);
         task.load(requestAndTaskExecutor, stageState);
+        stageState.setIsTaskWrapped(null);
         stopWrapRequestsAsAggregation();
         checkIfTaskFinished();
     }
@@ -127,7 +129,9 @@ class AggregationTaskController {
     }
 
     void executeWrappedAggregationTask(AggregationTask aggregationTask) {
+        stageState.setIsTaskWrapped(true);
         aggregationTask.load(requestAndTaskExecutor, stageState);
+        stageState.setIsTaskWrapped(null);
     }
 
     boolean checkIfTaskExecutedAsPartOfAggregationTask() {
@@ -139,16 +143,10 @@ class AggregationTaskController {
     }
 
     void startWrappingRequestsAsAggregation() {
-        if (isWrappingTasks) {
-            Lc.fatalException(new IllegalStateException("startWrappingRequestsAsAggregation - strange"));
-        }
         isWrappingTasks = true;
     }
 
     void stopWrapRequestsAsAggregation() {
-        if (!isWrappingTasks) {
-            Lc.fatalException(new IllegalStateException("stopWrapRequestsAsAggregation - strange"));
-        }
         isWrappingTasks = false;
     }
 
