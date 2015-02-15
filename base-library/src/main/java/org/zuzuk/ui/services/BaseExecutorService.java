@@ -10,7 +10,7 @@ import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
  */
 public abstract class BaseExecutorService extends BaseService implements AggregationTaskExecutor {
 
-    protected TaskExecutorHelper taskExecutorHelper;
+    private TaskExecutorHelper taskExecutorHelper;
 
     @Override
     public void onCreate() {
@@ -29,6 +29,10 @@ public abstract class BaseExecutorService extends BaseService implements Aggrega
         super.onDestroy();
         taskExecutorHelper.onPause();
         taskExecutorHelper = null;
+    }
+
+    public TaskExecutorHelper getTaskExecutorHelper() {
+        return taskExecutorHelper;
     }
 
 }

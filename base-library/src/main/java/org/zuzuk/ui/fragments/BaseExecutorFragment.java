@@ -12,7 +12,7 @@ import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
  */
 public abstract class BaseExecutorFragment extends BaseFragment implements AggregationTaskExecutor {
 
-    protected TaskExecutorHelper taskExecutorHelper;
+    private TaskExecutorHelper taskExecutorHelper;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,6 +41,10 @@ public abstract class BaseExecutorFragment extends BaseFragment implements Aggre
     public void onDestroy() {
         super.onDestroy();
         taskExecutorHelper = null;
+    }
+
+    public TaskExecutorHelper getTaskExecutorHelper() {
+        return taskExecutorHelper;
     }
 
 }
