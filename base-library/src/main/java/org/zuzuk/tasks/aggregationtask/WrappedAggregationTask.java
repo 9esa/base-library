@@ -49,9 +49,4 @@ public class WrappedAggregationTask implements AggregationTask {
         aggregationTaskToWrap.processTask(task, currentTaskStageState);
     }
 
-    @Override
-    public boolean canBeWrapped() {
-        return aggregationTaskToWrap.canBeWrapped();
-    }
-
 }

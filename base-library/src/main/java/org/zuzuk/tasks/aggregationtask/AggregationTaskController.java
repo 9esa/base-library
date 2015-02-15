@@ -3,6 +3,8 @@ package org.zuzuk.tasks.aggregationtask;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import org.zuzuk.tasks.base.Task;
+import org.zuzuk.tasks.remote.base.RemoteRequest;
 import org.zuzuk.utils.Lc;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ class AggregationTaskController {
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
     private boolean isWrappingTasks = false;
+    private RequestAndTaskExecutor requestAndTaskExecutor;
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -97,10 +100,48 @@ class AggregationTaskController {
 
     @SuppressWarnings("unchecked")
     private void loadAggregationTask() {
-        taskExecutorHelper.startWrappingRequestsAsAggregation(this);
-        task.load(taskExecutorHelper.createRequestAndTaskExecutor(), stageState);
-        taskExecutorHelper.stopWrapRequestsAsAggregation(this);
+        startWrappingRequestsAsAggregation();
+        requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
+        requestAndTaskExecutor.setAggregationTaskController(this);
+        task.load(requestAndTaskExecutor, stageState);
+        stopWrapRequestsAsAggregation();
         checkIfTaskFinished();
+    }
+
+    <T> void executeRequest(RemoteRequest<T> request,
+                            RequestListener<T> requestListener) {
+        taskExecutorHelper.executeRequestInternal(request, requestListener, this);
+    }
+
+    <T> void executeTask(Task<T> task,
+                         RequestListener<T> requestListener) {
+        taskExecutorHelper.executeTaskInternal(task, requestListener, false, this);
+    }
+
+    void executeWrappedAggregationTask(AggregationTask aggregationTask) {
+        aggregationTask.load(requestAndTaskExecutor, stageState);
+    }
+
+    boolean checkIfTaskExecutedAsPartOfAggregationTask() {
+        if (!isWrappingTasks) {
+            Lc.fatalException(new IllegalStateException("Any tasks or requests should be in load() block of AggregationTask or in any RequestListener callback"));
+            return false;
+        }
+        return true;
+    }
+
+    void startWrappingRequestsAsAggregation() {
+        if (isWrappingTasks) {
+            Lc.fatalException(new IllegalStateException("startWrappingRequestsAsAggregation - strange"));
+        }
+        isWrappingTasks = true;
+    }
+
+    void stopWrapRequestsAsAggregation() {
+        if (!isWrappingTasks) {
+            Lc.fatalException(new IllegalStateException("stopWrapRequestsAsAggregation - strange"));
+        }
+        isWrappingTasks = false;
     }
 
 }

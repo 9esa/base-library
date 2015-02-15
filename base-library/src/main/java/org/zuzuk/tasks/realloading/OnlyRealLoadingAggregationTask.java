@@ -81,9 +81,4 @@ public abstract class OnlyRealLoadingAggregationTask implements AggregationTask,
     public void processTask(Task task, AggregationTaskStageState currentTaskStageState) {
     }
 
-    @Override
-    public boolean canBeWrapped() {
-        return false;
-    }
-
 }

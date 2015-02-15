@@ -47,6 +47,4 @@ public abstract interface AggregationTask {
 
     void processTask(Task task, AggregationTaskStageState currentTaskStageState);
 
-    boolean canBeWrapped();
-
 }

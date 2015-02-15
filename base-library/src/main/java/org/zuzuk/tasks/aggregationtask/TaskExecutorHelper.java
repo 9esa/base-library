@@ -36,7 +36,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
     }
 
     protected RequestAndTaskExecutor createRequestAndTaskExecutor() {
-        return new RequestAndTaskExecutor(this);
+        return new RequestAndTaskExecutor();
     }
 
     protected SpiceManager createLocalSpiceManager() {
@@ -68,20 +68,16 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
 
     @Override
     public void executeAggregationTask(final AggregationTask aggregationTask) {
-        if (currentTaskController != null && aggregationTask.canBeWrapped()) {
-            aggregationTask.load(createRequestAndTaskExecutor(), currentTaskController.stageState);
-        } else {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (isPaused) {
-                        return;
-                    }
-
-                    executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (isPaused) {
+                    return;
                 }
-            });
-        }
+
+                executeAggregationTaskInternal(new AggregationTaskController(TaskExecutorHelper.this, aggregationTask));
+            }
+        });
     }
 
     private void executeAggregationTaskInternal(final AggregationTaskController taskController) {
@@ -91,7 +87,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
     <T> void executeRequestInternal(final RemoteRequest<T> request,
                                             final RequestListener<T> requestListener,
                                             final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)|| !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController)) {
+        if (!checkManagersState(request)|| !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask()) {
             return;
         }
 
@@ -111,21 +107,11 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
         });
     }
 
-    <T> void executeRequest(RemoteRequest<T> request,
-                            RequestListener<T> requestListener) {
-        executeRequestInternal(request, requestListener, currentTaskController);
-    }
-
-    <T> void executeTask(Task<T> task,
-                         RequestListener<T> requestListener) {
-        executeTaskInternal(task, requestListener, false, currentTaskController);
-    }
-
     <T> void executeTaskInternal(final Task<T> task,
                                  final RequestListener<T> requestListener,
                                  final boolean doNotWrap, final AggregationTaskController aggregationTaskController) {
         if (!checkManagersState(task)
-                || (!doNotWrap && !checkIfTaskExecutedAsPartOfAggregationTask(aggregationTaskController))) {
+                || (!doNotWrap && !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask())) {
             return;
         }
 
@@ -161,28 +147,6 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
             return false;
         }
         return true;
-    }
-
-    private boolean checkIfTaskExecutedAsPartOfAggregationTask(AggregationTaskController aggregationTaskController) {
-        if (aggregationTaskController == null) {
-            Lc.fatalException(new IllegalStateException("Any tasks or requests should be in load() block of AggregationTask or in any RequestListener callback"));
-            return false;
-        }
-        return true;
-    }
-
-    void startWrappingRequestsAsAggregation(AggregationTaskController aggregationTaskController) {
-        if (this.currentTaskController != null) {
-            Lc.fatalException(new IllegalStateException("startWrappingRequestsAsAggregation - strange"));
-        }
-        currentTaskController = aggregationTaskController;
-    }
-
-    void stopWrapRequestsAsAggregation(AggregationTaskController aggregationTaskController) {
-        if (this.currentTaskController != aggregationTaskController) {
-            Lc.fatalException(new IllegalStateException("stopWrapRequestsAsAggregation - strange"));
-        }
-        currentTaskController = null;
     }
 
     private <T> AggregationTaskRequestListener<T> wrapForAggregationTask(RequestListener<T> requestListener, AggregationTaskController aggregationTaskController) {
