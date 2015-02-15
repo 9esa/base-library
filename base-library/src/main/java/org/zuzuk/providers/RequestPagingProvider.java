@@ -9,7 +9,7 @@ import org.zuzuk.tasks.aggregationtask.AggregationTaskExecutor;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageListener;
 import org.zuzuk.tasks.aggregationtask.AggregationTaskStageState;
 import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
-import org.zuzuk.tasks.aggregationtask.WrappedAggregationTask;
+import org.zuzuk.tasks.aggregationtask.WrappingAggregationTask;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,9 +67,9 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void requestPage(final int index) {
+    protected void requestPage(final int index, RequestAndTaskExecutor executorOuter) {
         final AggregationPagingTask aggregationTask = createTask(index);
-        aggregationTaskExecutor.executeAggregationTask(new WrappedAggregationTask(aggregationTask) {
+        WrappingAggregationTask wrappingAggregationTask = new WrappingAggregationTask(aggregationTask) {
             @Override
             public void load(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                 getRequestingPages().add(index);
@@ -102,7 +102,12 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
                 super.onFailed(currentTaskStageState);
                 onPageLoadingFailed(index, currentTaskStageState.getExceptions());
             }
-        });
+        };
+        if (executorOuter != null) {
+            executorOuter.executeWrappedAggregationTask(wrappingAggregationTask);
+        } else {
+            aggregationTaskExecutor.executeAggregationTask(wrappingAggregationTask);
+        }
     }
 
     @Override

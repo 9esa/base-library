@@ -1,5 +1,8 @@
 package org.zuzuk.providers.base;
 
+import org.zuzuk.tasks.aggregationtask.RequestAndTaskExecutor;
+import org.zuzuk.utils.Lc;
+
 import java.util.List;
 
 /**
@@ -23,19 +26,24 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> {
     }
 
     /* Starts provider initialization at specific position */
-    public void initialize(int initializationPosition) {
+    public void initialize(int initializationPosition, RequestAndTaskExecutor executor) {
+        if (executor == null) {
+            Lc.fatalException(new Throwable("Initialization is allowed only inside load()"));
+            return;
+        }
+
         if (isInitialized) {
             reset();
         }
 
         if (!isInitializing) {
             isInitializing = true;
-            initializeInternal(initializationPosition);
+            initializeInternal(initializationPosition, executor);
         }
     }
 
     /* Internal provider initialization logic */
-    protected abstract void initializeInternal(int initializationPosition);
+    protected abstract void initializeInternal(int initializationPosition, RequestAndTaskExecutor executor);
 
     /* Raises when provider initialized. Use it in child classes */
     public void onInitialized() {

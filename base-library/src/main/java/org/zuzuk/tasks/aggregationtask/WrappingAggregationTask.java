@@ -4,11 +4,11 @@ package org.zuzuk.tasks.aggregationtask;
  * Created by Gavriil Sitnikov on 08/02/2015.
  * Aggregation task over aggregation. Enjoy!
  */
-public class WrappedAggregationTask implements AggregationTask {
+public class WrappingAggregationTask implements AggregationTask {
 
     private final AggregationTask aggregationTaskToWrap;
 
-    public WrappedAggregationTask(AggregationTask aggregationTaskToWrap) {
+    public WrappingAggregationTask(AggregationTask aggregationTaskToWrap) {
         this.aggregationTaskToWrap = aggregationTaskToWrap;
     }
 

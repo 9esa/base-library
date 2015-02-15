@@ -23,6 +23,7 @@ import java.util.Stack;
  * Created by Gavriil Sitnikov on 07/14.
  * Provider that based on OrmLite (database) iterator
  */
+// TODO check if it is valid
 public class IteratorProvider<TItem> extends PagingProvider<TItem> {
 
     private final AggregationTaskExecutor aggregationTaskExecutor;
@@ -55,18 +56,18 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
     }
 
     @Override
-    protected void initializeInternal(int startPosition) {
-        updateIterator(startPosition);
+    protected void initializeInternal(int startPosition, RequestAndTaskExecutor executor) {
+        updateIterator(startPosition, executor);
     }
 
     /* Manually updating provider (if caller know that database have changed) */
-    public void updateIterator() {
-        updateIterator(null);
+    public void updateIterator(RequestAndTaskExecutor executor) {
+        updateIterator(null, executor);
     }
 
     @SuppressWarnings("unchecked")
-    private void updateIterator(final Integer startPosition) {
-        aggregationTaskExecutor.executeAggregationTask(new OnlyRealLoadingAggregationTask(null) {
+    private void updateIterator(final Integer startPosition, RequestAndTaskExecutor executorOuter) {
+        OnlyRealLoadingAggregationTask onlyRealLoadingAggregationTask = new OnlyRealLoadingAggregationTask(null) {
             @Override
             protected void realLoad(final RequestAndTaskExecutor executor, final AggregationTaskStageState currentTaskStageState) {
                 executor.executeTask(queryBuilder != null ?
@@ -82,7 +83,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                 getRequestingPages().clear();
                                 getPages().clear();
                                 if (startPosition != null) {
-                                    IteratorProvider.super.initializeInternal(startPosition);
+                                    IteratorProvider.super.initializeInternal(startPosition, executor);
                                 } else {
                                     onDataSetChanged();
                                 }
@@ -94,14 +95,19 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                             }
                         });
             }
-        });
+        };
+        if (executorOuter != null) {
+            executorOuter.executeWrappedAggregationTask(onlyRealLoadingAggregationTask);
+        } else {
+            aggregationTaskExecutor.executeAggregationTask(onlyRealLoadingAggregationTask);
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void requestPage(final int index) {
+    protected void requestPage(final int index, RequestAndTaskExecutor executorOuter) {
         if (getRequestingPages().isEmpty()) {
-            aggregationTaskExecutor.executeAggregationTask(new OnlyRealLoadingAggregationTask(null) {
+            OnlyRealLoadingAggregationTask onlyRealLoadingAggregationTask = new OnlyRealLoadingAggregationTask(null) {
                 @Override
                 protected void realLoad(RequestAndTaskExecutor executor, AggregationTaskStageState currentTaskStageState) {
                     //TODO: is it ok?
@@ -120,7 +126,12 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
                                 }
                             });
                 }
-            });
+            };
+            if (executorOuter != null) {
+                executorOuter.executeWrappedAggregationTask(onlyRealLoadingAggregationTask);
+            } else {
+                aggregationTaskExecutor.executeAggregationTask(onlyRealLoadingAggregationTask);
+            }
         } else {
             waitingForRequestPages.push(index);
         }
@@ -131,7 +142,7 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
         super.onPageLoaded(pageIndex, items);
         currentPosition = pageIndex * DEFAULT_ITEMS_ON_PAGE + items.size();
         if (!waitingForRequestPages.isEmpty()) {
-            requestPage(waitingForRequestPages.pop());
+            requestPage(waitingForRequestPages.pop(), null);
         }
     }
 
