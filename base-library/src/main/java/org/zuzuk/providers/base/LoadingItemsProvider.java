@@ -32,10 +32,6 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> {
             return;
         }
 
-        if (isInitialized) {
-            reset();
-        }
-
         if (!isInitializing) {
             isInitializing = true;
             initializeInternal(initializationPosition, executor);
