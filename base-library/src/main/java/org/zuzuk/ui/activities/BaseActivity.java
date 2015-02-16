@@ -165,6 +165,52 @@ public abstract class BaseActivity extends ActionBarActivity
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                FragmentManager fragmentManager = getSupportFragmentManager();
+
+                boolean homePressResult = false;
+                if (fragmentManager.getFragments() != null) {
+                    for (Fragment fragment : fragmentManager.getFragments()) {
+                        if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
+                            homePressResult = homePressResult || ((BaseFragment) fragment).onHomePressed();
+                        }
+                    }
+                }
+
+                if (homePressResult) {
+                    return true;
+                }
+
+                int stackSize = fragmentManager.getBackStackEntryCount();
+
+                switch (stackSize) {
+                    case 0:
+                        return false;
+                    case 1:
+                        fragmentManager.popBackStack();
+                        return true;
+                    default:
+                        String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
+                        for (int i = stackSize - 2; i >= 0; i--) {
+                            String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
+                            if (currentFragmentName == null || !currentFragmentName.equals(lastFragmentName)) {
+                                fragmentManager.popBackStackImmediate(currentFragmentName, 0);
+                                break;
+                            } else if (i == 0) {
+                                fragmentManager.popBackStackImmediate(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                            } else {
+                                lastFragmentName = currentFragmentName;
+                            }
+                        }
+                        return true;
+                }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     /* Hides device keyboard */
     public void hideSoftInput() {
         if (getCurrentFocus() != null) {
