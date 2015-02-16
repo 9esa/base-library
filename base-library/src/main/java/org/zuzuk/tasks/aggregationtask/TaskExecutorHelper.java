@@ -141,7 +141,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
 
     private boolean checkManagersState(Object request) {
         if (!remoteSpiceManager.isStarted() || !localSpiceManager.isStarted()) {
-            Lc.fatalException(new IllegalStateException(request.getClass().getName() + " is requested after onPause"));
+            Lc.e(request.getClass().getName() + " is requested after onPause");
             return false;
         }
         return true;
