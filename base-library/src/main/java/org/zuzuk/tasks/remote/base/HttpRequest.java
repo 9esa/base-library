@@ -5,8 +5,8 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ObjectParser;
 
 import org.zuzuk.utils.Lc;
@@ -65,17 +65,19 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         Lc.d("Url requested: " + request.getUrl().toString());
 
         T response = null;
+        HttpResponse httpResponse = request.execute();
         if (doLogResponse()) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(request.execute().getContent()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(httpResponse.getContent()));
             StringBuilder responseString = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
                 responseString.append(line);
             }
+            httpResponse.disconnect();
             Lc.d("Response for: " + request.getUrl().toString() + '\n' + responseString);
             response = getParser().parseAndClose(new StringReader(responseString.toString()), getResultType());
         } else {
-            response = request.execute().parseAs(getResultType());
+            response = httpResponse.parseAs(getResultType());
         }
 
         response = handleResponse(response);
