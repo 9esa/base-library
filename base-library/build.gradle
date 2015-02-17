@@ -44,6 +44,8 @@ dependencies {
     /* Serialization */
     provided 'de.ruedigermoeller:fst:2.22'
 
+    provided 'org.apache.commons:commons-lang3:3.3.2'
+
     /* Network requests */
 //    provided 'com.octo.android.robospice:robospice:1.4.14'
     compile files('libs/robospice-1.4.14.jar')
