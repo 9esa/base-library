@@ -63,25 +63,25 @@ class AggregationTaskController {
         @Override
         public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
             if (stageState.isLoaded()) {
-                task.onLoaded(stageState);
                 stageState.notifyListenerAboutLoadSuccess();
+                task.onLoaded(stageState);
             } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
-                task.onFailed(stageState);
                 stageState.notifyListenerAboutLoadFailure();
+                task.onFailed(stageState);
             }
 
             if (stageState.isLoadingNeeded()) {
                 switch (stageState.getTaskStage()) {
                     case PRE_LOADING:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.LOADING_LOCALLY, stageState);
-                        task.onLoadingStarted(stageState);
                         stageState.notifyListenerAboutLoadingStart();
+                        task.onLoadingStarted(stageState);
                         loadAggregationTask();
                         break;
                     case LOADING_LOCALLY:
                         stageState = new AggregationTaskStageState(AggregationTaskStage.REAL_LOADING, stageState);
-                        task.onLoadingStarted(stageState);
                         stageState.notifyListenerAboutLoadingStart();
+                        task.onLoadingStarted(stageState);
                         loadAggregationTask();
                         break;
                 }
