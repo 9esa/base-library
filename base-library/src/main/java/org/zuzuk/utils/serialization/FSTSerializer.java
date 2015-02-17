@@ -8,17 +8,12 @@ public enum FSTSerializer implements Serializer {
 
     Instance;
 
-    private static ThreadLocal<FSTConfiguration> fstConfigurationThreadLocal = new ThreadLocal<FSTConfiguration>() {
-        @Override
-        public FSTConfiguration initialValue() {
-            return FSTConfiguration.createDefaultConfiguration().setForceSerializable(true);
-        }
-    };
+    private static FSTConfiguration fstConfiguration = FSTConfiguration.createDefaultConfiguration().setForceSerializable(true);
 
     @Override
     public <TObject> byte[] serialize(TObject object) {
         try {
-            FSTObjectOutput fstObjectOutput = new FSTObjectOutput(fstConfigurationThreadLocal.get());
+            FSTObjectOutput fstObjectOutput = new FSTObjectOutput(fstConfiguration);
             fstObjectOutput.writeObject(object);
             byte[] bytes = fstObjectOutput.getCopyOfWrittenBuffer();
             fstObjectOutput.close();
@@ -32,7 +27,7 @@ public enum FSTSerializer implements Serializer {
     @Override
     public <TObject> TObject deserialize(byte[] byteArray) {
         try {
-            FSTObjectInput fstObjectInput = new FSTObjectInput(fstConfigurationThreadLocal.get());
+            FSTObjectInput fstObjectInput = new FSTObjectInput(fstConfiguration);
             fstObjectInput.resetForReuseUseArray(byteArray);
             TObject object = (TObject) fstObjectInput.readObject();
             fstObjectInput.close();
