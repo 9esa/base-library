@@ -13,10 +13,12 @@ import com.octo.android.robospice.retry.RetryPolicy;
  */
 public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
     private final SpiceManager spiceManager;
+    private Object requestCacheKey;
 
     public AllowOnlyOfflineCacheRequest(SpiceManager spiceManager, SpiceRequest<T> spiceRequest, Object requestCacheKey, long cacheDuration) {
-        super(spiceRequest, requestCacheKey, cacheDuration);
+        super(spiceRequest, null, cacheDuration);
         this.spiceManager = spiceManager;
+        this.requestCacheKey = requestCacheKey;
     }
 
     @Override
@@ -35,11 +37,11 @@ public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
     @Override
     public T loadDataFromNetwork() throws Exception {
         if (isOffline()) {
-            T result = spiceManager.getDataFromCache(getResultType(), getRequestCacheKey()).get();
+            T result = spiceManager.getDataFromCache(getResultType(), requestCacheKey).get();
             if (result != null) {
                 return result;
             } else {
-                throw new CacheLoadingException("Cached data not found for: '" + getRequestCacheKey() + "' during offline cache request");
+                throw new CacheLoadingException("Cached data not found for: '" + requestCacheKey + "' during offline cache request");
             }
         }
         return super.loadDataFromNetwork();
