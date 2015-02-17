@@ -12,11 +12,12 @@ import com.octo.android.robospice.retry.RetryPolicy;
  * Cache request that is doing only local cache loading if isOffline() returns true
  */
 public class AllowOnlyOfflineCacheRequest<T> extends CachedSpiceRequest<T> {
+
     private final SpiceManager spiceManager;
     private Object requestCacheKey;
 
-    public AllowOnlyOfflineCacheRequest(SpiceManager spiceManager, SpiceRequest<T> spiceRequest, Object requestCacheKey, long cacheDuration) {
-        super(spiceRequest, null, cacheDuration);
+    public AllowOnlyOfflineCacheRequest(SpiceManager spiceManager, SpiceRequest<T> spiceRequest, Object requestCacheKey, long cacheDuration, boolean isLoadingFromCache) {
+        super(spiceRequest, isLoadingFromCache ? null : requestCacheKey, cacheDuration);
         this.spiceManager = spiceManager;
         this.requestCacheKey = requestCacheKey;
     }

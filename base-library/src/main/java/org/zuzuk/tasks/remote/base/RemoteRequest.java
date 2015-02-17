@@ -18,7 +18,7 @@ public abstract class RemoteRequest<T> extends Task<T> {
     public AllowOnlyOfflineCacheRequest<T> wrapAsCacheRequest(SpiceManager spiceManager, boolean isLoadingFromCache) {
         long cacheExpiryTime = isLoadingFromCache || !ignoreCacheOnRealLoading ? getCacheExpiryDuration() : 1;
         AllowOnlyOfflineCacheRequest<T> cachedSpiceRequest
-                = new AllowOnlyOfflineCacheRequest<>(spiceManager, this, getCacheKey(), cacheExpiryTime);
+                = new AllowOnlyOfflineCacheRequest<>(spiceManager, this, getCacheKey(), cacheExpiryTime, isLoadingFromCache);
         cachedSpiceRequest.setOffline(isLoadingFromCache || isOffline());
         cachedSpiceRequest.setAggregatable(true);
         return cachedSpiceRequest;
