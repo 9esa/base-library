@@ -5,33 +5,64 @@ import android.app.Application;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.ObjectPersister;
+import com.octo.android.robospice.persistence.exception.CacheCreationException;
 import com.octo.android.robospice.persistence.exception.CacheLoadingException;
 import com.octo.android.robospice.persistence.exception.CacheSavingException;
 
+import org.apache.commons.io.FileUtils;
 import org.zuzuk.database.DBUtils;
 import org.zuzuk.utils.serialization.FSTSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TObject> {
+    private static final String DEFAULT_ROOT_CACHE_DIR = "robospice-cache";
+    private static final int MAX_BYTE_ARRAY_SIZE_IN_DB = 512 * 1024; // 512Kb
 
     private Serializer serializer = FSTSerializer.Instance;
-
-    public ORMLiteDatabaseObjectPersister(Application application, Class<TObject> clazz) {
-        super(application, clazz);
-    }
+    private File cacheFolder;
 
     protected void setSerializer(Serializer serializer) {
         this.serializer = serializer;
+    }
+
+    protected File getCacheFolder() throws CacheCreationException {
+        if (cacheFolder == null) {
+            cacheFolder = new File(getApplication().getCacheDir(), DEFAULT_ROOT_CACHE_DIR);
+        }
+        synchronized (cacheFolder.getAbsolutePath().intern()) {
+            if (!cacheFolder.exists() && !cacheFolder.mkdirs()) {
+                throw new CacheCreationException("The cache folder " + cacheFolder.getAbsolutePath() + " could not be created.");
+            }
+        }
+        return cacheFolder;
+    }
+
+    protected File getCacheFile(String cacheKey) throws CacheCreationException {
+        return new File(getCacheFolder(), cacheKey);
+    }
+
+    public ORMLiteDatabaseObjectPersister(Application application, Class<TObject> clazz) {
+        super(application, clazz);
     }
 
     @Override
     public TObject loadDataFromCache(Object cacheKey, long maxTimeInCache) throws CacheLoadingException {
         ORMLiteDatabaseCacheDbEntry cacheDbEntry = getMyCacheDbEntry(cacheKey);
         if (isCachedAndNotExpired(cacheDbEntry, maxTimeInCache)) {
-            return serializer.deserialize(cacheDbEntry.getData());
+            byte[] data = cacheDbEntry.getData();
+            if (data == null) {
+                try {
+                    File cachedFile = getCacheFile(cacheKey.toString());
+                    data = FileUtils.readFileToByteArray(cachedFile);
+                } catch (Exception e) {
+                    throw new CacheLoadingException(e);
+                }
+            }
+            return serializer.deserialize(data);
         } else {
             return null;
         }
@@ -60,7 +91,17 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
     @Override
     public TObject saveDataToCacheAndReturnData(TObject object, Object cacheKey) throws CacheSavingException {
         byte[] serializedData = serializer.serialize(object);
-        ORMLiteDatabaseCacheDbEntry cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), serializedData);
+        ORMLiteDatabaseCacheDbEntry cacheDbEntry;
+        if (serializedData.length < MAX_BYTE_ARRAY_SIZE_IN_DB) {
+            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), serializedData);
+        } else {
+            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), null);
+            try {
+                FileUtils.writeByteArrayToFile(getCacheFile(cacheKey.toString()), serializedData);
+            } catch (Exception e) {
+                throw new CacheSavingException(e);
+            }
+        }
         getCacheDbTable().createOrUpdate(cacheDbEntry);
         return object;
     }
