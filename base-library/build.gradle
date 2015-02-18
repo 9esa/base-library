@@ -8,7 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library'
 ext.libPackageName = 'org.zuzuk'
-ext.libVersion = '1.1.21'
+ext.libVersion = '1.1.23'
 
 android {
     compileSdkVersion 21
@@ -47,6 +47,7 @@ dependencies {
 
     /* Network requests */
 //    provided 'com.octo.android.robospice:robospice:1.4.14'
+    provided 'commons-io:commons-io:2.4'
     compile files('libs/robospice-1.4.14.jar')
     compile files('libs/robospice-cache-1.4.14.jar')
 
