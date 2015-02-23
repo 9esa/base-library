@@ -28,7 +28,7 @@ public class CustomListView extends ListView {
     protected void dispatchDraw(@NonNull Canvas canvas) {
         try {
             super.dispatchDraw(canvas);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (Exception e) {
             // samsung error
         }
     }
