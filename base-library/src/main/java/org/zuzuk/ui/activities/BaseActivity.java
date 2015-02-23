@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,6 +110,7 @@ public abstract class BaseActivity extends ActionBarActivity
         Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
         fragmentManager.beginTransaction()
                 .replace(getFragmentContainerId(), fragment, null)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
         return fragment;
     }
@@ -122,6 +124,7 @@ public abstract class BaseActivity extends ActionBarActivity
         Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
         getSupportFragmentManager().beginTransaction()
                 .replace(getFragmentContainerId(), fragment, backStackTag)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .addToBackStack(backStackTag)
                 .commit();
         return fragment;
