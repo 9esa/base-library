@@ -32,6 +32,11 @@ public abstract class BaseExecutorFragment extends BaseFragment implements Aggre
     }
 
     @Override
+    public void cancelAggregationTask(AggregationTask aggregationTask) {
+        taskExecutorHelper.cancelAggregationTask(aggregationTask);
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();

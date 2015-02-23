@@ -32,6 +32,11 @@ public abstract class BaseExecutorActivity extends BaseActivity implements Aggre
     }
 
     @Override
+    public void cancelAggregationTask(AggregationTask aggregationTask) {
+        taskExecutorHelper.cancelAggregationTask(aggregationTask);
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         taskExecutorHelper.onPause();

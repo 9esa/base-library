@@ -25,6 +25,11 @@ public abstract class BaseExecutorService extends BaseService implements Aggrega
     }
 
     @Override
+    public void cancelAggregationTask(AggregationTask aggregationTask) {
+        taskExecutorHelper.cancelAggregationTask(aggregationTask);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         taskExecutorHelper.onPause();
