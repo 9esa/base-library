@@ -24,7 +24,7 @@ public class InitializationHelper {
                 .cacheOnDisk(true)
                 .cacheInMemory(true)
                 .resetViewBeforeLoading(true)
-                .displayer(new FadeInBitmapDisplayer(250, true, false, false))
+                .displayer(new FadeInBitmapDisplayer(250, true, true, false))
                 .delayBeforeLoading(100);
     }
 
@@ -32,14 +32,13 @@ public class InitializationHelper {
     public static ImageLoaderConfiguration.Builder createDefaultImageLoaderConfiguration(Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         int maxImageSizeInMemory = Math.max(metrics.widthPixels, metrics.widthPixels) / 3;
-        int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
 
         return new ImageLoaderConfiguration.Builder(context)
                 .diskCache(new LimitedAgeDiscCache(StorageUtils.getIndividualCacheDirectory(context),
                         StorageUtils.getIndividualCacheDirectory(context),
                         new Md5FileNameGenerator(), 24 * 60 * 60))
                 .denyCacheImageMultipleSizesInMemory()
-                .memoryCache(new LruMemoryCache(maxMemory / 8))
+                .memoryCache(new LruMemoryCache((int) (Runtime.getRuntime().maxMemory() / 8)))
                 .memoryCacheExtraOptions(maxImageSizeInMemory, maxImageSizeInMemory)
                 .defaultDisplayImageOptions(createDefaultDisplayImageOptions().build());
     }
