@@ -5,7 +5,6 @@ import org.nustaq.serialization.FSTObjectInput;
 import org.nustaq.serialization.FSTObjectOutput;
 
 public enum FSTSerializer implements Serializer {
-
     Instance;
 
     private static FSTConfiguration fstConfiguration = FSTConfiguration.createDefaultConfiguration().setForceSerializable(true);

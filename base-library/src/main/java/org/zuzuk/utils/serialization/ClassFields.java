@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public enum ClassFields {
-
     Instance;
 
     private HashMap<Class, ArrayList<Field>> cacheMap = new HashMap<>();
