@@ -8,8 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library'
 ext.libPackageName = 'org.zuzuk'
-ext.libVersion = '1.1.20'
-
+ext.libVersion = '1.1.24'
 android {
     compileSdkVersion 21
     buildToolsVersion "20.0.0"
@@ -34,6 +33,7 @@ android {
 dependencies {
     /* Common */
     provided 'com.android.support:appcompat-v7:21.0.3'
+    provided 'com.android.support:recyclerview-v7:21.0.3'
 
     /* Image loading */
     provided 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
@@ -45,6 +45,7 @@ dependencies {
     provided 'de.ruedigermoeller:fst:2.22'
 
     provided 'org.apache.commons:commons-lang3:3.3.2'
+    provided 'commons-io:commons-io:2.4'
 
     /* Network requests */
 //    provided 'com.octo.android.robospice:robospice:1.4.14'

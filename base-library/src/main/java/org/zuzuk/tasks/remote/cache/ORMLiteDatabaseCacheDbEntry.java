@@ -13,7 +13,7 @@ public class ORMLiteDatabaseCacheDbEntry {
     @DatabaseField(canBeNull = false)
     private long lastModified;
 
-    @DatabaseField(dataType = DataType.BYTE_ARRAY)
+    @DatabaseField(dataType = DataType.BYTE_ARRAY, canBeNull = true)
     private byte[] data;
 
     public String getKey() {
