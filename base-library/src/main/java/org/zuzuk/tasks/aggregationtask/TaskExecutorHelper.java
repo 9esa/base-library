@@ -16,6 +16,9 @@ import org.zuzuk.tasks.remote.cache.ORMLiteDatabaseCacheService;
 import org.zuzuk.ui.UIUtils;
 import org.zuzuk.utils.Lc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Gavriil Sitnikov on 14/09/2014.
  * Helper to work with tasks execution during lifecycle of object
@@ -24,11 +27,11 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
 
     private final Handler postHandler = new Handler();
 
-    private AggregationTaskController currentTaskController;
     private SpiceManager localSpiceManager;
     private SpiceManager remoteSpiceManager;
 
     private boolean isPaused = true;
+    final List<AggregationTaskController> controllers = new ArrayList<>();
 
     /* Returns if executor in paused state so it can't execute requests */
     boolean isPaused() {
@@ -51,7 +54,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
     }
 
     public static TaskExecutorHelper newInstance(Context context) {
-        return ((TaskExecutorHelperCreator)context.getApplicationContext()).createTaskExecutorHelper();
+        return ((TaskExecutorHelperCreator) context.getApplicationContext()).createTaskExecutorHelper();
     }
 
     /* Associated lifecycle method */
@@ -59,7 +62,7 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
         if (localSpiceManager == null || remoteSpiceManager == null) {
             localSpiceManager = createLocalSpiceManager();
             remoteSpiceManager = createRemoteSpiceManager();
-         }
+        }
 
         localSpiceManager.start(context);
         remoteSpiceManager.start(context);
@@ -80,14 +83,33 @@ public class TaskExecutorHelper implements AggregationTaskExecutor {
         });
     }
 
+    @Override
+    public void cancelAggregationTask(final AggregationTask aggregationTask) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AggregationTaskController controllerToCancel = null;
+                for (AggregationTaskController controller : controllers) {
+                    if (controller.task == aggregationTask) {
+                        controllerToCancel = controller;
+                        break;
+                    }
+                }
+                if (controllerToCancel != null) {
+                    controllerToCancel.endTask();
+                }
+            }
+        });
+    }
+
     private void executeAggregationTaskInternal(final AggregationTaskController taskController) {
         taskController.nextStep();
     }
 
     <T> void executeRequestInternal(final RemoteRequest<T> request,
-                                            final RequestListener<T> requestListener,
-                                            final AggregationTaskController aggregationTaskController) {
-        if (!checkManagersState(request)|| !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask()) {
+                                    final RequestListener<T> requestListener,
+                                    final AggregationTaskController aggregationTaskController) {
+        if (!checkManagersState(request) || !aggregationTaskController.checkIfTaskExecutedAsPartOfAggregationTask()) {
             return;
         }
 

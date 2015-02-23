@@ -95,13 +95,13 @@ public class AggregationTaskStageState {
         }
     }
 
-    void notifyListenerAboutLoadSuccess() {
+    void notifyListenersAboutLoadSuccess() {
         for (AggregationTaskStageListener taskStageListener : taskStageListeners) {
             taskStageListener.onLoaded(this);
         }
     }
 
-    void notifyListenerAboutLoadFailure() {
+    void notifyListenersAboutLoadFailure() {
         for (AggregationTaskStageListener taskStageListener : taskStageListeners) {
             taskStageListener.onFailed(this);
         }

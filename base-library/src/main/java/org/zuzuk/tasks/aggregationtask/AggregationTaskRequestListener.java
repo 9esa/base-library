@@ -24,7 +24,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
 
     @Override
     public void onRequestSuccess(T response) {
-        if (taskExecutorHelper.isPaused()) {
+        if (parentTaskController.isEnded() || taskExecutorHelper.isPaused()) {
             return;
         }
 
@@ -39,7 +39,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
 
     @Override
     public void onRequestFailure(SpiceException spiceException) {
-        if (taskExecutorHelper.isPaused()) {
+        if (parentTaskController.isEnded() || taskExecutorHelper.isPaused()) {
             return;
         }
 
@@ -48,7 +48,7 @@ class AggregationTaskRequestListener<T> implements RequestListener<T> {
             int countOfListeners = parentTaskController.wrappedRequestListeners.size();
             requestListener.onRequestFailure(spiceException);
             // add fail if nothing else started in failure callback
-            if(countOfListeners == parentTaskController.wrappedRequestListeners.size()){
+            if (countOfListeners == parentTaskController.wrappedRequestListeners.size()) {
                 parentTaskController.stageState.addFail(spiceException);
             }
         } else {

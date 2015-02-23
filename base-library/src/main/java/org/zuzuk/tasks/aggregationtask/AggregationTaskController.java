@@ -23,7 +23,13 @@ class AggregationTaskController {
     final List<RequestListener> wrappedRequestListeners = new ArrayList<>();
     AggregationTaskStageState stageState = AggregationTaskStageState.createPreLoadingStageState();
     private boolean isWrappingTasks = false;
-    RequestAndTaskExecutor requestAndTaskExecutor;
+    private boolean isEnded = false;
+    private RequestAndTaskExecutor requestAndTaskExecutor;
+
+    /* Returns if task is ended */
+    public boolean isEnded() {
+        return isEnded;
+    }
 
     /* Returns if all observed tasks finished so controller not listen to any task execution */
     private boolean noOneListenToRequests() {
@@ -37,7 +43,20 @@ class AggregationTaskController {
 
     /* Changing state of task from PRE_LOADING to LOADED */
     void nextStep() {
-        taskExecutorHelper.executeTaskInternal(new AggregationTaskStageStateTask(this, stageState), taskStageStateListener, true, this);
+        stageState.setIsLoaded(task.isLoaded(stageState));
+        if (stageState.isLoaded()) {
+            stageState.notifyListenersAboutLoadSuccess();
+            task.onLoaded(stageState);
+        } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
+            stageState.notifyListenersAboutLoadFailure();
+            task.onFailed(stageState);
+        }
+
+        if (stageState.getTaskStage() != AggregationTaskStage.REAL_LOADING) {
+            taskExecutorHelper.executeTaskInternal(new IsLoadingCheckerTask(this, stageState), taskStageStateListener, true, this);
+        } else {
+            endTask();
+        }
     }
 
     /* Start listening to some task */
@@ -58,18 +77,15 @@ class AggregationTaskController {
     }
 
     /* Object that listens to tasks which calculates states of stages */
-    private final RequestListener<AggregationTaskStageState> taskStageStateListener = new RequestListener<AggregationTaskStageState>() {
+    private final RequestListener<Boolean> taskStageStateListener = new RequestListener<Boolean>() {
 
         @Override
-        public void onRequestSuccess(AggregationTaskStageState aggregationTaskStageState) {
-            if (stageState.isLoaded()) {
-                stageState.notifyListenerAboutLoadSuccess();
-                task.onLoaded(stageState);
-            } else if (stageState.getTaskStage() != AggregationTaskStage.PRE_LOADING) {
-                stageState.notifyListenerAboutLoadFailure();
-                task.onFailed(stageState);
+        public void onRequestSuccess(Boolean isLoadingNeeded) {
+            if (isEnded) {
+                return;
             }
 
+            stageState.setIsLoadingNeeded(isLoadingNeeded);
             if (stageState.isLoadingNeeded()) {
                 switch (stageState.getTaskStage()) {
                     case PRE_LOADING:
@@ -85,20 +101,25 @@ class AggregationTaskController {
                         loadAggregationTask();
                         break;
                 }
+            } else {
+                endTask();
             }
         }
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
+            if (isEnded) {
+                return;
+            }
+
             stageState = new AggregationTaskStageState(stageState.getTaskStage(), stageState);
             stageState.addFail(spiceException);
             task.onFailed(stageState);
-            stageState.notifyListenerAboutLoadFailure();
+            stageState.notifyListenersAboutLoadFailure();
             Lc.e("Failed on getting isLoaded() or isLoadingNeeded() on stage " + stageState.getTaskStage());
         }
     };
 
-    @SuppressWarnings("unchecked")
     private void loadAggregationTask() {
         startWrappingRequestsAsAggregation();
         requestAndTaskExecutor = taskExecutorHelper.createRequestAndTaskExecutor();
@@ -108,6 +129,12 @@ class AggregationTaskController {
         stageState.setIsTaskWrapped(null);
         stopWrapRequestsAsAggregation();
         checkIfTaskFinished();
+    }
+
+    public void endTask() {
+        wrappedRequestListeners.clear();
+        isEnded = true;
+        taskExecutorHelper.controllers.remove(this);
     }
 
     <T> void executeRequest(RemoteRequest<T> request,
@@ -149,5 +176,4 @@ class AggregationTaskController {
     void stopWrapRequestsAsAggregation() {
         isWrappingTasks = false;
     }
-
 }
