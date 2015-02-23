@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="BaseLibraryAttributes">
-        <attr name="loadingFragmentLayout" format="reference"/>
-    </declare-styleable>
-
     <declare-styleable name="TypefacedTextView">
         <attr name="customTypeface" format="string" />
     </declare-styleable>

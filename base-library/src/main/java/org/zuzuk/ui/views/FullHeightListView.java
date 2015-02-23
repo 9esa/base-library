@@ -4,11 +4,13 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ListView;
 
+import org.zuzuk.ui.views.hacked.CustomListView;
+
 /**
  * Created by Gavriil Sitnikov on 03/10/2014.
  * ListView that measures with full height
  */
-public class FullHeightListView extends ListView {
+public class FullHeightListView extends CustomListView {
 
     public FullHeightListView(Context context) {
         super(context);
