@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
 import com.j256.ormlite.support.ConnectionSource;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
+import org.zuzuk.utils.serialization.FSTSerializer;
+import org.zuzuk.utils.serialization.Serializer;
 
 import java.io.File;
 
@@ -20,6 +22,8 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
 
     private static SettingsDatabaseHelper instance;
     private static MigrateProcessor migrateProcessor;
+
+    private Serializer serializer = FSTSerializer.Instance;
 
     public synchronized static SettingsDatabaseHelper getInstance(Context context) {
         if (instance == null) {
@@ -44,9 +48,12 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         if (migrateProcessor != null) {
-            migrateProcessor.migrate(this, oldVersion, newVersion);
+            migrateProcessor.getOldData(this, oldVersion, newVersion);
         }
         super.onUpgrade(sqLiteDatabase, connectionSource, oldVersion, newVersion);
+        if (migrateProcessor != null) {
+            migrateProcessor.setNewData(this, oldVersion, newVersion);
+        }
     }
 
     private static int getSettingsVersion(Context context) {
@@ -67,8 +74,15 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         return setting == null ? null : setting.getData();
     }
 
+    public void setSetting(String settingName, Object data) {
+        SettingDatabaseModel settingsModel = new SettingDatabaseModel(settingName, serializer.serialize(data));
+        getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
+    }
+
     public interface MigrateProcessor {
 
-        void migrate(SettingsDatabaseHelper settingsDatabase, int oldVersion, int newVersion);
+        void getOldData(SettingsDatabaseHelper settingsDatabase, int oldVersion, int newVersion);
+
+        void setNewData(SettingsDatabaseHelper settingsDatabase, int oldVersion, int newVersion);
     }
 }
