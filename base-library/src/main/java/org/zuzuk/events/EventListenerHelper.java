@@ -45,7 +45,7 @@ public class EventListenerHelper {
 
     public EventListenerHelper(EventListener eventListener) {
         this.eventListener = eventListener;
-        fillListeningBroadcastEvents();
+        fillListeningBroadcastEventsFromClass(eventListener.getClass());
     }
 
     public void onCreate(Context context) {
@@ -74,25 +74,37 @@ public class EventListenerHelper {
         context = null;
     }
 
+    private void fillListeningBroadcastEventsFromClass(Class clazz) {
+        BroadcastEvents events = (BroadcastEvents) clazz.getAnnotation(BroadcastEvents.class);
+        if (events == null) {
+            return;
+        }
 
-    private void fillListeningBroadcastEvents() {
-        BroadcastEvents events = eventListener.getClass().getAnnotation(BroadcastEvents.class);
-        if (events != null) {
-            for (EventAnnotation eventAnnotation : events.value()) {
-                if (!eventAnnotation.isGlobalBroadcast()) {
-                    if (eventAnnotation.isOnlyWhileResumed()) {
-                        localOnResumeEvents.add(eventAnnotation.value());
-                    } else {
-                        localEvents.add(eventAnnotation.value());
+        for (EventAnnotation eventAnnotation : events.value()) {
+            String eventName = eventAnnotation.value();
+            if (!eventAnnotation.isGlobalBroadcast()) {
+                if (eventAnnotation.isOnlyWhileResumed()) {
+                    if (!localOnResumeEvents.contains(eventName)) {
+                        localOnResumeEvents.add(eventName);
                     }
                 } else {
-                    if (eventAnnotation.isOnlyWhileResumed()) {
-                        globalOnResumeEvents.add(eventAnnotation.value());
-                    } else {
-                        globalEvents.add(eventAnnotation.value());
+                    if (!localEvents.contains(eventName)) {
+                        localEvents.add(eventName);
+                    }
+                }
+            } else {
+                if (eventAnnotation.isOnlyWhileResumed()) {
+                    if (!globalOnResumeEvents.contains(eventName)) {
+                        globalOnResumeEvents.add(eventName);
+                    }
+                } else {
+                    if (!globalEvents.contains(eventName)) {
+                        globalEvents.add(eventName);
                     }
                 }
             }
         }
+
+        fillListeningBroadcastEventsFromClass(clazz.getSuperclass());
     }
 }
