@@ -3,21 +3,22 @@ package org.zuzuk.settings;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+
+import com.j256.ormlite.support.ConnectionSource;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
 
 import java.io.File;
 
 public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
-
     private final static String SETTINGS_DATABASE_NAME = "inner_settings";
-
     private final static int DEFAULT_SETTINGS_VERSION = 1;
-
     private final static String SETTINGS_VERSION_MANIFEST_KEY = "org.zuzuk.settings.version";
 
     private static SettingsDatabaseHelper instance;
+    private static MigrateProcessor migrateProcessor;
 
     public synchronized static SettingsDatabaseHelper getInstance(Context context) {
         if (instance == null) {
@@ -26,8 +27,21 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         return instance;
     }
 
+    @Override
+    protected Class[] getTables() {
+        return new Class[]{SettingDatabaseModel.class};
+    }
+
     private SettingsDatabaseHelper(Context context) {
         super(context, context.getFilesDir() + File.separator + SETTINGS_DATABASE_NAME, null, getSettingsVersion(context));
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource, int oldVersion, int newVersion) {
+        if (migrateProcessor != null) {
+            migrateProcessor.migrate(oldVersion, newVersion);
+        }
+        super.onUpgrade(sqLiteDatabase, connectionSource, oldVersion, newVersion);
     }
 
     private static int getSettingsVersion(Context context) {
@@ -42,9 +56,12 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         }
     }
 
-    @Override
-    protected Class[] getTables() {
-        return new Class[]{SettingDatabaseModel.class};
+    public static void setMigrateProcessor(MigrateProcessor migrateProcessor) {
+        SettingsDatabaseHelper.migrateProcessor = migrateProcessor;
     }
 
+    public interface MigrateProcessor {
+
+        void migrate(int oldVersion, int newVersion);
+    }
 }
