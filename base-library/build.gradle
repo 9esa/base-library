@@ -8,7 +8,7 @@ repositories {
 
 ext.libArtifactId = 'base-library'
 ext.libPackageName = 'org.zuzuk'
-ext.libVersion = '1.1.28'
+ext.libVersion = '1.1.29'
 android {
     compileSdkVersion 21
     buildToolsVersion "20.0.0"

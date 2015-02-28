@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 
 import com.j256.ormlite.support.ConnectionSource;
 
@@ -27,6 +28,10 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         return instance;
     }
 
+    public static void setMigrateProcessor(MigrateProcessor migrateProcessor) {
+        SettingsDatabaseHelper.migrateProcessor = migrateProcessor;
+    }
+
     @Override
     protected Class[] getTables() {
         return new Class[]{SettingDatabaseModel.class};
@@ -39,7 +44,7 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         if (migrateProcessor != null) {
-            migrateProcessor.migrate(oldVersion, newVersion);
+            migrateProcessor.migrate(this, oldVersion, newVersion);
         }
         super.onUpgrade(sqLiteDatabase, connectionSource, oldVersion, newVersion);
     }
@@ -56,12 +61,14 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
         }
     }
 
-    public static void setMigrateProcessor(MigrateProcessor migrateProcessor) {
-        SettingsDatabaseHelper.migrateProcessor = migrateProcessor;
+    @Nullable
+    public byte[] getSettingRawData(String settingName) {
+        SettingDatabaseModel setting = getDbTable(SettingDatabaseModel.class).queryForId(settingName);
+        return setting == null ? null : setting.getData();
     }
 
     public interface MigrateProcessor {
 
-        void migrate(int oldVersion, int newVersion);
+        void migrate(SettingsDatabaseHelper settingsDatabase, int oldVersion, int newVersion);
     }
 }
