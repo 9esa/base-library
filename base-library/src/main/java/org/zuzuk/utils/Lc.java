@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
-import org.zuzuk.InitializationHelper;
+import com.j256.ormlite.logger.LocalLog;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -31,6 +31,23 @@ public class Lc {
         return logLevel;
     }
 
+    /* Setting Robospice log level */
+    public static void setRobospiceLogLevel(int robospiceLogLevel) {
+        Ln.getConfig().setLoggingLevel(robospiceLogLevel);
+        Ln.setPrint(new Ln.Print() {
+            @Override
+            public int println(int priority, String msg) {
+                logMessage(priority, msg, null, 1);
+                return 0;
+            }
+        });
+    }
+
+    /* Setting OrmLite log level */
+    public static void setOrmLiteLogLevel(int ormLiteLogLevel) {
+        System.setProperty(LocalLog.LOCAL_LOG_LEVEL_PROPERTY, Ln.logLevelToString(ormLiteLogLevel));
+    }
+
     private static final ThreadLocal<SimpleDateFormat> DateTimeFormatter =
             new ThreadLocal<SimpleDateFormat>() {
                 @Override
@@ -41,26 +58,13 @@ public class Lc {
 
     /* Logging initialization */
     public static void initialize(int logLevel) {
-        initialize(logLevel, logLevel, new ConsoleLogProcessor());
-    }
-
-    /* Logging initialization with different log level for Robospice*/
-    public static void initialize(int logLevel, int robospiceLogLevel) {
-        initialize(logLevel, robospiceLogLevel, new ConsoleLogProcessor());
+        initialize(logLevel, new ConsoleLogProcessor());
     }
 
     /* Logging initialization with different log level for Robospice and custom log processor */
-    public static void initialize(int logLevel, int robospiceLogLevel, LogProcessor logProcessor) {
+    public static void initialize(int logLevel, LogProcessor logProcessor) {
         Lc.logLevel = logLevel;
         Lc.logProcessor = logProcessor;
-        Ln.getConfig().setLoggingLevel(robospiceLogLevel);
-        Ln.setPrint(new Ln.Print() {
-            @Override
-            public int println(int priority, String msg) {
-                logMessage(priority, msg, null, 1);
-                return 0;
-            }
-        });
         d(String.format("Configuring Logging, minimum log level is %s", Ln.logLevelToString(logLevel)));
     }
 
