@@ -71,22 +71,15 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
             return totalCount;
         }
 
-        if (!isInitialized()) {
-            return 0;
-        }
-
         int maxPageIndex = -1;
         for (int i = 0; i < pages.size(); i++) {
             maxPageIndex = Math.max(maxPageIndex, pages.keyAt(i));
         }
-        return (maxPageIndex + 1) * DEFAULT_ITEMS_ON_PAGE + 1;
+        return (maxPageIndex + 1) * DEFAULT_ITEMS_ON_PAGE;
     }
 
     @Override
     public int getAvailableCount() {
-        if (!isInitialized()) {
-            return 0;
-        }
         int result = 0;
         for (int i = 0; i < pages.size(); i++) {
             result += pages.valueAt(i).size();
@@ -126,11 +119,7 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         }
 
         getRequestingPages().remove(pageIndex);
-        if (!isInitialized()) {
-            onInitialized();
-        } else {
-            onDataSetChanged();
-        }
+        onDataSetChanged();
     }
 
     protected void onPageLoadingFailed(int pageIndex, List<Exception> exceptions) {
@@ -139,9 +128,6 @@ public abstract class PagingProvider<TItem> extends LoadingItemsProvider<TItem> 
         }
 
         getRequestingPages().remove(pageIndex);
-        if (!isInitialized()) {
-            onInitializationFailed(exceptions);
-        }
     }
 
     @Override

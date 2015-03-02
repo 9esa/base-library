@@ -74,6 +74,7 @@ public class EventListenerHelper {
         context = null;
     }
 
+    @SuppressWarnings("unchecked")
     private void fillListeningBroadcastEventsFromClass(Class clazz) {
         BroadcastEvents events = (BroadcastEvents) clazz.getAnnotation(BroadcastEvents.class);
         if (events == null) {

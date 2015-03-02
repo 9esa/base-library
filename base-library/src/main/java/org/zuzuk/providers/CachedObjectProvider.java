@@ -40,21 +40,14 @@ public class CachedObjectProvider<TObject> extends DataProvider {
         onDataSetChanged();
     }
 
-    @Override
-    public boolean isInitialized() {
-        return object != null
-                && cacheInfo != null;
-    }
-
     /* Returns if cached data is expired */
     public boolean isDataExpired(SpiceManager spiceManager) {
-        return !isInitialized()
-                || CacheUtils.isCachedDataExpired(spiceManager, cacheInfo);
+        return CacheUtils.isCachedDataExpired(spiceManager, cacheInfo);
     }
 
     /* Returns if provider stores valid data */
     public boolean isValid(SpiceManager spiceManager) {
-        return isInitialized() && !isDataExpired(spiceManager);
+        return !isDataExpired(spiceManager);
     }
 
     @Override
@@ -64,8 +57,8 @@ public class CachedObjectProvider<TObject> extends DataProvider {
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeBoolean(isInitialized());
-        if (isInitialized()) {
+        out.writeBoolean(cacheInfo != null);
+        if (cacheInfo != null) {
             out.writeObject(object);
             out.writeObject(cacheInfo);
         }

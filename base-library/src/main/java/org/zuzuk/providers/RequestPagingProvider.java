@@ -23,14 +23,9 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
     private AggregationTaskExecutor aggregationTaskExecutor;
     private PagingTaskCreator<TItem> requestCreator;
     private HashMap<Integer, List<TItem>> items = new HashMap<>();
-    private Long initializationTime;
 
     /* Returns if cached data is expired */
     public boolean isDataExpired(SpiceManager spiceManager) {
-        if (!isInitialized()) {
-            return true;
-        }
-
         for (Integer index : items.keySet()) {
             if (createTask(index).isLoadingNeeded(AggregationTaskStageState.createPreLoadingStageState())) {
                 return true;
@@ -41,7 +36,7 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
 
     /* Returns if provider stores valid data */
     public boolean isValid(SpiceManager spiceManager) {
-        return isInitialized() && !isDataExpired(spiceManager);
+        return !isDataExpired(spiceManager);
     }
 
     public RequestPagingProvider(AggregationTaskExecutor aggregationTaskExecutor, PagingTaskCreator<TItem> requestCreator) {
@@ -58,9 +53,6 @@ public class RequestPagingProvider<TItem> extends PagingProvider<TItem> {
         List<TItem> items = aggregationTask.getPageItems();
         if (items != null) {
             RequestPagingProvider.this.items.put(index, items);
-            if (initializationTime == null) {
-                initializationTime = System.currentTimeMillis();
-            }
             onPageLoaded(index, items);
         }
     }

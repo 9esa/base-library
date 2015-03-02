@@ -20,37 +20,16 @@ public abstract class LoadingItemsProvider<TItem> extends ItemsProvider<TItem> {
     /* Returns available loaded item by position (position related to AvailableCount) */
     public abstract TItem getAvailableItem(int position);
 
-    /* Returns is provider initialized */
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
     /* Starts provider initialization at specific position */
     public void initialize(int initializationPosition, RequestAndTaskExecutor executor) {
         if (executor == null) {
             Lc.fatalException(new Throwable("Initialization is allowed only inside load()"));
             return;
         }
-
-        if (!isInitializing) {
-            isInitializing = true;
-            initializeInternal(initializationPosition, executor);
-        }
+        initializeInternal(initializationPosition, executor);
     }
 
     /* Internal provider initialization logic */
     protected abstract void initializeInternal(int initializationPosition, RequestAndTaskExecutor executor);
-
-    /* Raises when provider initialized. Use it in child classes */
-    public void onInitialized() {
-        isInitialized = true;
-        isInitializing = false;
-        onDataSetChanged();
-    }
-
-    /* Raises when provider initialization failed. Use it in child classes */
-    public void onInitializationFailed(List<Exception> exceptions) {
-        isInitializing = false;
-    }
 
 }
