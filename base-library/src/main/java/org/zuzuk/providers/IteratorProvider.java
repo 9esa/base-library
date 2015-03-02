@@ -91,7 +91,6 @@ public class IteratorProvider<TItem> extends PagingProvider<TItem> {
 
                             @Override
                             public void onRequestFailure(SpiceException spiceException) {
-                                onInitializationFailed(Arrays.asList((Exception) spiceException));
                             }
                         });
             }

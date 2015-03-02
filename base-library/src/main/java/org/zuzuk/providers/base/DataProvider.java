@@ -11,9 +11,6 @@ import java.util.List;
 public abstract class DataProvider {
     private List<WeakReference<DataSetChangedListener>> dataSetChangedListenersReferences = new ArrayList<>();
 
-    /* Returns if provider is initialized */
-    public abstract boolean isInitialized();
-
     /* Adds data set changing listener */
     public void addOnDataSetChangedListener(DataSetChangedListener dataSetChangedListener) {
         dataSetChangedListenersReferences.add(new WeakReference<>(dataSetChangedListener));

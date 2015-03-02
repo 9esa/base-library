@@ -21,11 +21,6 @@ public class ObjectProvider<TObject> extends DataProvider {
     }
 
     @Override
-    public boolean isInitialized() {
-        return object != null;
-    }
-
-    @Override
     protected void resetInternal() {
         object = null;
     }
