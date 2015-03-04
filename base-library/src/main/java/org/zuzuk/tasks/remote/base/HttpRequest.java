@@ -54,6 +54,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
         setupUrlParameters(url);
 
         return buildRequest(DefaultHttpTransport.createRequestFactory(), url)
+                .setNumberOfRetries(0)
                 .setHeaders(headers)
                 .setParser(getParser());
     }
@@ -64,7 +65,7 @@ public abstract class HttpRequest<T> extends RemoteRequest<T> {
 
         Lc.d("Url requested: " + request.getUrl().toString());
 
-        T response = null;
+        T response;
         HttpResponse httpResponse = request.execute();
         if (doLogResponse()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(httpResponse.getContent()));
