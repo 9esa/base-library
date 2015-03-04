@@ -19,13 +19,18 @@ public abstract class ItemsRecyclerAdapter<TItem, TViewHolder extends RecyclerVi
         setHasStableIds(true);
     }
 
+    protected boolean isItemEnabled(TItem item, int position) {
+        return true;
+    }
+
     @Override
     public void onBindViewHolder(TViewHolder holder, final int position) {
+        holder.itemView.setEnabled(isItemEnabled(getItem(position), position));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (onItemClickListener != null) {
-                    onItemClickListener.onClick(getItem(position));
+                    onItemClickListener.onClick(getItem(position), position);
                 }
             }
         });
@@ -39,6 +44,6 @@ public abstract class ItemsRecyclerAdapter<TItem, TViewHolder extends RecyclerVi
     }
 
     public interface OnItemClickListener<TItem> {
-        void onClick(TItem item);
+        void onClick(TItem item, int position);
     }
 }
