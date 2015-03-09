@@ -10,7 +10,7 @@ import android.support.annotation.Nullable;
 import com.j256.ormlite.support.ConnectionSource;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
-import org.zuzuk.utils.serialization.FSTSerializer;
+import org.zuzuk.utils.serialization.KryoSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
 import java.io.File;
@@ -23,7 +23,7 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
     private static SettingsDatabaseHelper instance;
     private static MigrateProcessor migrateProcessor;
 
-    private Serializer serializer = FSTSerializer.Instance;
+    private Serializer serializer = KryoSerializer.Instance;
 
     public synchronized static SettingsDatabaseHelper getInstance(Context context) {
         if (instance == null) {

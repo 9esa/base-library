@@ -10,7 +10,7 @@ import android.util.Log;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 import org.zuzuk.utils.Lc;
-import org.zuzuk.utils.serialization.FSTSerializer;
+import org.zuzuk.utils.serialization.KryoSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
 import java.util.Arrays;
@@ -37,7 +37,7 @@ public class Setting<T> {
             onSettingChanged(context);
         }
     };
-    private Serializer serializer = FSTSerializer.Instance;
+    private Serializer serializer = KryoSerializer.Instance;
 
     public Setting(String name) {
         this.name = name;
@@ -101,9 +101,15 @@ public class Setting<T> {
             if (cachedValueBytes == null) {
                 updateCacheValueBytes(context);
             }
-            return cachedValueBytes != EMPTY_VALUE
-                    ? serializer.<T>deserialize(cachedValueBytes)
-                    : null;
+            try {
+                return cachedValueBytes != EMPTY_VALUE
+                        ? serializer.<T>deserialize(cachedValueBytes)
+                        : null;
+            } catch (Exception e) {
+                Lc.fatalException(e);
+                set(context, null);
+                return null;
+            }
         }
     }
 
@@ -144,7 +150,12 @@ public class Setting<T> {
     }
 
     private byte[] getBytesOrNull(T value, byte[] nullValue) {
-        return value != null ? serializer.serialize(value) : nullValue;
+        try {
+            return value != null ? serializer.serialize(value) : nullValue;
+        } catch (Exception e) {
+            Lc.fatalException(e);
+            return null;
+        }
     }
 
     private String valueToString(T value) {

@@ -11,7 +11,7 @@ import com.octo.android.robospice.persistence.exception.CacheSavingException;
 
 import org.apache.commons.io.FileUtils;
 import org.zuzuk.database.DBUtils;
-import org.zuzuk.utils.serialization.FSTSerializer;
+import org.zuzuk.utils.serialization.KryoSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
 import java.io.File;
@@ -22,7 +22,7 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
     private static final String DEFAULT_ROOT_CACHE_DIR = "robospice-cache";
     private static final int MAX_BYTE_ARRAY_SIZE_IN_DB = 512 * 1024; // 512Kb
 
-    private Serializer serializer = FSTSerializer.Instance;
+    private Serializer serializer = KryoSerializer.Instance;
     private File cacheFolder;
 
     protected void setSerializer(Serializer serializer) {
@@ -62,7 +62,11 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
                     throw new CacheLoadingException(e);
                 }
             }
-            return serializer.deserialize(data);
+            try {
+                return serializer.deserialize(data);
+            } catch (Exception e) {
+                throw new CacheLoadingException(e);
+            }
         } else {
             return null;
         }
@@ -90,7 +94,12 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
 
     @Override
     public TObject saveDataToCacheAndReturnData(TObject object, Object cacheKey) throws CacheSavingException {
-        byte[] serializedData = serializer.serialize(object);
+        byte[] serializedData;
+        try {
+            serializedData = serializer.serialize(object);
+        } catch (Exception e) {
+            throw new CacheSavingException(e);
+        }
         ORMLiteDatabaseCacheDbEntry cacheDbEntry;
         if (serializedData.length < MAX_BYTE_ARRAY_SIZE_IN_DB) {
             cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), serializedData);
