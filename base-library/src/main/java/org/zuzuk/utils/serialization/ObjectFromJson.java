@@ -29,10 +29,10 @@ public class ObjectFromJson implements Externalizable {
                         int length = input.readInt();
                         byte[] buffer = new byte[length];
                         input.readFully(buffer);
-                        field.set(this, FSTSerializer.Instance.deserialize(buffer));
+                        field.set(this, KryoSerializer.Instance.deserialize(buffer));
                 }
             }
-        } catch (IllegalAccessException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -49,12 +49,12 @@ public class ObjectFromJson implements Externalizable {
                     output.writeObject(JsonObjectState.DATA_NULL);
                 } else {
                     output.writeObject(JsonObjectState.OBJECT);
-                    byte[] serialized = FSTSerializer.Instance.serialize(value);
+                    byte[] serialized = KryoSerializer.Instance.serialize(value);
                     output.writeInt(serialized.length);
                     output.write(serialized);
                 }
             }
-        } catch (IllegalAccessException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }

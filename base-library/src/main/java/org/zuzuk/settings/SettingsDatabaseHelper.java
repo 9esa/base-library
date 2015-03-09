@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import com.j256.ormlite.support.ConnectionSource;
 
 import org.zuzuk.database.BaseOrmLiteHelper;
+import org.zuzuk.utils.Lc;
 import org.zuzuk.utils.serialization.KryoSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
@@ -75,7 +76,12 @@ public class SettingsDatabaseHelper extends BaseOrmLiteHelper {
     }
 
     public void setSetting(String settingName, Object data) {
-        SettingDatabaseModel settingsModel = new SettingDatabaseModel(settingName, serializer.serialize(data));
+        SettingDatabaseModel settingsModel = null;
+        try {
+            settingsModel = new SettingDatabaseModel(settingName, serializer.serialize(data));
+        } catch (Exception e) {
+            Lc.fatalException(e);
+        }
         getDbTable(SettingDatabaseModel.class).createOrUpdate(settingsModel);
     }
 

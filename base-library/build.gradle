@@ -8,10 +8,10 @@ repositories {
 
 ext.libArtifactId = 'base-library'
 ext.libPackageName = 'org.zuzuk'
-ext.libVersion = '1.1.35'
+ext.libVersion = '1.1.36'
 android {
     compileSdkVersion 21
-    buildToolsVersion "20.0.0"
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         minSdkVersion 7
@@ -31,9 +31,9 @@ android {
 }
 
 dependencies {
-    /* Common */
-    provided 'com.android.support:appcompat-v7:21.0.3'
-    provided 'com.android.support:recyclerview-v7:21.0.3'
+    /* Common. Should be compile because of .aar */
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support:recyclerview-v7:21.0.3'
 
     /* Image loading */
     provided 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
