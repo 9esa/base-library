@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
 import org.zuzuk.ui.UIUtils;
+import org.zuzuk.utils.Lc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,31 +16,43 @@ import java.util.List;
  * Helper to listen events during lifecycle of object
  */
 public class EventListenerHelper {
+
     private final EventListener eventListener;
     private Context context;
+    private boolean isCreated = false;
+    private boolean isResumed = false;
+
     private final List<String> globalEvents = new ArrayList<>();
     private final List<String> localEvents = new ArrayList<>();
     private final List<String> globalOnResumeEvents = new ArrayList<>();
     private final List<String> localOnResumeEvents = new ArrayList<>();
-    private boolean isOnCreateReceiversRegistered = false;
+
     private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            eventListener.onEvent(context, intent.getAction(), intent);
+            if (isCreated) {
+                eventListener.onEvent(context, intent.getAction(), intent);
+            }
         }
     };
     private final BroadcastReceiver localEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            eventListener.onEvent(context, intent.getAction(), intent);
+            if (isCreated) {
+                eventListener.onEvent(context, intent.getAction(), intent);
+            }
         }
     };
     private final BroadcastReceiver globalOnResumeEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            eventListener.onEvent(context, intent.getAction(), intent);
+            if (isResumed) {
+                eventListener.onEvent(context, intent.getAction(), intent);
+            }
         }
     };
     private final BroadcastReceiver localOnResumeEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            eventListener.onEvent(context, intent.getAction(), intent);
+            if (isResumed) {
+                eventListener.onEvent(context, intent.getAction(), intent);
+            }
         }
     };
 
@@ -49,28 +62,56 @@ public class EventListenerHelper {
     }
 
     public void onCreate(Context context) {
+        if (isCreated) {
+            Lc.fatalException(new IllegalStateException("Call onDestroy() first"));
+        }
+        if (isResumed) {
+            Lc.fatalException(new IllegalStateException("Call onPause() first"));
+        }
+
         this.context = context;
+        isCreated = true;
         LocalBroadcastManager.getInstance(context).registerReceiver(localEventReceiver, UIUtils.createIntentFilter(localEvents));
         context.registerReceiver(globalEventReceiver, UIUtils.createIntentFilter(globalEvents));
-        isOnCreateReceiversRegistered = true;
     }
 
     public void onResume() {
+        if (!isCreated) {
+            Lc.fatalException(new IllegalStateException("Call onCreate() first"));
+        }
+        if (isResumed) {
+            Lc.fatalException(new IllegalStateException("Call onPause() first"));
+        }
+
+        isResumed = true;
         LocalBroadcastManager.getInstance(context).registerReceiver(localOnResumeEventReceiver, UIUtils.createIntentFilter(localOnResumeEvents));
         context.registerReceiver(globalOnResumeEventReceiver, UIUtils.createIntentFilter(globalOnResumeEvents));
     }
 
     public void onPause() {
+        if (!isCreated) {
+            Lc.fatalException(new IllegalStateException("Call onCreate() first"));
+        }
+        if (!isResumed) {
+            Lc.fatalException(new IllegalStateException("Call onResume() first"));
+        }
+
+        isResumed = false;
         LocalBroadcastManager.getInstance(context).unregisterReceiver(localOnResumeEventReceiver);
         context.unregisterReceiver(globalOnResumeEventReceiver);
     }
 
     public void onDestroy() {
-        if (isOnCreateReceiversRegistered) {
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(localEventReceiver);
-            context.unregisterReceiver(globalEventReceiver);
-            isOnCreateReceiversRegistered = false;
+        if (!isCreated) {
+            Lc.fatalException(new IllegalStateException("Call onCreate() first"));
         }
+        if (isResumed) {
+            Lc.fatalException(new IllegalStateException("Call onPause() first"));
+        }
+
+        isCreated = false;
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(localEventReceiver);
+        context.unregisterReceiver(globalEventReceiver);
         context = null;
     }
 
