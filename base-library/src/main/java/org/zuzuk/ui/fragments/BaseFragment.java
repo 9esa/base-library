@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 
 import org.zuzuk.events.EventListener;
 import org.zuzuk.events.EventListenerHelper;
-import org.zuzuk.tasks.aggregationtask.TaskExecutorHelper;
 import org.zuzuk.ui.activities.BaseActivity;
 
 import java.util.HashMap;
@@ -59,7 +58,9 @@ public abstract class BaseFragment extends Fragment implements EventListener,
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        eventListenerHelper.onCreate(getActivity());
+        if (!eventListenerHelper.isCreated()) {
+            eventListenerHelper.onCreate(getActivity());
+        }
     }
 
     @Override

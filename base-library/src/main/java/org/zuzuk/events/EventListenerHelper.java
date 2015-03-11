@@ -27,6 +27,10 @@ public class EventListenerHelper {
     private final List<String> globalOnResumeEvents = new ArrayList<>();
     private final List<String> localOnResumeEvents = new ArrayList<>();
 
+    public boolean isCreated() {
+        return isCreated;
+    }
+
     private final BroadcastReceiver globalEventReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             if (isCreated) {
