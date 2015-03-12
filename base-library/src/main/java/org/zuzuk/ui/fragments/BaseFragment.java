@@ -28,6 +28,7 @@ public abstract class BaseFragment extends Fragment implements EventListener,
     private final HashMap<Integer, View> viewsHolder = new HashMap<>();
     private final Handler postHandler = new Handler();
     private final EventListenerHelper eventListenerHelper = new EventListenerHelper(this);
+    private boolean wasActivityCreated = false;
 
     /* Returns post handler to executes code on UI thread */
     public Handler getPostHandler() {
@@ -60,6 +61,7 @@ public abstract class BaseFragment extends Fragment implements EventListener,
         super.onActivityCreated(savedInstanceState);
         if (!eventListenerHelper.isCreated()) {
             eventListenerHelper.onCreate(getActivity());
+            wasActivityCreated = true;
         }
     }
 
@@ -141,7 +143,10 @@ public abstract class BaseFragment extends Fragment implements EventListener,
     @Override
     public void onDestroy() {
         super.onDestroy();
-        eventListenerHelper.onDestroy();
+        if (wasActivityCreated) {
+            eventListenerHelper.onDestroy();
+            wasActivityCreated = false;
+        }
     }
 
     /* Finds view by id and stores it in cache till view destroys */
