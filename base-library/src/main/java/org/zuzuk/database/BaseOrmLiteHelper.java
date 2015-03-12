@@ -34,10 +34,6 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
     /* Returns classes that are part of database */
     protected abstract Class[] getTables();
 
-    protected boolean shouldCreate() {
-        return true;
-    }
-
     public BaseOrmLiteHelper(Context context, String databaseName, SQLiteDatabase.CursorFactory factory, int databaseVersion) {
         super(context, databaseName, factory, databaseVersion);
     }
@@ -48,10 +44,6 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource) {
-        if (!shouldCreate()) {
-            return;
-        }
-
         try {
             for (Class table : getTables()) {
                 TableUtils.createTableIfNotExists(connectionSource, table);
@@ -104,4 +96,5 @@ public abstract class BaseOrmLiteHelper extends OrmLiteSqliteOpenHelper {
         checkDaoMap();
         return daoMap.get(getTables()[0]);
     }
+
 }
