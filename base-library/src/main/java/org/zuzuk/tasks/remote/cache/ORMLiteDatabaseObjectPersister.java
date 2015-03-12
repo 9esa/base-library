@@ -3,6 +3,7 @@ package org.zuzuk.tasks.remote.cache;
 import android.app.Application;
 
 import com.j256.ormlite.dao.RuntimeExceptionDao;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.ObjectPersister;
 import com.octo.android.robospice.persistence.exception.CacheCreationException;
@@ -10,11 +11,11 @@ import com.octo.android.robospice.persistence.exception.CacheLoadingException;
 import com.octo.android.robospice.persistence.exception.CacheSavingException;
 
 import org.apache.commons.io.FileUtils;
-import org.zuzuk.database.DBUtils;
 import org.zuzuk.utils.serialization.KryoSerializer;
 import org.zuzuk.utils.serialization.Serializer;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,9 +103,9 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
         }
         ORMLiteDatabaseCacheDbEntry cacheDbEntry;
         if (serializedData.length < MAX_BYTE_ARRAY_SIZE_IN_DB) {
-            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), serializedData);
+            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), getHandledClass(), serializedData);
         } else {
-            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), null);
+            cacheDbEntry = new ORMLiteDatabaseCacheDbEntry(cacheKey.toString(), getHandledClass(), null);
             try {
                 FileUtils.writeByteArrayToFile(getCacheFile(cacheKey.toString()), serializedData);
             } catch (Exception e) {
@@ -123,7 +124,13 @@ public class ORMLiteDatabaseObjectPersister<TObject> extends ObjectPersister<TOb
 
     @Override
     public void removeAllDataFromCache() {
-        DBUtils.deleteAll(getCacheDbTable());
+        try {
+            DeleteBuilder<ORMLiteDatabaseCacheDbEntry, Object> deleteBuilder = getCacheDbTable().deleteBuilder();
+            deleteBuilder.where().eq(ORMLiteDatabaseCacheDbEntry.CLAZZ_COLUMN, getHandledClass().getName());
+            deleteBuilder.delete();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private RuntimeExceptionDao<ORMLiteDatabaseCacheDbEntry, Object> getCacheDbTable() {

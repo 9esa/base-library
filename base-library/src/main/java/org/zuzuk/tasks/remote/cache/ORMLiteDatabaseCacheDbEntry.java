@@ -7,8 +7,13 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable
 public class ORMLiteDatabaseCacheDbEntry {
 
+    public static final String CLAZZ_COLUMN = "CLAZZ_COLUMN";
+
     @DatabaseField(id = true, canBeNull = false)
     private String key;
+
+    @DatabaseField(index = true, canBeNull = false, columnName = CLAZZ_COLUMN)
+    private String clazz;
 
     @DatabaseField(canBeNull = false)
     private long lastModified;
@@ -31,8 +36,9 @@ public class ORMLiteDatabaseCacheDbEntry {
     private ORMLiteDatabaseCacheDbEntry() {
     }
 
-    public ORMLiteDatabaseCacheDbEntry(Object key, byte[] data) {
+    public ORMLiteDatabaseCacheDbEntry(Object key, Class clazz, byte[] data) {
         this.key = key.toString();
+        this.clazz = clazz.getName();
         this.lastModified = System.currentTimeMillis();
         this.data = data;
     }
