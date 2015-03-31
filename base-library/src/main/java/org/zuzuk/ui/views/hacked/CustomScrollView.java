@@ -50,6 +50,16 @@ public class CustomScrollView extends ScrollView {
         }
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        int oldY = getScrollY();
+        super.onLayout(changed, l, t, r, b);
+        // Scroll position restoring in super.onLayout without call onScrollChanged
+        if (oldY != getScrollY() && onScrollChangedListener != null) {
+            onScrollChangedListener.onScrollChanged(getScrollX(), getScrollY(), getScrollX(), oldY);
+        }
+    }
+
     public void setOnScrollChangedListener(OnScrollChangedListener onScrollChangedListener) {
         this.onScrollChangedListener = onScrollChangedListener;
     }
